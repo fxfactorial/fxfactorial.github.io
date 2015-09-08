@@ -12,13 +12,13 @@
   color: #bd3613; }
 
 .str {
-  color: #269186; }
+  color: #48b3a8; }
 
 .kwd {
-  color: #859900; }
+  color: #a7bb22; }
 
 .com {
-  color: #586175;
+  color: #7a8397;
   font-style: italic; }
 
 .typ {
@@ -28,35 +28,35 @@
   color: #2aa198; }
 
 .pun {
-  color: #839496; }
+  color: #a5b6b8; }
 
 .opn {
-  color: #839496; }
+  color: #a5b6b8; }
 
 .clo {
-  color: #839496; }
+  color: #a5b6b8; }
 
 .tag {
-  color: #268bd2; }
+  color: #48adf4; }
 
 .atn {
-  color: #586175; }
+  color: #7a8397; }
 
 .atv {
   color: #2aa198; }
 
 .dec {
-  color: #268bd2; }
+  color: #48adf4; }
 
 .var {
-  color: #268bd2; }
+  color: #48adf4; }
 
 .fun {
-  color: #FF0000; }
+  color: #FF2222; }
 
 /* Put a border around prettyprinted code snippets. */
 pre.prettyprint {
-  background-color: #042029;
+  background-color: #000000;
   padding: 10px;
   border: 1px solid #E1E1E8; }
 
