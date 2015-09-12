@@ -4,10 +4,17 @@
     <title>Edgar Aroutiounian</title>
     <link>http://hyegar.com</link>
     <description>Thoughts and Musings</description>
-    <pubDate>Fri, 11 Sep 2015 21:02:16 PDT</pubDate>
-    <lastBuildDate>Fri, 11 Sep 2015 21:02:16 PDT</lastBuildDate>
+    <pubDate>Fri, 11 Sep 2015 21:15:38 PDT</pubDate>
+    <lastBuildDate>Fri, 11 Sep 2015 21:15:38 PDT</lastBuildDate>
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>Org-page static site generator (https://github.com/kelvinh/org-page)</generator>
+    <item>
+      <title>latex.org</title>
+      <link>http://hyegar.com&lt;TODO: insert your uri here&gt;</link>
+      <description>No Description</description>
+      <pubDate>2015-09-11</pubDate>
+      <guid>http://hyegar.com&lt;TODO: insert your uri here&gt;</guid>
+    </item>
     <item>
       <title>Emacs for Linux Coding Part II</title>
       <link>http://hyegar.com/blog/2015/09/11/emacs-for-linux-coding-part-ii</link>
