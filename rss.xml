@@ -4,8 +4,8 @@
     <title>Edgar Aroutiounian</title>
     <link>http://hyegar.com</link>
     <description>Thoughts and Musings</description>
-    <pubDate>Fri, 11 Sep 2015 20:32:18 PDT</pubDate>
-    <lastBuildDate>Fri, 11 Sep 2015 20:32:18 PDT</lastBuildDate>
+    <pubDate>Fri, 11 Sep 2015 20:42:52 PDT</pubDate>
+    <lastBuildDate>Fri, 11 Sep 2015 20:42:52 PDT</lastBuildDate>
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>Org-page static site generator (https://github.com/kelvinh/org-page)</generator>
     <item>
@@ -14,6 +14,13 @@
       <description>Leaving Octopress, embracing org-mode</description>
       <pubDate>2015-09-11</pubDate>
       <guid>http://hyegar.com/blog/2015/09/07/simpler-blogging</guid>
+    </item>
+    <item>
+      <title>Setting up emacs for Linux Coding</title>
+      <link>http://hyegar.com/blog/2015/09/11/setting-up-emacs-for-linux-coding</link>
+      <description>Config emacs for kernel hacking</description>
+      <pubDate>2015-09-11</pubDate>
+      <guid>http://hyegar.com/blog/2015/09/11/setting-up-emacs-for-linux-coding</guid>
     </item>
   </channel>
 </rss>
