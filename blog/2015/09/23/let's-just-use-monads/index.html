@@ -139,14 +139,16 @@ of out <code>create_charge</code> function:
 </p>
 <div class="org-src-container">
 
-<pre class="src src-ocaml"><span class="linenr">1: </span>let create_charge amount currency source handle = 
-<span class="linenr">2: </span>  let this_uri = Uri.of_string handle.end_point in
-<span class="linenr">3: </span>  [("amount", string_of_int amount);
-<span class="linenr">4: </span>   ("currency", currency);]
-<span class="linenr">5: </span>   ("source", source)]
-<span class="linenr">6: </span>  |&gt; Uri.add_query_params' this_uri
-<span class="linenr">7: </span>  |&gt; Cohttp_lwt_unix.Client.post ~headers:handle.authed &gt;&gt;= fun (resp, body) -&gt; 
-<span class="linenr">8: </span>  Cohttp_lwt_body.to_string body &gt;|= Yojson.Basic.from_string
+<pre class="src src-ocaml"><span class="linenr"> 1: </span>let create_charge amount currency source handle = 
+<span class="linenr"> 2: </span>  let open Cohttp_lwt_unix in
+<span class="linenr"> 3: </span>  let this_uri = Uri.of_string handle.end_point in
+<span class="linenr"> 4: </span>  [("amount", string_of_int amount);
+<span class="linenr"> 5: </span>   ("currency", currency);]
+<span class="linenr"> 6: </span>   ("source", source)]
+<span class="linenr"> 7: </span>  |&gt; Uri.add_query_params' this_uri
+<span class="linenr"> 8: </span>  |&gt; Client.post ~headers:handle.authed &gt;&gt;= fun (resp, body) -&gt; 
+<span class="linenr"> 9: </span>  Cohttp_lwt_body.to_string body &gt;|= 
+<span class="linenr">10: </span>  Yojson.Basic.from_string
 </pre>
 </div>
 <p>
