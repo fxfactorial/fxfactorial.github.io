@@ -54,12 +54,13 @@ code, I assume you have <a href="https://opam.ocaml.org/">opam</a> installed. No
 </p>
 <div class="org-src-container">
 
-<pre class="src src-shell">$ opam installl lwt cohttp.lwt yojson
+<pre class="src src-shell">$ opam install lwt cohttp.lwt yojson uri
 </pre>
 </div>
 <p>
-These are the libaries we will use: <code>lwt</code> is for threading, <code>cohttp.lwt</code>
-is for our HTTP requests and <code>yojson</code> is an easy to use json library.
+These are the libaries we will use: <code>lwt</code> is for threading,
+<code>cohttp.lwt</code> is for our HTTP requests, <code>uri</code> for handling URIs and
+<code>yojson</code>, an easy to use and <b>de facto</b> json library.
 </p>
 </div>
 </div>
@@ -90,9 +91,14 @@ function's signature and helper data structure, something like:
 </p>
 <div class="org-src-container">
 
-<pre class="src src-ocaml">type t = { authed_headers: Cohttp.Headers.t; end_point : string; }
+<pre class="src src-ocaml">type t = { authed_headers: Cohttp.Headers.t; 
+           end_point : string; }
 val make_handle : unit -&gt; t
-val create_charge : int -&gt; string -&gt; t -&gt; Yojson.Basic.json Lwt.t
+val create_charge : int -&gt; 
+                    string -&gt; 
+                    string -&gt;
+                    t -&gt;  
+                    Yojson.Basic.json Lwt.t
 </pre>
 </div>
 <p>
@@ -120,8 +126,17 @@ Let's start filling out the <code>make_handle</code> function,
 <p>
 This creates our record needed for making a post. Stripe requires a
 key in each request, so we just make this record to encapsulate that
-other wise boilerplate code we'd have to do instead.
+other wise boilerplate code we'd have to do instead. Now the
+<code>create_charge</code> function:
 </p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">let create_charge amount currency source handle = 
+  let this_uri = Uri.of_string handle.end_point in
+  [("amount", string_of_int amount);
+   ("currency", currency);]
+</pre>
+</div>
 </div>
 </div>
 
