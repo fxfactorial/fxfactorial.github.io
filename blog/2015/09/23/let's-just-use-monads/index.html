@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <title>Let&#39;s just use Monads - Edgar Aroutiounian</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Edgar Aroutiounian" />
+    <meta name="description" content="Pragmatic Monads" />
+    <meta name="keywords" content="monads" />
+    <link rel="stylesheet" href="/media/css/main.css" type="text/css">
+    <link rel="stylesheet" href="/media/css/prettify.css" type="text/css">
+  </head>
+  <body class="container">
+    <div>
+      <header class="masthead">
+        <h1 class="masthead-title"><a href="/">Edgar Aroutiounian</a></h1>
+        <p>Thoughts and Musings</p>
+        <ul>
+          <li><a href="/blog/">Blog</a></li>
+          <li><a href="/ocamldocs/">Ocamldocs</a></li>
+          <li><a href="/tags/">Tags</a></li>
+          <li><a href="/about/">About</a></li>
+          <li><a href="http://github.com/fxfactorial">GitHub</a></li>
+          <li><a href="/rss.xml">RSS</a></li>
+        </ul>
+        <form method="get" id="searchform" action="http://www.google.com/search">
+          <input type="text" class="field" name="q" id="s" placeholder="Search">
+          <input type="hidden" name="as_sitesearch" value="hyegar.com">
+        </form>
+      </header>
+    </div>
+
+<div>
+<div class="post">
+<h1>Let&#39;s just use Monads</h1>
+<p>
+Let's learn about monads as programmers, that is let's use them for
+building something and in the process we'll build up a intuition;
+practice first, then we can come back to theory.
+</p>
+
+<p>
+As Bryan O'Sullivan said once "...we need something that's non-trivial
+but still chewey." So we'll build a real working example in OCaml that
+will be the starting point of a library to the <a href="https://stripe.com/docs/api">Stripe API</a> and it will
+use monads.
+</p>
+
+<div id="outline-container-orgheadline1" class="outline-2">
+<h2 id="orgheadline1">Prereqs</h2>
+<div class="outline-text-2" id="text-orgheadline1">
+<p>
+We need to make sure we have all the same starting point for this
+code, I assume you have <a href="https://opam.ocaml.org/">opam</a> installed. Now do:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-shell">$ opam installl lwt cohttp.lwt yojson
+</pre>
+</div>
+<p>
+These are the libaries we will use: <code>lwt</code> is for threading, <code>cohttp.lwt</code>
+is for our HTTP requests and <code>yojson</code> is an easy to use json library.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline2" class="outline-2">
+<h2 id="orgheadline2">Stripe</h2>
+<div class="outline-text-2" id="text-orgheadline2">
+<p>
+The Stripe API is a straight forward REST API. You'll need to have a
+developer account from which you'll get your Test Key, hence forth
+known as <code>key</code>. We'll focus on one task, we'll start the process of
+charging a credit card. Point your browser to this <a href="https://stripe.com/docs/api#create_charge">link</a> which shows
+how to create the "Charge" object. From there we see we need to do a
+<code>POST</code> to <a href="https://api.stripe.com/v1/charges">https://api.stripe.com/v1/charges</a> with several required
+arguments:
+</p>
+
+<ol class="org-ol">
+<li>The amount to charge</li>
+<li>The ISO code for currency</li>
+<li>Either the Customer or Source (perfect use-case for a variant,
+we'll use polymorphic variants)</li>
+</ol>
+
+<p>
+All of Stripe's API returns JSON, so we can already sketch out our
+function's signature and helper data structure, something like:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">type t = { authed_headers: Cohttp.Headers.t; end_point : string; }
+val make_handle : unit -&gt; t
+val create_charge : int -&gt; string -&gt; t -&gt; Yojson.Basic.json Lwt.t
+</pre>
+</div>
+<p>
+Mostly straight forward, although that <code>Lwt.t</code> should look at
+little strange. The quick answer that that <code>create_charge</code> will give
+back an <code>Lwt.t</code> Monad which in this case will contain a <code>json</code> object.
+</p>
+
+<p>
+Let's start filling out the <code>make_handle</code> function, 
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">let make_handle () = 
+  let auth_me k = 
+    let starter = Cohttp.Header.init () in 
+    Cohttp.Auth.credential_of_string ("Bearer " ^ k)
+    |&gt; Cohttp.Header.add_authorization starter
+  in
+  {authed_headers = auth_me "YOUR STRIPE KEY"; 
+   (** Hardcoding to the charge create path *)
+   end_point = "https://api.stripe.com/v1/charges"}
+</pre>
+</div>
+<p>
+This creates our record needed for making a post. Stripe requires a
+key in each request, so we just make this record to encapsulate that
+other wise boilerplate code we'd have to do instead.
+</p>
+</div>
+</div>
+
+</div>
+</div>
+    <div>
+      <div class="post-meta">
+        <span title="post date" class="post-info">2015-09-23</span>
+        <span title="last modification date" class="post-info">2015-09-23</span>
+        <span title="tags" class="post-info"><a href="/tags/ocaml/">ocaml</a>, <a href="/tags/functional-programming/">functional programming</a></span>
+        <span title="author" class="post-info">Edgar Aroutiounian</span>
+      </div>
+      <section>
+        <h1>Comments</h1>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+          //var disqus_developer = 1;
+          var disqus_identifier = "/blog/2015/09/23/let&#39;s-just-use-monads";
+          var disqus_url = "http://hyegar.com/blog/2015/09/23/let&#39;s-just-use-monads";
+          var disqus_shortname = 'hyegar';
+          /* * * DON'T EDIT BELOW THIS LINE * * */
+          (function() {
+          var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+          dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+          (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+          })();
+        </script>
+        <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+      </section>
+      <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.js"></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script src="/media/js/main.js"></script>
+      <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-57031124-1']);
+        _gaq.push(['_trackPageview']);
+        (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+      </script>
+      <div class="footer">
+        <p>Generated by <a href="http://www.gnu.org/software/emacs/">Emacs</a> 25.x (<a href="http://orgmode.org">Org mode</a> 8.x)</p>
+        <p>
+          Copyright &copy; 2012 - <span id="footerYear"></span> <a href="mailto:edgar &lt;dot&gt; factorial &lt;at&gt; gmail &lt;dot&gt; com">Edgar Aroutiounian</a>
+          &nbsp;&nbsp;-&nbsp;&nbsp;
+          Powered by <a href="https://github.com/kelvinh/org-page" target="_blank">org-page</a>
+          <script type="text/javascript">document.getElementById("footerYear").innerHTML = (new Date()).getFullYear();</script>
+        </p>
+      </div>
+    </div>
+
+  </body>
+</html>
