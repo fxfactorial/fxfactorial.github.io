@@ -39,7 +39,7 @@ practice first, then we can come back to theory.
 </p>
 
 <p>
-(I'll be writing to an OCaml audience mainly, but the Monad idea
+(I'll be writing to an OCaml audience mainly, but the monad idea
 should be understandable anyway)
 </p>
 
@@ -112,7 +112,7 @@ val create_charge : int -&gt;
 <p>
 Mostly straight forward, although that <code>Lwt.t</code> should look at
 little strange. The quick answer that that <code>create_charge</code> will give
-back an <code>Lwt.t</code> Monad which in this case will contain a <code>json</code> object.
+back an <code>Lwt.t</code> monad which in this case will contain a <code>json</code> object.
 </p>
 
 <p>
@@ -144,7 +144,7 @@ Now the first cut of out <code>create_charge</code> function:
 <p>
 (<b>META NOTE</b> This is horrible indentation, I'm only doing it because
 of the sizing done in the exporting of this document and I want it to
-be clear what's happening and the coloring is wrong because ~'~ can be
+be clear what's happening and the coloring is wrong because ~ ' ~ can be
 used in a value's name but its messing up the coding exporter)
 </p>
 <div class="org-src-container">
@@ -193,7 +193,19 @@ the signature of <code>Client.post</code>, its:
 <p>
 Looks big but we don't care about most of it, in fact we could just
 care about the <code>Uri.t</code> parameter since the rest of the parameters, the
-ones with <code>?</code>, have default values.
+ones with <code>?</code>, have default values but we can override them as we do
+on line 8's <code>Client.post ~headers:handle.authed</code>. Now notice the final
+value of a call to <code>Client.post</code>, its:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">(Cohttp.Response.t * Cohttp_lwt_body.t) Lwt.t
+</pre>
+</div>
+<p>
+This says that <code>post</code> will give back an <code>Lwt.t</code> monad which contains a
+tuple of a response object and the body, again completely reasonable.
+The line of line 8 features the famous ~ &gt;&gt;= ~ operator, aka <code>bind</code>
 </p>
 </div>
 </div>
@@ -203,7 +215,7 @@ ones with <code>?</code>, have default values.
 <div class="outline-text-2" id="text-orgheadline3">
 <p>
 So in terms of actually day to day coding, you don't actually need to
-know what a Monad "is", you just need to know how to use it and
+know what a monad "is", you just need to know how to use it and
 honestly that's completely fine.
 </p>
 </div>
@@ -214,7 +226,7 @@ honestly that's completely fine.
     <div>
       <div class="post-meta">
         <span title="post date" class="post-info">2015-09-23</span>
-        <span title="last modification date" class="post-info">2015-09-23</span>
+        <span title="last modification date" class="post-info">2015-09-24</span>
         <span title="tags" class="post-info"><a href="/tags/ocaml/">ocaml</a>, <a href="/tags/functional-programming/">functional programming</a></span>
         <span title="author" class="post-info">Edgar Aroutiounian</span>
       </div>
