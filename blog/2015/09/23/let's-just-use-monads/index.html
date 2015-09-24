@@ -133,15 +133,19 @@ Let's start filling out the <code>make_handle</code> function,
 </div>
 <p>
 This creates our record needed for making a post. Stripe requires a
-key in each request, so we just make this record to encapsulate that
-other wise boilerplate code we'd have to do instead. Now the first cut
-of out <code>create_charge</code> function: 
+key in each request so we'll make this record to encapsulate that,
+otherwise we have to write boilerplate code, never fun.
+</p>
+
+<p>
+Now the first cut of out <code>create_charge</code> function:
 </p>
 
 <p>
 (<b>META NOTE</b> This is horrible indentation, I'm only doing it because
 of the sizing done in the exporting of this document and I want it to
-be clear what's happening)
+be clear what's happening and the coloring is wrong because ~'~ can be
+used in a value's name but its messing up the coding exporter)
 </p>
 <div class="org-src-container">
 
@@ -160,7 +164,7 @@ be clear what's happening)
 </div>
 <p>
 Okay, so what the hell is going on. Line 2 open the <code>Cohttp_lwt_unix</code>
-module locally to this function so that we can type Client.post
+module locally to this function so that we can type <code>Client.post</code>
 instead of <code>Cohttp_lwt_unix.Client.post</code>. Line 3 creates a <code>uri</code>
 object, lines 4-6 are the query parameters we want to add to our <code>uri</code>
 object. The <code>|&gt;</code> symbol is a function, you can call it reverse apply,
@@ -171,9 +175,28 @@ you can define it as
 <pre class="src src-ocaml">let ( |&gt; ) f x = x f
 </pre>
 </div>
-</div>
-</div>
+<p>
+but you don't need to, it comes with OCaml. It just says take the left
+side as the input to the right side, aka a Unix Pipe. Now let's see
+the signature of <code>Client.post</code>, its:
+</p>
+<div class="org-src-container">
 
+<pre class="src src-ocaml">val post ?ctx:Cohttp_lwt_unix.Client.ctx -&gt;
+         ?body:Cohttp_lwt_body.t -&gt;
+         ?chunked:bool -&gt;
+         ?headers:Cohttp.Header.t -&gt;
+         Uri.t -&gt; 
+         (Cohttp.Response.t * Cohttp_lwt_body.t) Lwt.t
+</pre>
+</div>
+<p>
+Looks big but we don't care about most of it, in fact we could just
+care about the <code>Uri.t</code> parameter since the rest of the parameters, the
+ones with <code>?</code>, have default values.
+</p>
+</div>
+</div>
 
 <div id="outline-container-orgheadline3" class="outline-2">
 <h2 id="orgheadline3">Moral of the Story</h2>
