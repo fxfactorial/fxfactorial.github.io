@@ -281,8 +281,86 @@ and pipe it out to <code>Lwt_io.printl</code>, a <code>printf</code> for the <co
 </div>
 
 <div id="outline-container-orgheadline3" class="outline-2">
-<h2 id="orgheadline3">Moral of the Story</h2>
+<h2 id="orgheadline3">Build and Run</h2>
 <div class="outline-text-2" id="text-orgheadline3">
+<p>
+Now let's build our program and run it, assuming all the code is in
+<code>code.ml</code> we invoke the OCaml toolchain as so:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">$ ocamlfind ocamlopt -linkpkg code.ml -packages lwt.unix,cohttp.lwt,yojson,uri -o T
+</pre>
+</div>
+<p>
+assuming everything well, you should have an executable T, which will
+print something like:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">$ ./T
+{
+  "object": "charge",
+  "created": 1443072037,
+  "livemode": false,
+  "paid": true,
+  "status": "succeeded",
+  "amount": 500,
+  "currency": "usd",
+  "refunded": false,
+  "source": {
+    "object": "card",
+    "brand": "Visa",
+    "funding": "credit",
+    "exp_month": 8,
+    "exp_year": 2016,
+    "country": "US",
+    "name": null,
+    "address_line1": null,
+    "address_line2": null,
+    "address_city": null,
+    "address_state": null,
+    "address_zip": null,
+    "address_country": null,
+    "cvc_check": null,
+    "address_line1_check": null,
+    "address_zip_check": null,
+    "tokenization_method": null,
+    "dynamic_last4": null,
+    "metadata": {},
+    "customer": null
+  },
+  "captured": true,
+  "failure_message": null,
+  "failure_code": null,
+  "amount_refunded": 0,
+  "customer": null,
+  "invoice": null,
+  "dispute": null,
+  "metadata": {},
+  "statement_descriptor": null,
+  "fraud_details": {},
+  "receipt_email": null,
+  "receipt_number": null,
+  "shipping": null,
+  "destination": null,
+  "application_fee": null,
+  "refunds": {
+    "object": "list",
+    "total_count": 0,
+    "has_more": false,
+    "url": "/v1/charges/ch_16oS9pJDURztdKY9Z7QS8c8D/refunds",
+    "data": []
+  }
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline4" class="outline-2">
+<h2 id="orgheadline4">Moral of the Story</h2>
+<div class="outline-text-2" id="text-orgheadline4">
 <p>
 So in terms of actually day to day coding, you don't actually need to
 know what a monad "is", you just need to know how to use it and
