@@ -44,10 +44,10 @@ should be understandable anyway)
 </p>
 
 <p>
-As Bryan O'Sullivan said once "...we need something that's non-trivial
-but still chewey." So we'll build a real working example in OCaml that
-will be the starting point of a library to the <a href="https://stripe.com/docs/api">Stripe API</a> and it will
-use monads.
+As Bryan O'Sullivan said (From Real World Haskell) "...we need
+something that's non-trivial but still chewey." So we'll build a real
+working example in OCaml that will be the starting point of a library
+to the <a href="https://stripe.com/docs/api">Stripe API</a> and it will use monads.
 </p>
 
 <div id="outline-container-orgheadline1" class="outline-2">
@@ -59,7 +59,7 @@ code, I assume you have <a href="https://opam.ocaml.org/">opam</a> installed. No
 </p>
 <div class="org-src-container">
 
-<pre class="src src-shell">$ opam install lwt cohttp.lwt yojson uri
+<pre class="src src-shell">$ opam install lwt.unix cohttp.lwt yojson uri
 </pre>
 </div>
 <p>
@@ -85,9 +85,10 @@ arguments:
 
 <ol class="org-ol">
 <li>The amount to charge</li>
-<li>The ISO code for currency</li>
-<li>Either the Customer or Source (perfect use-case for a variant,
-we'll use polymorphic variants)</li>
+<li>The ISO code for currency (a perfect use-case for a variant, we'll
+use polymorphic variants for this)</li>
+<li>Either the Customer or Source, (this will also use polymorphic
+variants)</li>
 </ol>
 
 <p>
@@ -96,7 +97,7 @@ function's signature and helper data structure, something like:
 </p>
 <div class="org-src-container">
 
-<pre class="src src-ocaml">type t = { authed_headers: Cohttp.Headers.t; 
+<pre class="src src-ocaml">type t = { authed : Cohttp.Headers.t; 
            end_point : string; }
 
 val make_handle : unit -&gt; t
@@ -125,7 +126,7 @@ Let's start filling out the <code>make_handle</code> function,
     Cohttp.Auth.credential_of_string ("Bearer " ^ k)
     |&gt; Cohttp.Header.add_authorization starter
   in
-  {authed_headers = auth_me "YOUR STRIPE KEY"; 
+  {authed = auth_me "YOUR STRIPE KEY"; 
    (** Hardcoding to the charge create path *)
    end_point = "https://api.stripe.com/v1/charges"}
 </pre>
@@ -133,17 +134,24 @@ Let's start filling out the <code>make_handle</code> function,
 <p>
 This creates our record needed for making a post. Stripe requires a
 key in each request, so we just make this record to encapsulate that
-other wise boilerplate code we'd have to do instead. Now the
-<code>create_charge</code> function:
+other wise boilerplate code we'd have to do instead. Now the first cut
+of out <code>create_charge</code> function:
 </p>
 <div class="org-src-container">
 
-<pre class="src src-ocaml">let create_charge amount currency source handle = 
-  let this_uri = Uri.of_string handle.end_point in
-  [("amount", string_of_int amount);
-   ("currency", currency);]
+<pre class="src src-ocaml"><span class="linenr">1: </span>let create_charge amount currency source handle = 
+<span class="linenr">2: </span>  let this_uri = Uri.of_string handle.end_point in
+<span class="linenr">3: </span>  [("amount", string_of_int amount);
+<span class="linenr">4: </span>   ("currency", currency);]
+<span class="linenr">5: </span>   ("source", source)]
+<span class="linenr">6: </span>  |&gt; Uri.add_query_params' this_uri
+<span class="linenr">7: </span>  |&gt; Cohttp_lwt_unix.Client.post ~headers:handle.authed &gt;&gt;= fun (resp, body) -&gt; 
+<span class="linenr">8: </span>  Cohttp_lwt_body.to_string body &gt;|= Yojson.Basic.from_string
 </pre>
 </div>
+<p>
+Okay, so what the hell is going on.
+</p>
 </div>
 </div>
 
