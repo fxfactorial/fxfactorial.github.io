@@ -39,6 +39,11 @@ practice first, then we can come back to theory.
 </p>
 
 <p>
+(I'll be writing to an OCaml audience mainly, but the Monad idea
+should be understandable anyway)
+</p>
+
+<p>
 As Bryan O'Sullivan said once "...we need something that's non-trivial
 but still chewey." So we'll build a real working example in OCaml that
 will be the starting point of a library to the <a href="https://stripe.com/docs/api">Stripe API</a> and it will
@@ -93,7 +98,9 @@ function's signature and helper data structure, something like:
 
 <pre class="src src-ocaml">type t = { authed_headers: Cohttp.Headers.t; 
            end_point : string; }
+
 val make_handle : unit -&gt; t
+
 val create_charge : int -&gt; 
                     string -&gt; 
                     string -&gt;
