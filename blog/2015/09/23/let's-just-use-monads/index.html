@@ -71,7 +71,7 @@ These are the libaries we will use: <code>lwt</code> is for threading,
 </div>
 
 <div id="outline-container-orgheadline2" class="outline-2">
-<h2 id="orgheadline2">Stripe</h2>
+<h2 id="orgheadline2"><span class="todo TODO">TODO</span> Stripe</h2>
 <div class="outline-text-2" id="text-orgheadline2">
 <p>
 The Stripe API is a straight forward REST API. You'll need to have a
@@ -158,8 +158,8 @@ used in a value's name but its messing up the coding exporter)
 <span class="linenr"> 7: </span>  |&gt; Uri.add_query_params' this_uri
 <span class="linenr"> 8: </span>  |&gt; Client.post ~headers:handle.authed &gt;&gt;= 
 <span class="linenr"> 9: </span>     fun (resp, body) -&gt; 
-<span class="linenr">10: </span>     Cohttp_lwt_body.to_string body &gt;|= 
-<span class="linenr">11: </span>     Yojson.Basic.from_string
+<span class="linenr">10: </span>     Cohttp_lwt_body.to_string body &gt;&gt;= fun j -&gt; 
+<span class="linenr">11: </span>     Yojson.Basic.from_string j |&gt; return
 </pre>
 </div>
 <p>
@@ -205,10 +205,48 @@ value of a call to <code>Client.post</code>, its:
 <p>
 This says that <code>post</code> will give back an <code>Lwt.t</code> monad which contains a
 tuple of a response object and the body, again completely reasonable.
-The line of line 8 features the famous <code>&gt;&gt;=</code> operator, aka <code>bind</code>
+The line of line 8 features the famous <code>&gt;&gt;=</code> operator, aka <code>bind</code> it's
+signature is:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">val ( &gt;&gt;= ) : 'a Lwt.t -&gt; ('a -&gt; 'b Lwt.t) -&gt; 'b Lwt.t
+</pre>
+</div>
+<p>
+And this says that <code>&gt;&gt;=</code> takes something wrapped in the <code>Lwt.t</code> monad
+on the left side and passes the unwrapped value to a function on the
+right side which has to return something wrapped in the <code>Lwt.t</code> monad
+where the two somethings can be different or the same. So in our code
+that right side is this anonymous function, this lambda:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">fun (resp, body) -&gt;
+</pre>
+</div>
+<p>
+Now we have a handle on the http response and the body, we won't do
+any error checking so let's just look at the body with line 10's usage
+of <code>Cohttp_lwt_body.to_string</code> whose signature is:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">val to_string : Cohttp_lwt_body.t -&gt; string Lwt.t
+</pre>
+</div>
+<p>
+Translation: Takes a body and gives back a string wrapped in a Lwt.t
+monad. Remember our goal is to get the body as a json object, so we
+could just pipe it to <code>Yojson.Basic.from_string</code> but still recall that
+our <code>create_charge</code> function had final value of <code>Yojson.Basic.json
+Lwt.t</code>, not a plain <code>Yojson.Basic.json</code> so we pipe it to the other
+famous monad related function, <code>return</code>
 </p>
 </div>
 </div>
+
+
 
 <div id="outline-container-orgheadline3" class="outline-2">
 <h2 id="orgheadline3">Moral of the Story</h2>
