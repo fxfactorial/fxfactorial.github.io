@@ -135,7 +135,13 @@ Let's start filling out the <code>make_handle</code> function,
 This creates our record needed for making a post. Stripe requires a
 key in each request, so we just make this record to encapsulate that
 other wise boilerplate code we'd have to do instead. Now the first cut
-of out <code>create_charge</code> function:
+of out <code>create_charge</code> function: 
+</p>
+
+<p>
+(<b>META NOTE</b> This is horrible indentation, I'm only doing it because
+of the sizing done in the exporting of this document and I want it to
+be clear what's happening)
 </p>
 <div class="org-src-container">
 
@@ -146,13 +152,36 @@ of out <code>create_charge</code> function:
 <span class="linenr"> 5: </span>   ("currency", currency);]
 <span class="linenr"> 6: </span>   ("source", source)]
 <span class="linenr"> 7: </span>  |&gt; Uri.add_query_params' this_uri
-<span class="linenr"> 8: </span>  |&gt; Client.post ~headers:handle.authed &gt;&gt;= fun (resp, body) -&gt; 
-<span class="linenr"> 9: </span>  Cohttp_lwt_body.to_string body &gt;|= 
-<span class="linenr">10: </span>  Yojson.Basic.from_string
+<span class="linenr"> 8: </span>  |&gt; Client.post ~headers:handle.authed &gt;&gt;= 
+<span class="linenr"> 9: </span>     fun (resp, body) -&gt; 
+<span class="linenr">10: </span>     Cohttp_lwt_body.to_string body &gt;|= 
+<span class="linenr">11: </span>     Yojson.Basic.from_string
 </pre>
 </div>
 <p>
-Okay, so what the hell is going on.
+Okay, so what the hell is going on. Line 2 open the <code>Cohttp_lwt_unix</code>
+module locally to this function so that we can type Client.post
+instead of <code>Cohttp_lwt_unix.Client.post</code>. Line 3 creates a <code>uri</code>
+object, lines 4-6 are the query parameters we want to add to our <code>uri</code>
+object. The <code>|&gt;</code> symbol is a function, you can call it reverse apply,
+you can define it as
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">let ( |&gt; ) f x = x f
+</pre>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orgheadline3" class="outline-2">
+<h2 id="orgheadline3">Moral of the Story</h2>
+<div class="outline-text-2" id="text-orgheadline3">
+<p>
+So in terms of actually day to day coding, you don't actually need to
+know what a Monad "is", you just need to know how to use it and
+honestly that's completely fine.
 </p>
 </div>
 </div>
