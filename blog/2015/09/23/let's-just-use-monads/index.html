@@ -166,8 +166,12 @@ used in a value's name but its messing up the coding exporter)
 <span class="linenr"> 7: </span>  |&gt; Uri.add_query_params' this_uri
 <span class="linenr"> 8: </span>  |&gt; Client.post ~headers:handle.authed &gt;&gt;= 
 <span class="linenr"> 9: </span>     fun (resp, body) -&gt; 
-<span class="linenr">10: </span>     Cohttp_lwt_body.to_string body &gt;&gt;= fun j -&gt; 
-<span class="linenr">11: </span>     Yojson.Basic.from_string j |&gt; return
+<span class="linenr">10: </span>     (* This can also be done more succinctly
+<span class="linenr">11: </span>        with:
+<span class="linenr">12: </span>        Cohttp_lwt_body.to_string body &gt;|=
+<span class="linenr">13: </span>        Yojson.Basic.from_string  *)
+<span class="linenr">14: </span>     Cohttp_lwt_body.to_string body &gt;&gt;= fun j -&gt; 
+<span class="linenr">15: </span>     Yojson.Basic.from_string j |&gt; return
 </pre>
 </div>
 <p>
