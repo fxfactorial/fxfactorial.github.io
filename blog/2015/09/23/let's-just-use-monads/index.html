@@ -39,8 +39,13 @@ practice first, then we can come back to theory.
 </p>
 
 <p>
-(I'll be writing to an OCaml audience mainly, but the monad idea
-should be understandable anyway)
+This post is split in two parts: 
+Part 1 is just to get the ideas out the door
+</p>
+
+<p>
+Part 2 (Currently not written) is for an OCaml audience,
+just to improve the quality of the OCaml code itself
 </p>
 
 <p>
@@ -71,24 +76,24 @@ These are the libaries we will use: <code>lwt</code> is for threading,
 </div>
 
 <div id="outline-container-orgheadline2" class="outline-2">
-<h2 id="orgheadline2"><span class="todo TODO">TODO</span> Stripe</h2>
+<h2 id="orgheadline2">Stripe</h2>
 <div class="outline-text-2" id="text-orgheadline2">
 <p>
 The Stripe API is a straight forward REST API. You'll need to have a
 developer account from which you'll get your Test Key, hence forth
 known as <code>key</code>. We'll focus on one task, we'll start the process of
 charging a credit card. Point your browser to this <a href="https://stripe.com/docs/api#create_charge">link</a> which shows
-how to create the "Charge" object. From there we see we need to do a
+how to create the "Charge" object. Be sure to be looking at that page
+while logged because we'll need the value for the <code>source</code> parameter,
+we'll call it the <b>source token</b> From there we see we need to do a
 <code>POST</code> to <a href="https://api.stripe.com/v1/charges">https://api.stripe.com/v1/charges</a> with several required
 arguments:
 </p>
 
 <ol class="org-ol">
 <li>The amount to charge</li>
-<li>The ISO code for currency (a perfect use-case for a variant, we'll
-use polymorphic variants for this)</li>
-<li>Either the Customer or Source, (this will also use polymorphic
-variants)</li>
+<li>The ISO code for currency</li>
+<li>Either the Customer or Source</li>
 </ol>
 
 <p>
@@ -241,12 +246,39 @@ monad. Remember our goal is to get the body as a json object, so we
 could just pipe it to <code>Yojson.Basic.from_string</code> but still recall that
 our <code>create_charge</code> function had final value of <code>Yojson.Basic.json
 Lwt.t</code>, not a plain <code>Yojson.Basic.json</code> so we pipe it to the other
-famous monad related function, <code>return</code>
+famous monad related function, <code>return</code>. <code>return</code> really should have
+been called inject because it takes a plain value and "injects" it
+into a monad, let's see its value here:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">val return : 'a -&gt; 'a Lwt.t
+</pre>
+</div>
+<p>
+We are using it to turn out plain <code>json</code> into a <code>json Lwt.t</code> Now let's
+use this code to actually do something.
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">let program = 
+  let this_handle = make_handle () in
+  let st = "SOURCE_TOKEN_MENTIONED_EARLIER" in
+  create_charge 500 "usd" this_handle &gt;&gt;= fun j -&gt; 
+  Yojson.Basic.pretty_to_string j |&gt; Lwt_io.printl 
+
+let () = 
+  Lwt_main.run program
+</pre>
+</div>
+<p>
+At this point this should be understandable, our create_charge is
+returning a monad so we pass its output to <code>&gt;&gt;=</code>, which passes a json
+object to a lambda, we turn the json value to a pretty printed string
+and pipe it out to <code>Lwt_io.printl</code>, a <code>printf</code> for the <code>Lwt</code> library.
 </p>
 </div>
 </div>
-
-
 
 <div id="outline-container-orgheadline3" class="outline-2">
 <h2 id="orgheadline3">Moral of the Story</h2>
