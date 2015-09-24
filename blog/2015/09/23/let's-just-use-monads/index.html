@@ -87,7 +87,7 @@ developer account from which you'll get your Test Key, hence forth
 known as <code>key</code>. We'll focus on one task, we'll start the process of
 charging a credit card. Point your browser to this <a href="https://stripe.com/docs/api#create_charge">link</a> which shows
 how to create the "Charge" object. Be sure to be looking at that page
-while logged because we'll need the value for the <code>source</code> parameter,
+while logged in because we'll need the value for the <code>source</code> parameter,
 we'll call it the <b>source token</b> From there we see we need to do a
 <code>POST</code> to <a href="https://api.stripe.com/v1/charges">https://api.stripe.com/v1/charges</a> with several required
 arguments:
@@ -259,8 +259,9 @@ into a monad, let's see its value here:
 </pre>
 </div>
 <p>
-We are using it to turn out plain <code>json</code> into a <code>json Lwt.t</code> Now let's
-use this code to actually do something.
+We are using it to turn our plain <code>Yojson.Basic.json</code> into a
+<code>Yojson.Basic.json Lwt.t</code> Now let's use this code to actually do
+something.
 </p>
 <div class="org-src-container">
 
