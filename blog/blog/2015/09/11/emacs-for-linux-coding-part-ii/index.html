@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <title>Emacs for Linux Coding Part II - Edgar Aroutiounian</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Edgar Aroutiounian" />
+    <meta name="description" content="Part II, emacs and kernel" />
+    <meta name="keywords" content="emacs, kernel, linux, coding" />
+    <link rel="stylesheet" href="/media/css/main.css" type="text/css">
+    <link rel="stylesheet" href="/media/css/prettify.css" type="text/css">
+  </head>
+  <body class="container">
+    <div>
+      <header class="masthead">
+        <h1 class="masthead-title"><a href="/">Edgar Aroutiounian</a></h1>
+        <p>Thoughts and Musings</p>
+        <ul>
+          <li><a href="/blog/">Blog</a></li>
+          <li><a href="/ocamldocs/">Ocamldocs</a></li>
+          <li><a href="/tags/">Tags</a></li>
+          <li><a href="/about/">About</a></li>
+          <li><a href="http://github.com/fxfactorial">GitHub</a></li>
+          <li><a href="/rss.xml">RSS</a></li>
+        </ul>
+        <form method="get" id="searchform" action="http://www.google.com/search">
+          <input type="text" class="field" name="q" id="s" placeholder="Search">
+          <input type="hidden" name="as_sitesearch" value="hyegar.com">
+        </form>
+      </header>
+    </div>
+
+<div>
+<div class="post">
+<h1>Emacs for Linux Coding Part II</h1>
+
+<div id="outline-container-orgheadline1" class="outline-2">
+<h2 id="orgheadline1">Tags</h2>
+<div class="outline-text-2" id="text-orgheadline1">
+<p>
+If you are using etags, stop doing that. The best tag system is gnu
+global, it is simply amazing. If you are on a debian machine, I
+recommend getting <a href="http://www.gnu.org/software/global/download.html">gnu global</a> from sourc
+hand. The reason is that the version of gnu global on apt-get is
+incredibly outdated. Once you have it installed, go to the root of
+your linux, or any C project, directory and type <code>gtags</code>. This will
+create all the infrastructure that we will soon be using in
+emacs. Note that the gtags file for Linux takes a few moments and
+clocks in at about 100mb, this is Linux source code after all...
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline2" class="outline-2">
+<h2 id="orgheadline2">Emacs Side</h2>
+<div class="outline-text-2" id="text-orgheadline2">
+<p>
+Now that we have gtags up and running, we can now focus on the emacs
+portion of things. Here's my hook for C-mode in emacs:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-emacs-lisp">(add-hook 'c-mode-hook '(lambda ()
+                          (setq-local show-trailing-whitespace t)
+                          (semantic-mode)
+                          (auto-complete-mode -1)
+                          (company-mode)
+                          (global-set-key (kbd "C-c C-f") 'helm-command-prefix)
+                          (global-unset-key (kbd "C-x c"))
+                          (define-key helm-gtags-mode-map (kbd "M-s") 'helm-gtags-select)
+                          (setq helm-quick-update                     t ; do not display invisible candidates
+                                helm-split-window-in-side-p           t ; open helm buffer inside current window, not occupy whole other window
+                                helm-buffers-fuzzy-matching           t ; fuzzy matching buffer names when non--nil
+                                helm-move-to-line-cycle-in-source     t ; move to end or beginning of source when reaching top or bottom of source.
+                                helm-ff-search-library-in-sexp        t ; search for library in `require' and `declare-function' sexp.
+                                helm-scroll-amount                    8 ; scroll 8 lines other window using M-&lt;next&gt;/M-&lt;prior&gt;
+                                helm-ff-file-name-history-use-recentf t
+                                helm-gtags-ignore-case t
+                                helm-gtags-auto-update t
+                                helm-gtags-use-input-at-cursor t
+                                helm-gtags-pulse-at-cursor t
+                                helm-gtags-prefix-key "\C-cg"
+                                helm-gtags-suggested-key-mapping t)
+                          (helm-gtags-mode)
+                          (define-key helm-gtags-mode-map (kbd "M-.") 'helm-gtags-dwim)
+                          (define-key helm-gtags-mode-map (kbd "M-,") 'helm-gtags-pop-stack)
+                          ;;Too complex for me right now. 
+                          ;;(helm-mode)
+                          (define-key company-mode-map (kbd "M-h") 'company-c-headers)
+                          (hs-minor-mode)
+                          (define-key hs-minor-mode-map (kbd "C-c C-t") 'hs-toggle-hiding)
+                          (define-key c-mode-map (kbd "C-c C-c") 'compile)
+                          (semantic-mru-bookmark-mode)
+                          (define-key semantic-mode-map (kbd "M-]") 'semantic-ia-fast-jump)
+                          (define-key semantic-mode-map (kbd "M-[") 'semantic-ia-fast-jump-back)
+                          (define-key c-mode-map (kbd "C-c C-i") 'default-c-includes)
+                          (ggtags-mode)
+                          (define-key ggtags-mode-map (kbd "M-.") nil)
+                          (define-key ggtags-mode-map (kbd "M-&lt;") nil)
+                          (define-key ggtags-mode-map (kbd "M-&gt;") nil)
+                          (define-key ggtags-mode-map (kbd "M-n") nil)
+                          (define-key ggtags-mode-map (kbd "M-p") nil)
+                          (define-key ggtags-mode-map (kbd "M-,") nil)
+                          (define-key ggtags-mode-map (kbd "M-]") nil)
+                          (define-key ggtags-mode-map (kbd "M--") 'ggtags-find-reference)
+                          ;;Flycheck has issues with tramp, just FYI. 
+                          ;;(flycheck-mode)
+                          (linux-c-mode)))
+</pre>
+</div>
+<p>
+That's quite a bit, but I'll explain all the relevant parts. I don't
+really use helm, other than for the features of <code>helm-gtags-dwin</code> and
+<code>helm-gtags-pop-stack</code> simply because Helm is too big for my tastes
+and it goes against how most of emacs "does" things. Basically
+whenever I want to find where a struct, function, etc is defined, I
+can just hit <code>M-.</code> and gtags will take me there, if I want to come
+back to where I was before looking up the definition, then I hit
+M-,. The reader might notice that I define many of the keys from
+<code>ggtags-mode-map</code> to <code>nil</code>, this is because the keys conflicted with
+my desired key bindings and the only thing that I found of use from
+ggtags-mode was finding all the references made to a piece of code,
+this is via the <code>ggtags-find-reference</code> function.  This is a feature
+that Semantic can supposedly do, but getting it to work right with the
+remote machine and the messed up header paths was just too much work,
+plus it had some issues about <code>call-process</code>. Ggtags-mode is able to
+do this incredibly well and fast. Finally there is the call to
+<code>linux-c-mode</code>, that is simply defined as:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-emacs-lisp">(defun linux-c-mode ()
+  "C mode with adjusted defaults for use with the linux kernel."
+  (interactive)
+  (setq c-set-style "linux")
+  (setq c-brace-offset -8)
+  (setq c-default-style "linux")
+  (setq c-basic-offset 8)
+  (setq tab-width 8))
+</pre>
+</div>
+<p>
+Since our homework assignments had Linux's <code>checkpatch.pl</code> script run
+against them, it made sense to just start out with Linux style
+C-coding enforced in emacs itself.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline3" class="outline-2">
+<h2 id="orgheadline3">Wrapping up</h2>
+<div class="outline-text-2" id="text-orgheadline3">
+<p>
+That's basically it. I skipped over a few things, but if you have
+questions, feel free to ask in the comments and I'll try to answer
+them. For reference, my <code>init.el</code> is [[<a href="https://github.com/fxfactorial/emacsd/blob/m">https://github.com/fxfactorial/emacsd/blob/m</a>
+other goodies. 
+</p>
+</div>
+</div>
+
+</div>
+</div>
+    <div>
+      <div class="post-meta">
+        <span title="post date" class="post-info">2015-09-11</span>
+        <span title="last modification date" class="post-info">2015-09-11</span>
+        <span title="tags" class="post-info"><a href="/tags/emacs/">emacs</a>, <a href="/tags/kernel/">kernel</a>, <a href="/tags/linux/">linux</a>, <a href="/tags/coding/">coding</a></span>
+        <span title="author" class="post-info">Edgar Aroutiounian</span>
+      </div>
+      <section>
+        <h1>Comments</h1>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+          //var disqus_developer = 1;
+          var disqus_identifier = "/blog/2015/09/11/emacs-for-linux-coding-part-ii";
+          var disqus_url = "http://hyegar.com/blog/2015/09/11/emacs-for-linux-coding-part-ii";
+          var disqus_shortname = 'hyegar';
+          /* * * DON'T EDIT BELOW THIS LINE * * */
+          (function() {
+          var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+          dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+          (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+          })();
+        </script>
+        <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+      </section>
+      <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.js"></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script src="/media/js/main.js"></script>
+      <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-57031124-1']);
+        _gaq.push(['_trackPageview']);
+        (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+      </script>
+      <div class="footer">
+        <p>Generated by <a href="http://www.gnu.org/software/emacs/">Emacs</a> 25.x (<a href="http://orgmode.org">Org mode</a> 8.x)</p>
+        <p>
+          Copyright &copy; 2012 - <span id="footerYear"></span> <a href="mailto:edgar &lt;dot&gt; factorial &lt;at&gt; gmail &lt;dot&gt; com">Edgar Aroutiounian</a>
+          &nbsp;&nbsp;-&nbsp;&nbsp;
+          Powered by <a href="https://github.com/kelvinh/org-page" target="_blank">org-page</a>
+          <script type="text/javascript">document.getElementById("footerYear").innerHTML = (new Date()).getFullYear();</script>
+        </p>
+      </div>
+    </div>
+
+  </body>
+</html>

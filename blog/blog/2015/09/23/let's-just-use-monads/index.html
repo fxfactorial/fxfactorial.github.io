@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <title>Let&#39;s just use Monads - Edgar Aroutiounian</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Edgar Aroutiounian" />
+    <meta name="description" content="Pragmatic Monads" />
+    <meta name="keywords" content="monads" />
+    <link rel="stylesheet" href="/media/css/main.css" type="text/css">
+    <link rel="stylesheet" href="/media/css/prettify.css" type="text/css">
+  </head>
+  <body class="container">
+    <div>
+      <header class="masthead">
+        <h1 class="masthead-title"><a href="/">Edgar Aroutiounian</a></h1>
+        <p>Thoughts and Musings</p>
+        <ul>
+          <li><a href="/blog/">Blog</a></li>
+          <li><a href="/ocamldocs/">Ocamldocs</a></li>
+          <li><a href="/tags/">Tags</a></li>
+          <li><a href="/about/">About</a></li>
+          <li><a href="http://github.com/fxfactorial">GitHub</a></li>
+          <li><a href="/rss.xml">RSS</a></li>
+        </ul>
+        <form method="get" id="searchform" action="http://www.google.com/search">
+          <input type="text" class="field" name="q" id="s" placeholder="Search">
+          <input type="hidden" name="as_sitesearch" value="hyegar.com">
+        </form>
+      </header>
+    </div>
+
+<div>
+<div class="post">
+<h1>Let&#39;s just use Monads</h1>
+<p>
+Let's learn about monads as programmers, that is let's use them for
+building something and in the process we'll build up a intuition;
+practice first, then you can go back to theory later.
+</p>
+
+<p>
+This post is split in two parts:
+</p>
+
+<p>
+Part 1 is just to get the ideas out the door
+</p>
+
+<p>
+Part 2 (Currently not written) is for an OCaml audience,
+just to improve the quality of the OCaml code itself
+</p>
+
+<p>
+As Bryan O'Sullivan said (From Real World Haskell) "...we need
+something that's non-trivial but still chewey." So we'll build a real
+working example in OCaml that will be the starting point of a library
+to the <a href="https://stripe.com/docs/api">Stripe API</a> and it will use monads.
+</p>
+
+<div id="outline-container-orgheadline1" class="outline-2">
+<h2 id="orgheadline1">Prereqs</h2>
+<div class="outline-text-2" id="text-orgheadline1">
+<p>
+We need to make sure we have all the same starting point for this
+code, I assume you have <a href="https://opam.ocaml.org/">opam</a> installed. Now do:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-shell">$ opam install lwt.unix cohttp.lwt yojson uri
+</pre>
+</div>
+<p>
+These are the libaries we will use: <code>lwt</code> is for threading,
+<code>cohttp.lwt</code> is for our HTTP requests, <code>uri</code> for handling URIs and
+<code>yojson</code>, an easy to use and <b>de facto</b> json library.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline2" class="outline-2">
+<h2 id="orgheadline2">Stripe</h2>
+<div class="outline-text-2" id="text-orgheadline2">
+<p>
+The Stripe API is a straight forward REST API. You'll need to have a
+developer account from which you'll get your Test Key, hence forth
+known as <code>key</code>. We'll focus on one task, we'll start the process of
+charging a credit card. Point your browser to this <a href="https://stripe.com/docs/api#create_charge">link</a> which shows
+how to create the "Charge" object. Be sure to be looking at that page
+while logged in because we'll need the value for the <code>source</code> parameter,
+we'll call it the <b>source token</b> From there we see we need to do a
+<code>POST</code> to <a href="https://api.stripe.com/v1/charges">https://api.stripe.com/v1/charges</a> with several required
+arguments:
+</p>
+
+<ol class="org-ol">
+<li>The amount to charge</li>
+<li>The ISO code for currency</li>
+<li>Either the Customer or Source</li>
+</ol>
+
+<p>
+All of Stripe's API returns JSON, so we can already sketch out our
+function's signature and helper data structure, something like:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">type t = { authed : Cohttp.Headers.t; 
+           end_point : string; }
+
+val make_handle : unit -&gt; t
+
+val create_charge : int -&gt; 
+                    string -&gt; 
+                    string -&gt;
+                    t -&gt;  
+                    Yojson.Basic.json Lwt.t
+</pre>
+</div>
+<p>
+Mostly straight forward, although that <code>Lwt.t</code> should look at
+little strange. The quick answer that that <code>create_charge</code> will give
+back an <code>Lwt.t</code> monad which in this case will contain a <code>json</code> object.
+</p>
+
+<p>
+Let's start filling out the <code>make_handle</code> function, 
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">let make_handle () = 
+  let auth_me k = 
+    let starter = Cohttp.Header.init () in 
+    Cohttp.Auth.credential_of_string ("Bearer " ^ k)
+    |&gt; Cohttp.Header.add_authorization starter
+  in
+  {authed = auth_me "YOUR STRIPE KEY"; 
+   (** Hardcoding to the charge create path *)
+   end_point = "https://api.stripe.com/v1/charges"}
+</pre>
+</div>
+<p>
+This creates our record needed for making a post. Stripe requires a
+key in each request so we'll make this record to encapsulate that,
+otherwise we have to write boilerplate code, never fun.
+</p>
+
+<p>
+Now the first cut of out <code>create_charge</code> function:
+</p>
+
+<p>
+(<b>META NOTE</b> This is horrible indentation, I'm only doing it because
+of the sizing done in the exporting of this document and I want it to
+be clear what's happening and the coloring is wrong because ~'~ can be
+used in a value's name but its messing up the coding exporter)
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml"><span class="linenr"> 1: </span>let create_charge amount currency source handle = 
+<span class="linenr"> 2: </span>  let open Cohttp_lwt_unix in
+<span class="linenr"> 3: </span>  let this_uri = Uri.of_string handle.end_point in
+<span class="linenr"> 4: </span>  [("amount", string_of_int amount);
+<span class="linenr"> 5: </span>   ("currency", currency);]
+<span class="linenr"> 6: </span>   ("source", source)]
+<span class="linenr"> 7: </span>  |&gt; Uri.add_query_params' this_uri
+<span class="linenr"> 8: </span>  |&gt; Client.post ~headers:handle.authed &gt;&gt;= 
+<span class="linenr"> 9: </span>     fun (resp, body) -&gt; 
+<span class="linenr">10: </span>     (* This can also be done more succinctly
+<span class="linenr">11: </span>        with:
+<span class="linenr">12: </span>        Cohttp_lwt_body.to_string body &gt;|=
+<span class="linenr">13: </span>        Yojson.Basic.from_string  *)
+<span class="linenr">14: </span>     Cohttp_lwt_body.to_string body &gt;&gt;= fun j -&gt; 
+<span class="linenr">15: </span>     Yojson.Basic.from_string j |&gt; return
+</pre>
+</div>
+<p>
+Okay, so what the hell is going on. Line 2 open the <code>Cohttp_lwt_unix</code>
+module locally to this function so that we can type <code>Client.post</code>
+instead of <code>Cohttp_lwt_unix.Client.post</code>. Line 3 creates a <code>uri</code>
+object, lines 4-6 are the query parameters we want to add to our <code>uri</code>
+object. The <code>|&gt;</code> symbol is a function, you can call it reverse apply,
+you can define it as
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">let ( |&gt; ) f x = x f
+</pre>
+</div>
+<p>
+but you don't need to, it comes with OCaml. It just says take the left
+side as the input to the right side, aka a Unix Pipe. Now let's see
+the signature of <code>Client.post</code>, its:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">val post ?ctx:Cohttp_lwt_unix.Client.ctx -&gt;
+         ?body:Cohttp_lwt_body.t -&gt;
+         ?chunked:bool -&gt;
+         ?headers:Cohttp.Header.t -&gt;
+         Uri.t -&gt; 
+         (Cohttp.Response.t * Cohttp_lwt_body.t) Lwt.t
+</pre>
+</div>
+<p>
+Looks big but we don't care about most of it, in fact we could just
+care about the <code>Uri.t</code> parameter since the rest of the parameters, the
+ones with <code>?</code>, have default values but we can override them as we do
+on line 8's <code>Client.post ~headers:handle.authed</code>. Now notice the final
+value of a call to <code>Client.post</code>, its:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">(Cohttp.Response.t * Cohttp_lwt_body.t) Lwt.t
+</pre>
+</div>
+<p>
+This says that <code>post</code> will give back an <code>Lwt.t</code> monad which contains a
+tuple of a response object and the body, again completely reasonable.
+The line of line 8 features the famous <code>&gt;&gt;=</code> operator, aka <code>bind</code> it's
+signature is:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">val ( &gt;&gt;= ) : 'a Lwt.t -&gt; ('a -&gt; 'b Lwt.t) -&gt; 'b Lwt.t
+</pre>
+</div>
+<p>
+And this says that <code>&gt;&gt;=</code> takes something wrapped in the <code>Lwt.t</code> monad
+on the left side and passes the unwrapped value to a function on the
+right side which has to return something wrapped in the <code>Lwt.t</code> monad
+where the two somethings can be different or the same. So in our code
+that right side is this anonymous function, this lambda:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">fun (resp, body) -&gt;
+</pre>
+</div>
+<p>
+Now we have a handle on the http response and the body, we won't do
+any error checking so let's just look at the body with line 10's usage
+of <code>Cohttp_lwt_body.to_string</code> whose signature is:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">val to_string : Cohttp_lwt_body.t -&gt; string Lwt.t
+</pre>
+</div>
+<p>
+Translation: Takes a body and gives back a string wrapped in a Lwt.t
+monad. Remember our goal is to get the body as a json object, so we
+could just pipe it to <code>Yojson.Basic.from_string</code> but still recall that
+our <code>create_charge</code> function had final value of <code>Yojson.Basic.json
+Lwt.t</code>, not a plain <code>Yojson.Basic.json</code> so we pipe it to the other
+famous monad related function, <code>return</code>. <code>return</code> really should have
+been called inject because it takes a plain value and "injects" it
+into a monad, let's see its value here:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">val return : 'a -&gt; 'a Lwt.t
+</pre>
+</div>
+<p>
+We are using it to turn our plain <code>Yojson.Basic.json</code> into a
+<code>Yojson.Basic.json Lwt.t</code> Now let's use this code to actually do
+something.
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">let program = 
+  let this_handle = make_handle () in
+  let st = "SOURCE_TOKEN_MENTIONED_EARLIER" in
+  create_charge 500 "usd" this_handle &gt;&gt;= fun j -&gt; 
+  Yojson.Basic.pretty_to_string j |&gt; Lwt_io.printl 
+
+let () = 
+  Lwt_main.run program
+</pre>
+</div>
+<p>
+At this point this should be understandable, our create_charge is
+returning a monad so we pass its output to <code>&gt;&gt;=</code>, which passes a json
+object to a lambda, we turn the json value to a pretty printed string
+and pipe it out to <code>Lwt_io.printl</code>, a <code>printf</code> for the <code>Lwt</code> library.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline3" class="outline-2">
+<h2 id="orgheadline3">Build and Run</h2>
+<div class="outline-text-2" id="text-orgheadline3">
+<p>
+Now let's build our program and run it, assuming all the code is in
+<code>code.ml</code> we invoke the OCaml toolchain as so:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">$ ocamlfind ocamlopt -linkpkg code.ml -packages lwt.unix,cohttp.lwt,yojson,uri -o T
+</pre>
+</div>
+<p>
+assuming everything well, you should have an executable T, which will
+print something like:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">$ ./T
+{
+  "object": "charge",
+  "created": 1443072037,
+  "livemode": false,
+  "paid": true,
+  "status": "succeeded",
+  "amount": 500,
+  "currency": "usd",
+  "refunded": false,
+  "source": {
+    "object": "card",
+    "brand": "Visa",
+    "funding": "credit",
+    "exp_month": 8,
+    "exp_year": 2016,
+    "country": "US",
+    "name": null,
+    "address_line1": null,
+    "address_line2": null,
+    "address_city": null,
+    "address_state": null,
+    "address_zip": null,
+    "address_country": null,
+    "cvc_check": null,
+    "address_line1_check": null,
+    "address_zip_check": null,
+    "tokenization_method": null,
+    "dynamic_last4": null,
+    "metadata": {},
+    "customer": null
+  },
+  "captured": true,
+  "failure_message": null,
+  "failure_code": null,
+  "amount_refunded": 0,
+  "customer": null,
+  "invoice": null,
+  "dispute": null,
+  "metadata": {},
+  "statement_descriptor": null,
+  "fraud_details": {},
+  "receipt_email": null,
+  "receipt_number": null,
+  "shipping": null,
+  "destination": null,
+  "application_fee": null,
+  "refunds": {
+    "object": "list",
+    "total_count": 0,
+    "has_more": false,
+    "url": "/v1/charges/ch_16oS9pJDURztdKY9Z7QS8c8D/refunds",
+    "data": []
+  }
+}
+</pre>
+</div>
+<p>
+Yay success.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline4" class="outline-2">
+<h2 id="orgheadline4">Moral of the Story</h2>
+<div class="outline-text-2" id="text-orgheadline4">
+<p>
+So in terms of actually day to day coding, you don't actually need to
+know what a monad "is", you just need to know how to use it and
+honestly that's completely fine, in fact just following the type
+signatures can take you pretty far in a new, unfamiliar library.
+</p>
+</div>
+</div>
+
+</div>
+</div>
+    <div>
+      <div class="post-meta">
+        <span title="post date" class="post-info">2015-09-23</span>
+        <span title="last modification date" class="post-info">2015-09-24</span>
+        <span title="tags" class="post-info"><a href="/tags/ocaml/">ocaml</a>, <a href="/tags/functional-programming/">functional programming</a></span>
+        <span title="author" class="post-info">Edgar Aroutiounian</span>
+      </div>
+      <section>
+        <h1>Comments</h1>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+          //var disqus_developer = 1;
+          var disqus_identifier = "/blog/2015/09/23/let&#39;s-just-use-monads";
+          var disqus_url = "http://hyegar.com/blog/2015/09/23/let&#39;s-just-use-monads";
+          var disqus_shortname = 'hyegar';
+          /* * * DON'T EDIT BELOW THIS LINE * * */
+          (function() {
+          var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+          dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+          (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+          })();
+        </script>
+        <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+      </section>
+      <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.js"></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script src="/media/js/main.js"></script>
+      <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-57031124-1']);
+        _gaq.push(['_trackPageview']);
+        (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+      </script>
+      <div class="footer">
+        <p>Generated by <a href="http://www.gnu.org/software/emacs/">Emacs</a> 25.x (<a href="http://orgmode.org">Org mode</a> 8.x)</p>
+        <p>
+          Copyright &copy; 2012 - <span id="footerYear"></span> <a href="mailto:edgar &lt;dot&gt; factorial &lt;at&gt; gmail &lt;dot&gt; com">Edgar Aroutiounian</a>
+          &nbsp;&nbsp;-&nbsp;&nbsp;
+          Powered by <a href="https://github.com/kelvinh/org-page" target="_blank">org-page</a>
+          <script type="text/javascript">document.getElementById("footerYear").innerHTML = (new Date()).getFullYear();</script>
+        </p>
+      </div>
+    </div>
+
+  </body>
+</html>

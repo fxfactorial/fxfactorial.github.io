@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <title>Simpler Blogging - Edgar Aroutiounian</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Edgar Aroutiounian" />
+    <meta name="description" content="Leaving Octopress, embracing org-mode" />
+    <meta name="keywords" content="blogging, octopress, emacs, org-mode" />
+    <link rel="stylesheet" href="/media/css/main.css" type="text/css">
+    <link rel="stylesheet" href="/media/css/prettify.css" type="text/css">
+  </head>
+  <body class="container">
+    <div>
+      <header class="masthead">
+        <h1 class="masthead-title"><a href="/">Edgar Aroutiounian</a></h1>
+        <p>Thoughts and Musings</p>
+        <ul>
+          <li><a href="/blog/">Blog</a></li>
+          <li><a href="/ocamldocs/">Ocamldocs</a></li>
+          <li><a href="/tags/">Tags</a></li>
+          <li><a href="/about/">About</a></li>
+          <li><a href="http://github.com/fxfactorial">GitHub</a></li>
+          <li><a href="/rss.xml">RSS</a></li>
+        </ul>
+        <form method="get" id="searchform" action="http://www.google.com/search">
+          <input type="text" class="field" name="q" id="s" placeholder="Search">
+          <input type="hidden" name="as_sitesearch" value="hyegar.com">
+        </form>
+      </header>
+    </div>
+
+<div>
+<div class="post">
+<h1>Simpler Blogging</h1>
+<p>
+Blogging is usually a pleasurable experience, it's a good way to know
+whether you know whatever it is you actually claim to know. Previously
+I was using <a href="http://octopress.org/">octopress</a> paired with <a href="http://orgmode.org/">org-mode</a> and it was fairly
+decent although the emacs configuration was painful at times.
+</p>
+
+<p>
+The real problem was building the site and deploying. Octopress is a
+Ruby application since octopress is built on top of <a href="http://jekyllrb.com/">Jekyll</a> and that's
+a Ruby program. I blindly and admittedly stupidly did:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-shell">$ gem update
+</pre>
+</div>
+<p>
+which of course broke my project. Add to that I fiddled with the
+Rakefile which utterly broke the project. Yes I could have fixed all
+the problems, eventually that is. But that would have taken much time
+and even worse I'd be learning how the sausage is made for a project
+that I don't really care about. Where's the abstraction then? I always
+like using technologies and languages that I already know, of
+course. So naturally I wanted an emacs based solution and emacs offers
+a great mode called org-mode. I looked at <a href="http://orgmode.org/worg/org-blog-wiki.html">this</a> and tried most of the
+listed libraries/packages/frameworks. Unfortunately the vast majority
+were either abandoned or broken but I did finally find <a href="https://github.com/kelvinh/org-page">org-page</a> and
+I'm using that now. I like it because its lightweight, based on
+org-mode and has a simple publishing model, no crazy Rakefiles, no
+build systems. I'll be porting over my previous three blog posts over
+here as well and I expect to write on topics more than just
+programming/coding. As always feel free to leave comments and
+questions.
+</p>
+
+</div>
+</div>
+    <div>
+      <div class="post-meta">
+        <span title="post date" class="post-info">2015-09-07</span>
+        <span title="last modification date" class="post-info">2015-09-11</span>
+        <span title="tags" class="post-info"><a href="/tags/emacs/">emacs</a>, <a href="/tags/org-mode/">org-mode</a></span>
+        <span title="author" class="post-info">Edgar Aroutiounian</span>
+      </div>
+      <section>
+        <h1>Comments</h1>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+          //var disqus_developer = 1;
+          var disqus_identifier = "/blog/2015/09/07/simpler-blogging";
+          var disqus_url = "http://hyegar.com/blog/2015/09/07/simpler-blogging";
+          var disqus_shortname = 'hyegar';
+          /* * * DON'T EDIT BELOW THIS LINE * * */
+          (function() {
+          var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+          dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+          (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+          })();
+        </script>
+        <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+      </section>
+      <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.js"></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script src="/media/js/main.js"></script>
+      <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-57031124-1']);
+        _gaq.push(['_trackPageview']);
+        (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+      </script>
+      <div class="footer">
+        <p>Generated by <a href="http://www.gnu.org/software/emacs/">Emacs</a> 25.x (<a href="http://orgmode.org">Org mode</a> 8.x)</p>
+        <p>
+          Copyright &copy; 2012 - <span id="footerYear"></span> <a href="mailto:edgar &lt;dot&gt; factorial &lt;at&gt; gmail &lt;dot&gt; com">Edgar Aroutiounian</a>
+          &nbsp;&nbsp;-&nbsp;&nbsp;
+          Powered by <a href="https://github.com/kelvinh/org-page" target="_blank">org-page</a>
+          <script type="text/javascript">document.getElementById("footerYear").innerHTML = (new Date()).getFullYear();</script>
+        </p>
+      </div>
+    </div>
+
+  </body>
+</html>
