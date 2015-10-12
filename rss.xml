@@ -4,16 +4,23 @@
     <title>Edgar Aroutiounian</title>
     <link>http://hyegar.com</link>
     <description>Thoughts and Musings</description>
-    <pubDate>Fri, 09 Oct 2015 08:38:43 PDT</pubDate>
-    <lastBuildDate>Fri, 09 Oct 2015 08:38:43 PDT</lastBuildDate>
+    <pubDate>Mon, 12 Oct 2015 14:37:57 PDT</pubDate>
+    <lastBuildDate>Mon, 12 Oct 2015 14:37:57 PDT</lastBuildDate>
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>Org-page static site generator (https://github.com/kelvinh/org-page)</generator>
     <item>
+      <title>Let&#39;s just use Monads</title>
+      <link>http://hyegar.com/blog/2015/09/23/let&#39;s-just-use-monads</link>
+      <description>Pragmatic Monads</description>
+      <pubDate>2015-10-12</pubDate>
+      <guid>http://hyegar.com/blog/2015/09/23/let&#39;s-just-use-monads</guid>
+    </item>
+    <item>
       <title>Untitled</title>
-      <link>http://hyegar.com/blog/2015/10/09/untitled/</link>
+      <link>http://hyegar.com/blog/2015/10/12/untitled/</link>
       <description>No Description</description>
       <pubDate>2015-10-09</pubDate>
-      <guid>http://hyegar.com/blog/2015/10/09/untitled/</guid>
+      <guid>http://hyegar.com/blog/2015/10/12/untitled/</guid>
     </item>
     <item>
       <title>Elegant OCaml</title>
@@ -21,13 +28,6 @@
       <description>Nice code</description>
       <pubDate>2015-10-07</pubDate>
       <guid>http://hyegar.com/blog/2015/10/07/elegant-ocaml</guid>
-    </item>
-    <item>
-      <title>Let&#39;s just use Monads</title>
-      <link>http://hyegar.com/blog/2015/09/23/let&#39;s-just-use-monads</link>
-      <description>Pragmatic Monads</description>
-      <pubDate>2015-09-24</pubDate>
-      <guid>http://hyegar.com/blog/2015/09/23/let&#39;s-just-use-monads</guid>
     </item>
     <item>
       <title>OCaml love</title>
