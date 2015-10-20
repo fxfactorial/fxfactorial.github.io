@@ -45,41 +45,57 @@ more programmers that are now aware of this amazing language called
 <p>
 These are some key notes that you should know.
 </p>
+
 <ol class="org-ol">
 <li><p>
 <code>opam</code> is the package manager for OCaml. It is very advanced and
 supports many features. The most basic of which is 
 </p>
+
 <div class="org-src-container">
 
 <pre class="src src-shell">$ opam install &lt;some_package&gt;
 </pre>
 </div>
+
 <p>
 For people on <code>OS X</code>, you can get it on <code>brew</code> and all the <code>Linux</code>
 distros should have <code>opam</code> for you to install. For Windows people,
 get a VM.
 </p></li>
+
 <li><p>
 Once you have <code>opam</code> installed, you probably want to do:
 </p>
+
 <div class="org-src-container">
 
 <pre class="src src-shell">$ opam switch 4.02.3
 </pre>
 </div>
+
 <p>
 This will install the latest version of the compiler.
 </p></li>
+
 <li><code>ocamlfind</code> is a program that predates <code>opam</code> and wraps the
 standard <code>OCaml</code> compilers: <code>ocamlc</code> and <code>ocamlopt</code>. The former is
 a byte code compiler and the latter creates native code.</li>
+
 <li><code>ocamlbuild</code> is a tool that helps build <code>OCaml</code> programs, many
 people have strong opinions on it.</li>
+
 <li><code>oasis</code> is a tool that helps abstract usage of 3, 4. I resisted it
-for a while and wrote <code>Makefile~s instead, don't do that, just ~oasis</code></li>
+for a while and wrote <code>Makefile~s instead, don't do that, just use
+   ~oasis</code></li>
+
 <li><code>merlin</code> is a OCaml program that is simply amazing it drives code
 completion for plugins available in <code>emacs</code> and <code>vim</code>.</li>
+
+<li>There are no full blown IDEs for OCaml, learn <code>emacs</code> or <code>vim</code>.</li>
+
+<li><code>utop</code> is an enhanced repl, its better than the plain <code>ocaml</code>
+   repl. Install it with <code>opam install utop</code></li>
 </ol>
 </div>
 </div>
@@ -96,6 +112,82 @@ moon. There are a few standard library replacements, one is called
 <b>Real World OCaml</b> book/website. Another standard library replacement
 is called <code>Batteries</code>, this is more "community" supported. There is a
 more recent contender called <code>Containers</code>.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline3" class="outline-2">
+<h2 id="orgheadline3">Doing simple tasks (shameless plug)</h2>
+<div class="outline-text-2" id="text-orgheadline3">
+<p>
+I try using <code>OCaml</code> for literally everything and that includes going
+to hackathons, to make this less painful I wrote a library called
+<code>Podge</code> which helps with simple stuff. I don't claim its a standard
+library replacement, just a library for getting stuff done. These two
+code samples assume the file is named <code>code.ml</code> and can be run with
+<code>utop code.ml</code>
+</p>
+
+<p>
+First install with opam:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-shell">$ opam install podge
+</pre>
+</div>
+
+<ol class="org-ol">
+<li>Reading output of a process</li>
+</ol>
+
+<div class="org-src-container">
+
+<pre class="src src-ocaml">#require "podge"
+let () = 
+  Podge.Unix.read_process_output "ls -halt" |&gt; List.iter print_endline
+</pre>
+</div>
+
+<p>
+The <code>|&gt;</code> just means piping, its piping the output of
+<code>read_process_output</code> into the input of the partially applied function
+<code>iter</code>
+</p>
+
+<ol class="org-ol">
+<li>Reading a file</li>
+</ol>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">#require "podge"
+let () = 
+  Podge.Unix.read_process_output "code.ml" |&gt; List.iter print_endline
+</pre>
+</div>
+
+<p>
+Similar to 1, this reads all lines of file and gives it to you as a
+list of strings.
+</p>
+
+<p>
+These are two simple code samples from <code>Podge</code>, check out the modules
+for other useful functions, especially <code>Podge.String</code> which is all due
+to <a href="http://rgrinberg.com/">Rudi Grinberg</a>. 
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline4" class="outline-2">
+<h2 id="orgheadline4">Stick with it!</h2>
+<div class="outline-text-2" id="text-orgheadline4">
+<p>
+This style of coding might be new to you or maybe its your first
+programming language, stick with it and continue. <code>OCaml</code> offers many
+awesome features and has many strengths including a very professional
+and pragmatic community.
 </p>
 </div>
 </div>
