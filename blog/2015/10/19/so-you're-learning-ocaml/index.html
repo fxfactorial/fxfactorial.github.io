@@ -85,17 +85,18 @@ a byte code compiler and the latter creates native code.</li>
 <li><code>ocamlbuild</code> is a tool that helps build <code>OCaml</code> programs, many
 people have strong opinions on it.</li>
 
-<li><code>oasis</code> is a tool that helps abstract usage of 3, 4. I resisted it
+<li><p>
+<code>oasis</code> is a tool that helps abstract usage of 3, 4. I resisted it
 for a while and wrote Makefiles instead, don't do that, just use
 oasis. The oasis flow basically goes like this: (Be aware that
 oasis is really finicky and its error messages are useless)
+</p>
 
-<ol class="org-ol">
-<li>Create a directory.</li>
-<li>Go to the directory and create a file named <b>_oasis</b> and
-directory named <code>src</code></li>
-<li><p>
-Here is a template of the contents of the <b>_oasis</b> file
+<p>
+5.1) Create a directory. 
+5.2) Go to the directory and create a file named <b>_oasis</b> and
+     directory named <code>src</code>
+5.3) Here is a template of the contents of the <b>_oasis</b> file
 </p>
 
 <div class="org-src-container">
@@ -135,26 +136,23 @@ CompiledObject: byte
 BuildDepends: some_package
 </pre>
 </div>
-<ol class="org-ol">
-<li>type: <code>oasis setup -setup-update dynamic</code></li>
-<li>type: <code>make</code>.</li>
-<li><p>
-You can stop here, but you can go even further with
-<code>oasis2opam</code>. Install it with: <code>opam install oasis2opam</code>, then
-in your project's root directory, aka the directory with the
-_oasis file, do: <code>oasis2opam --local</code>. This creates the <code>opam</code>
-directory and some meta data for the opam packaging
-system. Your local package can now be a first class citizen
-with opam just by doing this in the same project root
-directory: 
+<p>
+5.4) type <code>oasis setup -setup-update dynamic</code>
+5.5) type <code>make</code>
+5.6) You can stop here, but you can go even further with
+     <code>oasis2opam</code>. Install it with: <code>opam install oasis2opam</code>, then
+     in your project's root directory, aka the directory with the
+     _oasis file, do: <code>oasis2opam --local</code>. This creates the <code>opam</code>
+     directory and some meta data for the opam packaging
+     system. Your local package can now be a first class citizen
+     with opam just by doing this in the same project root
+     directory: 
 </p>
 <div class="org-src-container">
 
 <pre class="src src-shell">$ opam pin add &lt;your_package_name&gt; . -y
 </pre>
 </div></li>
-</ol></li>
-</ol></li>
 
 <li><p>
 <code>merlin</code> is a OCaml program that is simply amazing it drives code
