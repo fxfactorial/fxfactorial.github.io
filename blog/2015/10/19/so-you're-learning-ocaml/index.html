@@ -227,7 +227,7 @@ moon. There are a few standard library replacements, one is called
 <b>Real World OCaml</b> book/website. Another standard library replacement
 is called <code>Batteries</code>, this is more "community" supported. There is a
 more recent contender called <code>Containers</code>. For a categorized list of
-contemporary and well liked go to/must have libraries checkout the
+contemporary and well liked/must have libraries, checkout the
 <a href="https://github.com/rizo/awesome-ocaml">awesome-ocaml</a> repository.
 </p>
 </div>
@@ -295,13 +295,13 @@ The <code>|&gt;</code> just means piping, its piping the output of
 
 <pre class="src src-ocaml">#require "podge"
 let () = 
-  Podge.Unix.read_process_output "code.ml" |&gt; List.iter print_endline
+  Podge.Unix.read_lines "code.ml" |&gt; List.iter print_endline
 </pre>
 </div>
 
 <p>
-Similar to 1, this reads all lines of file and gives it to you as a
-list of strings.
+Similar to 1, this reads all lines of file and gives it to the input
+of the partially applied function <code>iter</code>.
 </p>
 
 <p>
