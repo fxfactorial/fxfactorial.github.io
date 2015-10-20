@@ -87,10 +87,95 @@ people have strong opinions on it.</li>
 
 <li><code>oasis</code> is a tool that helps abstract usage of 3, 4. I resisted it
 for a while and wrote Makefiles instead, don't do that, just use
-oasis</li>
+oasis. The oasis flow basically goes like this: (Be aware that
+oasis is really finicky and its error messages are useless)
 
-<li><code>merlin</code> is a OCaml program that is simply amazing it drives code
-completion for plugins available in <code>emacs</code> and <code>vim</code>.</li>
+<ol class="org-ol">
+<li>Create a directory.</li>
+<li>Go to the directory and create a file named <b>_oasis</b> and
+directory named <code>src</code></li>
+<li><p>
+Here is a template of the contents of the <b>_oasis</b> file
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-shell">OASISFormat:  0.4
+OCamlVersion: &gt;= 4.02.3
+Name:         opam_package_name
+Version:      0.1
+Maintainers:  New OCaml programmer
+Homepage:     http://my_coolsite.com
+Synopsis:     Some short description
+Authors:      Cool@me.com
+License:      BSD-3-clause
+Plugins:      META (0.4), DevFiles (0.4)
+AlphaFeatures: ocamlbuild_more_args
+
+Description:
+  Some cool description
+
+# This is a comment and this below creates an binary program    
+Executable &lt;some_program_name&gt;
+Path: src
+BuildTools:ocamlbuild
+install: true
+MainIs: main.ml
+CompiledObject: native
+BuildDepends: package_one, package_two
+
+# Another comment, this builds a library called pg
+Library pg
+Path:         src
+# oasis will figure out the dependencies, 
+# Just list the modules you want public, 
+# Note that there's no .ml, just give the name
+Modules:      Pg
+CompiledObject: byte
+BuildDepends: some_package
+</pre>
+</div>
+<ol class="org-ol">
+<li>type: <code>oasis setup -setup-update dynamic</code></li>
+<li>type: <code>make</code>.</li>
+<li><p>
+You can stop here, but you can go even further with
+<code>oasis2opam</code>. Install it with: <code>opam install oasis2opam</code>, then
+in your project's root directory, aka the directory with the
+_oasis file, do: <code>oasis2opam --local</code>. This creates the <code>opam</code>
+directory and some meta data for the opam packaging
+system. Your local package can now be a first class citizen
+with opam just by doing this in the same project root
+directory: 
+</p>
+<div class="org-src-container">
+
+<pre class="src src-shell">$ opam pin add &lt;your_package_name&gt; . -y
+</pre>
+</div></li>
+</ol></li>
+</ol></li>
+
+<li><p>
+<code>merlin</code> is a OCaml program that is simply amazing it drives code
+completion for plugins available in <code>emacs</code> and <code>vim</code>. Once you
+have merlin installing and running, add a <code>.merlin</code> file to your
+project so that <code>merlin</code> knows what packages to code complete for,
+a sample <code>.merlin</code> file looks like this:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-shell">B _build/src
+S src
+PKG cmdliner js_of_ocaml
+</pre>
+</div>
+
+<p>
+Notice how I put the <code>B _build/src</code> That sort of assumes you're
+using <code>_oasis</code> and you made the <code>src</code> directory I mentioned earlier.
+</p></li>
 
 <li>There are no full blown IDEs for OCaml, learn <code>emacs</code> or <code>vim</code>.</li>
 
