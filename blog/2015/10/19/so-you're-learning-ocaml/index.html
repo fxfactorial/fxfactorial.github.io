@@ -142,13 +142,26 @@ Library pg
   BuildDepends: some_package
 </pre>
 </div>
-<p>
-5.4) type <code>oasis setup -setup-update dynamic</code>
-</p>
 
 <p>
-5.5) type <code>make</code>
+5.4) Generate the Makefile, setup.ml, configure and other build crap.
 </p>
+
+<div class="org-src-container">
+
+<pre class="src src-shell">$ oasis setup -setup-update dynamic
+</pre>
+</div>
+
+<p>
+5.5) Actually build your code, yes its just a call to make.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-shell">$ make
+</pre>
+</div>
 
 <p>
 5.6) You can stop here, but you can go even further with
@@ -160,6 +173,7 @@ Library pg
      with opam just by doing this in the same project root
      directory: 
 </p>
+
 <div class="org-src-container">
 
 <pre class="src src-shell">$ opam pin add &lt;your_package_name&gt; . -y
@@ -169,7 +183,7 @@ Library pg
 <li><p>
 <code>merlin</code> is a OCaml program that is simply amazing it drives code
 completion for plugins available in <code>emacs</code> and <code>vim</code>. Once you
-have merlin installing and running, add a <code>.merlin</code> file to your
+have merlin installed and running, add a <code>.merlin</code> file to your
 project so that <code>merlin</code> knows what packages to code complete for,
 a sample <code>.merlin</code> file looks like this:
 </p>
