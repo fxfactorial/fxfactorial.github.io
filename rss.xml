@@ -4,10 +4,17 @@
     <title>Edgar Aroutiounian</title>
     <link>http://hyegar.com</link>
     <description>Thoughts and Musings</description>
-    <pubDate>Tue, 20 Oct 2015 21:18:43 PDT</pubDate>
-    <lastBuildDate>Tue, 20 Oct 2015 21:18:43 PDT</lastBuildDate>
+    <pubDate>Thu, 05 Nov 2015 13:56:35 PST</pubDate>
+    <lastBuildDate>Thu, 05 Nov 2015 13:56:35 PST</lastBuildDate>
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>Org-page static site generator (https://github.com/kelvinh/org-page)</generator>
+    <item>
+      <title>Let&#39;s write compile OCaml to JavaScript, run on Node</title>
+      <link>http://hyegar.com/blog/2015/11/05/write-ocaml,-run-on-nodejs</link>
+      <description>OCaml on Node</description>
+      <pubDate>2015-11-05</pubDate>
+      <guid>http://hyegar.com/blog/2015/11/05/write-ocaml,-run-on-nodejs</guid>
+    </item>
     <item>
       <title>So you&#39;re learning OCaml...</title>
       <link>http://hyegar.com/blog/2015/10/19/so-you&#39;re-learning-ocaml</link>

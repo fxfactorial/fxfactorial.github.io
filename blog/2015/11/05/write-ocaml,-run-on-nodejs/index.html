@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <title>Let&#39;s write compile OCaml to JavaScript, run on Node - Edgar Aroutiounian</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Edgar Aroutiounian" />
+    <meta name="description" content="OCaml on Node" />
+    <meta name="keywords" content="nodejs, javascript, OCaml" />
+    <link rel="stylesheet" href="/media/css/main.css" type="text/css">
+    <link rel="stylesheet" href="/media/css/prettify.css" type="text/css">
+  </head>
+  <body class="container">
+    <div>
+      <header class="masthead">
+        <h1 class="masthead-title"><a href="/">Edgar Aroutiounian</a></h1>
+        <p>Thoughts and Musings</p>
+        <ul>
+          <li><a href="/blog/">Blog</a></li>
+          <li><a href="/tags/">Tags</a></li>
+          <li><a href="/about/">About</a></li>
+          <li><a href="http://github.com/fxfactorial">GitHub</a></li>
+          <li><a href="/rss.xml">RSS</a></li>
+        </ul>
+        <form method="get" id="searchform" action="http://www.google.com/search">
+          <input type="text" class="field" name="q" id="s" placeholder="Search">
+          <input type="hidden" name="as_sitesearch" value="hyegar.com">
+        </form>
+      </header>
+    </div>
+
+<div>
+<div class="post">
+<h1>Let&#39;s write compile OCaml to JavaScript, run on Node</h1>
+<p>
+I've been exposed to Node, its an amazing ecosystem with great cross
+platform support and a great standard library; my only issue is
+<b>JavaScript</b>. So I've been writing several libraries, bindings, that
+compile OCaml to JavaScript which I then run on <code>node</code>.
+</p>
+
+<div id="outline-container-orgheadline1" class="outline-2">
+<h2 id="orgheadline1">Sample Code</h2>
+<div class="outline-text-2" id="text-orgheadline1">
+<p>
+Here's an example, with explanations, of some bindings.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-ocaml"><span class="linenr"> 1: </span>(* Assume this file is called c.ml *)
+<span class="linenr"> 2: </span>open Nodejs
+<span class="linenr"> 3: </span>
+<span class="linenr"> 4: </span>class child_process = object
+<span class="linenr"> 5: </span>
+<span class="linenr"> 6: </span>  val raw_js = require_module "child_process"
+<span class="linenr"> 7: </span>
+<span class="linenr"> 8: </span>  (* Clearly not finished *)
+<span class="linenr"> 9: </span>  method spawn_sync cmd args : (string * string) list =
+<span class="linenr">10: </span>    let handle =
+<span class="linenr">11: </span>      [|i (Js.string cmd);
+<span class="linenr">12: </span>        i (List.map Js.string args |&gt; Array.of_list |&gt; Js.array)|]
+<span class="linenr">13: </span>      |&gt; m raw_js "spawnSync"
+<span class="linenr">14: </span>    in
+<span class="linenr">15: </span>    (handle &lt;!&gt; "envPairs")
+<span class="linenr">16: </span>    |&gt; Js.to_array |&gt; Array.map begin fun (s : Js.js_string Js.t) -&gt;
+<span class="linenr">17: </span>      let chop = s##split (Js.string "=") |&gt; to_string_list |&gt; Array.of_list in
+<span class="linenr">18: </span>      (chop.(0), chop.(1))
+<span class="linenr">19: </span>    end
+<span class="linenr">20: </span>    |&gt; Array.to_list
+<span class="linenr">21: </span>
+<span class="linenr">22: </span>end
+<span class="linenr">23: </span>
+<span class="linenr">24: </span>let () =
+<span class="linenr">25: </span>  let ls_proc = (new child_process)#spawn_sync "ls" [] in
+<span class="linenr">26: </span>  ls_proc |&gt; List.iter begin fun (key, value) -&gt;
+<span class="linenr">27: </span>    Printf.sprintf "Key was: %s and value: %s" key value
+<span class="linenr">28: </span>    |&gt; print_endline
+<span class="linenr">29: </span>  end
+</pre>
+</div>
+
+<p>
+(Line one comes from my <code>nodejs</code> package, install it with <code>opam install
+nodejs</code>). 
+</p>
+
+<p>
+This example is a subset of my bindings to the builtin node module,
+<a href="https://nodejs.org/api/child_process.html">child_process</a>. Here we spawn a separate process and create an OCaml
+<code>alist</code> out of the environment variables of the spawned process. A
+point of interest is the poverty of OCaml StdLib's <code>String</code> module, so
+much so that I get more functionality out of JavaScript's string
+methods! (There's no split in the StdLib). 
+</p>
+
+<p>
+To actually run this code you'll need to do:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-shell">$ ocamlfind ocamlc c.ml -linkpkg -package nodejs -o T.out
+$ js_of_ocaml T.out
+$ node T.js
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline2" class="outline-2">
+<h2 id="orgheadline2">Projects</h2>
+<div class="outline-text-2" id="text-orgheadline2">
+<p>
+This approach surprisingly works and I've written similar bindings to
+<a href="https://github.com/fxfactorial/ocaml-npm-socket-io">socket.io</a> for which I have a working chat server:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-ocaml">open Nodejs
+
+let () =
+  let io = Socket_io.require () in
+  let server =
+    Http.create_server begin fun incoming response -&gt;
+
+      Fs.read_file ~path:"./client.html" begin fun err data -&gt;
+        response#write_head ~status_code:200 [("Content-type", "text/html")];
+        response#end_ ~data:(Http.String data) ()
+
+      end
+    end
+  in
+  let app = server#listen ~port:8080 begin fun () -&gt;
+      Printf.sprintf
+        "Started Server and Running node: %s" (new process#version)
+      |&gt; print_endline
+    end
+  in
+
+  let io = io#listen app in
+  io#sockets#on_connection begin fun socket -&gt;
+
+    socket#on "message_to_server" begin fun data -&gt;
+
+      io#sockets#emit
+        ~event_name:"message_to_client"
+        !!(object%js val message = data &lt;!&gt; "message" end)
+
+    end
+  end
+</pre>
+</div>
+<p>
+Notice the features of OCaml that don't exist in JavaScript at all,
+like named parameters.
+</p>
+
+<p>
+Another project in this vein are my bindings to Github's <code>Electron</code>
+project, here's a project I did with a friend using Basecamp's
+recently released <code>Trix</code> editor.
+</p>
+
+
+<div class="figure">
+<p><img src="./static/img/electron_working.gif" alt="electron_working.gif" />
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline3" class="outline-2">
+<h2 id="orgheadline3">Like what you see?</h2>
+<div class="outline-text-2" id="text-orgheadline3">
+<p>
+Writing out these bindings is a bit of work, Node's API is pretty big
+in addition to third party code like socket.io, express, and
+Electron. Much of these bindings are quite formulaic, although some
+ideas don't easily match up between the OCaml and JavaScript boundary,
+like <code>varargs</code> so that requires some more thought at times. 
+</p>
+
+<p>
+To any reader interested in OCaml open-source or for whatever reason,
+send me a PR, its mostly an issue of translating <a href="https://nodejs.org/api/index.html">the Node API</a> into the
+equivalent bindings.
+</p>
+</div>
+</div>
+
+</div>
+</div>
+    <div>
+      <div class="post-meta">
+        <span title="post date" class="post-info">2015-11-05</span>
+        <span title="last modification date" class="post-info">2015-11-05</span>
+        <span title="tags" class="post-info"><a href="/tags/nodejs/">nodejs</a>, <a href="/tags/javascript/">JavaScript</a>, <a href="/tags/ocaml/">OCaml</a></span>
+        <span title="author" class="post-info">Edgar Aroutiounian</span>
+      </div>
+      <section>
+        <h1>Comments</h1>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+          //var disqus_developer = 1;
+          var disqus_identifier = "/blog/2015/11/05/write-ocaml,-run-on-nodejs";
+          var disqus_url = "http://hyegar.com/blog/2015/11/05/write-ocaml,-run-on-nodejs";
+          var disqus_shortname = 'hyegar';
+          /* * * DON'T EDIT BELOW THIS LINE * * */
+          (function() {
+          var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+          dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+          (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+          })();
+        </script>
+        <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+      </section>
+      <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.js"></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script src="/media/js/main.js"></script>
+      <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-57031124-1']);
+        _gaq.push(['_trackPageview']);
+        (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+      </script>
+      <div class="footer">
+        <p>Generated by <a href="http://www.gnu.org/software/emacs/">Emacs</a> 25.x (<a href="http://orgmode.org">Org mode</a> 8.x)</p>
+        <p>
+          Copyright &copy; 2012 - <span id="footerYear"></span> <a href="mailto:edgar &lt;dot&gt; factorial &lt;at&gt; gmail &lt;dot&gt; com">Edgar Aroutiounian</a>
+          &nbsp;&nbsp;-&nbsp;&nbsp;
+          Powered by <a href="https://github.com/kelvinh/org-page" target="_blank">org-page</a>
+          <script type="text/javascript">document.getElementById("footerYear").innerHTML = (new Date()).getFullYear();</script>
+        </p>
+      </div>
+    </div>
+
+  </body>
+</html>
