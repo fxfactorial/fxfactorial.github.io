@@ -171,7 +171,7 @@ table th.right, table td.right {
 /* body */
 .container {
     margin: 0 auto;
-    max-width: 770px;
+    max-width: 1024px;
 }
 /* head */
 .masthead {
