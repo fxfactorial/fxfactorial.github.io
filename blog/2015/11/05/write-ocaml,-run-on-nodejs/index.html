@@ -42,7 +42,151 @@ compile OCaml to JavaScript which I then run on <code>node</code>.
 <h2 id="orgheadline1">Sample Code</h2>
 <div class="outline-text-2" id="text-orgheadline1">
 <p>
-Here's an example, with explanations, of some bindings.
+Here are some working examples, many are directly from the README at
+<a href="https://github.com/fxfactorial/ocaml-nodejs/blob/master/README.md">ocaml-nodejs</a>.
+</p>
+
+<p>
+<b>Multicast DNS over UDP sockets, only for the local network, like a
+ no config p2p chat application.</b>
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml"><span class="linenr"> 1: </span>open Nodejs
+<span class="linenr"> 2: </span>
+<span class="linenr"> 3: </span>module U = Yojson.Basic.Util
+<span class="linenr"> 4: </span>
+<span class="linenr"> 5: </span>let (multicast_addr, bind_addr, port) = "224.1.1.1", "0.0.0.0", 6811
+<span class="linenr"> 6: </span>
+<span class="linenr"> 7: </span>let () =
+<span class="linenr"> 8: </span>  Random.self_init ();
+<span class="linenr"> 9: </span>  let p = new process in
+<span class="linenr">10: </span>  let user_name = ref (Printf.sprintf "User:%d" (Random.int 10000)) in
+<span class="linenr">11: </span>  let listener = Udp_datagram.(create_socket ~reuse_address:true Udp4) in
+<span class="linenr">12: </span>  let sender = Udp_datagram.(create_socket ~reuse_address:true Udp4) in
+<span class="linenr">13: </span>
+<span class="linenr">14: </span>  listener#bind ~port ~address:multicast_addr ~f:begin fun () -&gt;
+<span class="linenr">15: </span>    listener#add_membership multicast_addr;
+<span class="linenr">16: </span>    listener#set_broadcast true;
+<span class="linenr">17: </span>    listener#set_multicast_loopback true
+<span class="linenr">18: </span>  end ();
+<span class="linenr">19: </span>
+<span class="linenr">20: </span>
+<span class="linenr">21: </span>  listener#on_message begin fun b resp -&gt;
+<span class="linenr">22: </span>
+<span class="linenr">23: </span>    let handle = b#to_string () |&gt; json_of_string in
+<span class="linenr">24: </span>    if (handle &lt;!&gt; "id" |&gt; Js.to_string) &lt;&gt; !user_name
+<span class="linenr">25: </span>    then print_string (handle &lt;!&gt; "message" |&gt; Js.to_string)
+<span class="linenr">26: </span>
+<span class="linenr">27: </span>  end;
+<span class="linenr">28: </span>
+<span class="linenr">29: </span>  p#stdin#on_data begin function
+<span class="linenr">30: </span>    | String _ -&gt; ()
+<span class="linenr">31: </span>    | Buffer b -&gt;
+<span class="linenr">32: </span>      let msg = b#to_string () in
+<span class="linenr">33: </span>      (* This needs to be redone with Re_pcre *)
+<span class="linenr">34: </span>      if String.length msg &gt; 10 then begin
+<span class="linenr">35: </span>        let modify = String.sub msg 0 9 in
+<span class="linenr">36: </span>        if modify = "set name:"
+<span class="linenr">37: </span>        then begin
+<span class="linenr">38: </span>          let as_string = Js.string (String.trim msg) in
+<span class="linenr">39: </span>          let chopped =
+<span class="linenr">40: </span>            as_string##split (Js.string ":") |&gt; to_string_list |&gt; Array.of_list
+<span class="linenr">41: </span>          in
+<span class="linenr">42: </span>          user_name := chopped.(1)
+<span class="linenr">43: </span>        end
+<span class="linenr">44: </span>      end;
+<span class="linenr">45: </span>
+<span class="linenr">46: </span>      let msg = Printf.sprintf "%s&gt;&gt;&gt;%s" !user_name (b#to_string ()) in
+<span class="linenr">47: </span>      let total_message = (object%js
+<span class="linenr">48: </span>        val id = !user_name |&gt; to_js_str
+<span class="linenr">49: </span>        val message = msg |&gt; to_js_str
+<span class="linenr">50: </span>        end) |&gt; stringify
+<span class="linenr">51: </span>      in
+<span class="linenr">52: </span>      sender#send
+<span class="linenr">53: </span>        ~offset:0
+<span class="linenr">54: </span>        ~length:(String.length total_message)
+<span class="linenr">55: </span>        ~port
+<span class="linenr">56: </span>        ~dest_address:multicast_addr
+<span class="linenr">57: </span>        (String total_message)
+<span class="linenr">58: </span>    end
+</pre>
+</div>
+
+<p>
+<b>Create a site and render directly from jade templates</b>
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">open Nodejs
+
+let () =
+  let exp = new Express.express in
+  let app = new Express.app ~existing:None in
+
+  app#set_app_value (`View_engine "jade");
+  app#use (exp#static ".");
+  app#get ~path:"/" (fun _ res -&gt; res#render "index.jade");
+
+  app#listen ~port:8080
+</pre>
+</div>
+
+<p>
+<b>Create a raw server from the Net module</b>
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">let () =
+  let server = Net.create_server ~conn_listener:begin fun sock -&gt;
+      sock#on_end (fun () -&gt; print_endline "client disconnected");
+      sock#write "Hello\r\n";
+      sock &gt;|&gt; sock |&gt; ignore
+    end ()
+  in
+  server#listen ~port:8124 begin fun () -&gt;
+    let info = server#address in
+    print_endline info.Net.address;
+    print_endline (info.Net.ip_family |&gt; string_of_ip);
+    print_endline (info.Net.port |&gt; string_of_int);
+    print_endline "started server"
+  end
+</pre>
+</div>
+
+<p>
+<b>Create a file stream, gzip it, write it</b>
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml"><span class="linenr">1: </span>open Nodejs
+<span class="linenr">2: </span>
+<span class="linenr">3: </span>let _ =
+<span class="linenr">4: </span>  Fs.create_read_stream "code.ml" &gt;|&gt;
+<span class="linenr">5: </span>  Zlib.create_gzip () &gt;|&gt;
+<span class="linenr">6: </span>  Fs.create_write_stream "NEWCODE_TEST.ml"
+</pre>
+</div>
+
+
+<p>
+<b>Typed Decoding of Buffers</b>
+</p>
+<div class="org-src-container">
+
+<pre class="src src-ocaml">open Nodejs
+
+let () =
+  let string_decoder = new String_decoder.decoder Utf_8 in
+  let cent = new Buffer.buffer (`Array [|0xE2; 0x82; 0xAC|]) in
+  (string_decoder#write cent) |&gt; print_endline
+</pre>
+</div>
+
+
+<p>
+This one is a bit more low level as it its a general idea of how these
+bindings are implemented.
 </p>
 
 <div class="org-src-container">
@@ -202,7 +346,7 @@ equivalent bindings:
     <div>
       <div class="post-meta">
         <span title="post date" class="post-info">2015-11-05</span>
-        <span title="last modification date" class="post-info">2015-11-05</span>
+        <span title="last modification date" class="post-info">2015-12-03</span>
         <span title="tags" class="post-info"><a href="/tags/nodejs/">nodejs</a>, <a href="/tags/javascript/">JavaScript</a>, <a href="/tags/ocaml/">OCaml</a></span>
         <span title="author" class="post-info">Edgar Aroutiounian</span>
       </div>

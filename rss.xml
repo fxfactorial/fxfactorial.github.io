@@ -4,77 +4,284 @@
     <title>Edgar Aroutiounian</title>
     <link>http://hyegar.com</link>
     <description>Thoughts and Musings</description>
-    <pubDate>Thu, 05 Nov 2015 14:39:49 PST</pubDate>
-    <lastBuildDate>Thu, 05 Nov 2015 14:39:49 PST</lastBuildDate>
+    <pubDate>Thu, 03 Dec 2015 08:10:58 PST</pubDate>
+    <lastBuildDate>Thu, 03 Dec 2015 08:10:58 PST</lastBuildDate>
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>Org-page static site generator (https://github.com/kelvinh/org-page)</generator>
     <item>
       <title>Compile OCaml to JavaScript, run on Node</title>
       <link>http://hyegar.com/blog/2015/11/05/write-ocaml,-run-on-nodejs</link>
-      <description>OCaml on Node</description>
-      <pubDate>2015-11-05</pubDate>
+      <description><![CDATA[OCaml on Node]]></description>
+      <pubDate>2015-12-03</pubDate>
       <guid>http://hyegar.com/blog/2015/11/05/write-ocaml,-run-on-nodejs</guid>
     </item>
     <item>
       <title>So you&#39;re learning OCaml...</title>
       <link>http://hyegar.com/blog/2015/10/19/so-you&#39;re-learning-ocaml</link>
-      <description>Help for OCaml beginners</description>
+      <description><![CDATA[Help for OCaml beginners]]></description>
       <pubDate>2015-10-20</pubDate>
       <guid>http://hyegar.com/blog/2015/10/19/so-you&#39;re-learning-ocaml</guid>
     </item>
     <item>
       <title>Let&#39;s just use Monads</title>
       <link>http://hyegar.com/blog/2015/09/23/let&#39;s-just-use-monads</link>
-      <description>Pragmatic Monads</description>
+      <description><![CDATA[Pragmatic Monads]]></description>
       <pubDate>2015-10-12</pubDate>
       <guid>http://hyegar.com/blog/2015/09/23/let&#39;s-just-use-monads</guid>
     </item>
     <item>
       <title>Elegant OCaml</title>
       <link>http://hyegar.com/blog/2015/10/07/elegant-ocaml</link>
-      <description>Nice code</description>
+      <description><![CDATA[Nice code]]></description>
       <pubDate>2015-10-07</pubDate>
       <guid>http://hyegar.com/blog/2015/10/07/elegant-ocaml</guid>
     </item>
     <item>
       <title>OCaml love</title>
       <link>http://hyegar.com/blog/2015/09/13/ocaml-love</link>
-      <description>Why I love OCaml, use OCaml</description>
+      <description><![CDATA[Why I love OCaml, use OCaml]]></description>
       <pubDate>2015-09-21</pubDate>
       <guid>http://hyegar.com/blog/2015/09/13/ocaml-love</guid>
     </item>
     <item>
       <title>Healthcare.gov still sucks</title>
       <link>http://hyegar.com/blog/2015/09/16/healthcare.gov-still-sucks</link>
-      <description>Issues with Healthcare.gov</description>
+      <description><![CDATA[Issues with Healthcare.gov]]></description>
       <pubDate>2015-09-17</pubDate>
       <guid>http://hyegar.com/blog/2015/09/16/healthcare.gov-still-sucks</guid>
     </item>
     <item>
       <title>LaTeX, org-mode and animations</title>
       <link>http://hyegar.com/blog/2015/09/11/latex,-org-mode-and-animations</link>
-      <description>No Description</description>
+      <description><![CDATA[<div>
+<div class="post">
+<h1>LaTeX, org-mode and animations</h1>
+<p>
+This post is going to add a lot of value to your life; I'm going to
+show you how to:
+</p>
+
+<ol class="org-ol">
+<li>Install LaTeX on OS X, without too much junk.</li>
+<li>Use org-mode on emacs along with some creature comforts</li>
+<li>Use animations inside a PDF. Yes, I'm serious.</li>
+</ol>
+
+<div id="outline-container-orgheadline1" class="outline-2">
+<h2 id="orgheadline1">Installing LaTeX</h2>
+<div class="outline-text-2" id="text-orgheadline1">
+<p>
+Most folks that install LaTeX on OS X probably do it with the <a href="https://tug.org/mactex/">MacTex</a>
+package. This is probably fine for most people, but the trouble with
+MacTex is the size of the install; Its huge! The last time I checked,
+MacTex ended up using at least 1.5 <b>gigabytes</b>. That's a lot of wasted
+space, especially for things like the LaTeX editor (since I do my
+LaTeX work in emacs). So here are the steps I recommend to installing
+LaTeX on OS X.
+</p>
+</div>
+
+<div id="outline-container-orgheadline2" class="outline-3">
+<h3 id="orgheadline2">Installing LaTeX on OS X</h3>
+<div class="outline-text-3" id="text-orgheadline2">
+<ol class="org-ol">
+<li>If you already have MacTex installed, get rid of it. Its pretty
+simple, just follow the directions <a href="https://tug.org/mactex/uninstalling.html">here</a>.</li>
+<li>Install BasicTex. This gives you stuff like pdfLatex, aka the
+compiler and core LaTeX. You can get the package installer from
+<a href="http://www.tug.org/mactex/morepackages.html">here</a>.</li>
+<li>Download the Tex Live Utility from <a href="https://github.com/amaxwell/tlutility">here</a>. Tex Live Utility is your 
+new LaTeX best friend. It will let you update all packages and
+install new ones whenever you need them, and you will need them
+since you only installed BasicTex. We will use it later on in this
+post.</li>
+</ol>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline3" class="outline-2">
+<h2 id="orgheadline3">Org Mode</h2>
+<div class="outline-text-2" id="text-orgheadline3">
+<p>
+I'm going to assume that you already know what emacs is, but I'll
+explain org-mode. Org-mode is an amazing mode that lets your write
+notes, presentation, and more. Side note, these posts are written in
+org-mode. I write them in org-mode, then org-mode exports them to
+HTML; its pretty neat and convenient.
+</p>
+
+<p>
+Okay, back to org-mode. In org-mode, you can put some configurations,
+things like:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-org-mode">#+AUTHOR: Edgar
+#+LATEX_HEADER: \usepackage{lmodern}
+#+OPTIONS: toc:nil
+</pre>
+</div>
+
+<p>
+Writing those things out on each new <code>.org</code> file is
+annoying. Fortunately emacs already comes with a solution. You'll want
+to add this to your <code>init.el</code>
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-emacs-lisp">;; This turns on auto-insert-mode
+(auto-insert-mode)
+;; This turns off the prompt that auto-insert-mode asks before 
+;; it actually inserts text/code for you
+(setq auto-insert-query nil)
+;; This is what you'll have inserted for a new .org file
+(define-skeleton my-org-defaults
+  "Org defaults I use"
+  nil
+  "#+AUTHOR:   Your name\n"
+  "#+EMAIL:    your.email@gmail.com\n"
+  "#+LANGUAGE: en\n"
+  "#+LATEX_HEADER: \\usepackage{lmodern}\n"
+  "#+LATEX_HEADER: \\usepackage[T1]{fontenc}\n"
+  "#+OPTIONS:  toc:nil num:0\n")
+;; This is how to tell auto-insert what to use for .org files
+(define-auto-insert "\\.org\\'" 'my-org-defaults)
+</pre>
+</div>
+<p>
+Now whenever you open a new <code>.org</code> file, you'll have these common
+things already there in the buffer. You can do this for other modes
+too, I do it for common <code>#include</code> items for C coding.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline4" class="outline-2">
+<h2 id="orgheadline4">Writing LaTeX via org-mode</h2>
+<div class="outline-text-2" id="text-orgheadline4">
+<p>
+You'll notice that in <code>my-org-defaults</code>, I included some items for
+LaTeX. I used to write LaTeX in emacs by hand using Auctex and I
+actually still recommend newcomers to LaTeX start by writing it by
+hand. I use org-mode because the writing is so much easier in it, and
+I can always drop down to LaTeX whenever I need to, like when I need
+specific packages. For example, the <code>\usepackage{lmodern}</code> is a LaTeX
+package for really nice modern latin font. To get this package, you'll
+need to install it via the newly installed Tex Live Utility
+application. Just open Tex Live Utility, go to the Packages tab,
+search for lmodern and right click and install.
+</p>
+
+<p>
+To export the <code>.org</code> file to PDF, just do: <code>C-c C-e l p</code>, where that
+last <code>p</code> can be replaced with <code>o</code> to open the newly created
+PDF. Another neat thing in org mode that I like is seeing LaTeX before
+its a PDF, that is, I want to preview the LaTeX inside the
+buffer. This, assuming you already have <code>imagemagick</code> installed, is
+easily done with <code>C-c C-x C-l</code>.
+</p>
+
+<p>
+Just to let you know my work-flow, I usually have a buffer open with
+the PDF of my work and another buffer of my <code>.org</code> file. Then I export
+to PDF and since I have <code>doc-view-mode</code> poll for updates, I see the
+changes to my work nearly instantly in the PDF buffer.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline5" class="outline-2">
+<h2 id="orgheadline5">Animations in a PDF</h2>
+<div class="outline-text-2" id="text-orgheadline5">
+<p>
+For a final paper on modifications to the <a href="http://en.wikipedia.org/wiki/Perceptron">Perceptron</a> algorithm, I
+wanted to include a neat animation of the Perceptron
+converging. Naturally I did my paper in emacs. Here are the steps
+needed.
+</p>
+<ol class="org-ol">
+<li>Install the <code>animate</code> package using Tex Live Utility</li>
+<li><p>
+Add the following two lines to your <code>.org</code> file. 
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-org-mode">#+LATEX_HEADER: \usepackage{animate}
+#+LATEX_HEADER: \usepackage{graphics}
+</pre>
+</div></li>
+
+<li><p>
+For the place where you want to add the animation, add code like
+the following to your <code>.org</code> file:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-tex">\begin{center}
+%                                            fps filename from to
+  \animategraphics[autoplay, loop, width=4in]{2}{p_N200_it}{1}{68}
+\end{center}
+</pre>
+</div>
+
+<p>
+In this example, I gave it some optional arguments and said use 2
+frames per second and for all the filenames that start with
+p_N200_it, go from 1 to 68, for example <code>p_N200_it4.png</code>.
+</p>
+
+<p>
+<b>Note:</b> <code>\animategraphics</code> can take other optional arguments, like
+<code>controls</code>. Please sure to check out its easily googlable manual for
+all the details.
+</p></li>
+</ol>
+
+<p>
+After exporting the PDF, you'll have a real animation that is
+completely self contained in the PDF. 
+</p>
+
+<p>
+<b>Note:</b> The Preview.app on OS X is kind of crappy and doesn't actually
+animate the graphic for reasons unknown to me, I recommend you use
+Adobe Reader.
+</p>
+
+<p>
+I hope this post helps makes your papers all that more exciting and
+rewarding.
+</p>
+</div>
+</div>
+
+</div>
+</div>]]></description>
       <pubDate>2015-09-11</pubDate>
       <guid>http://hyegar.com/blog/2015/09/11/latex,-org-mode-and-animations</guid>
     </item>
     <item>
       <title>Emacs for Linux Coding Part II</title>
       <link>http://hyegar.com/blog/2015/09/11/emacs-for-linux-coding-part-ii</link>
-      <description>Part II, emacs and kernel</description>
+      <description><![CDATA[Part II, emacs and kernel]]></description>
       <pubDate>2015-09-11</pubDate>
       <guid>http://hyegar.com/blog/2015/09/11/emacs-for-linux-coding-part-ii</guid>
     </item>
     <item>
       <title>Simpler Blogging</title>
       <link>http://hyegar.com/blog/2015/09/07/simpler-blogging</link>
-      <description>Leaving Octopress, embracing org-mode</description>
+      <description><![CDATA[Leaving Octopress, embracing org-mode]]></description>
       <pubDate>2015-09-11</pubDate>
       <guid>http://hyegar.com/blog/2015/09/07/simpler-blogging</guid>
     </item>
     <item>
       <title>Emacs for Linux Coding Part I</title>
       <link>http://hyegar.com/blog/2015/09/11/setting-up-emacs-for-linux-coding</link>
-      <description>Config emacs for kernel hacking</description>
+      <description><![CDATA[Config emacs for kernel hacking]]></description>
       <pubDate>2015-09-11</pubDate>
       <guid>http://hyegar.com/blog/2015/09/11/setting-up-emacs-for-linux-coding</guid>
     </item>
