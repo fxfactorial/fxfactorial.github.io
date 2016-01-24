@@ -1,0 +1,18 @@
+#+TITLE:       Calling OCaml from Objective-C on the iPhone
+#+AUTHOR:      Edgar Aroutiounian
+#+EMAIL:       edgar.factorial@gmail.com
+#+DATE:        2016-01-23 Sat
+#+URI:         /blog/%y/%m/%d/calling-ocaml-from-objective-c-on-the-iphone
+#+KEYWORDS:    objective-c, ocaml, iphone
+#+TAGS:        objective-c, iphone, ocaml
+#+LANGUAGE:    en
+#+OPTIONS:     H:3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+#+DESCRIPTION: OCaml and Objective-C
+
+I love iOS and I love OCaml, so I've packaged up an OCaml compiler for
+iOS via opam. Now all you need to build OCaml programs on the iPhone
+is opam!
+
+* First steps
+You'll need the cross compiler. 
+
