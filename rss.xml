@@ -4,10 +4,17 @@
     <title>Edgar Aroutiounian</title>
     <link>http://hyegar.com</link>
     <description>Thoughts and Musings</description>
-    <pubDate>Sat, 23 Jan 2016 22:31:10 PST</pubDate>
-    <lastBuildDate>Sat, 23 Jan 2016 22:31:10 PST</lastBuildDate>
+    <pubDate>Sat, 23 Jan 2016 22:34:02 PST</pubDate>
+    <lastBuildDate>Sat, 23 Jan 2016 22:34:02 PST</lastBuildDate>
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>Org-page static site generator (https://github.com/kelvinh/org-page)</generator>
+    <item>
+      <title>Calling OCaml from Objective-C on the iPhone</title>
+      <link>http://hyegar.com/blog/2016/01/23/calling-ocaml-from-objective-c-on-the-iphone</link>
+      <description><![CDATA[OCaml and Objective-C]]></description>
+      <pubDate>2016-01-23</pubDate>
+      <guid>http://hyegar.com/blog/2016/01/23/calling-ocaml-from-objective-c-on-the-iphone</guid>
+    </item>
     <item>
       <title>Compile OCaml to JavaScript, run on Node</title>
       <link>http://hyegar.com/blog/2015/11/05/write-ocaml,-run-on-nodejs</link>
@@ -277,13 +284,6 @@ rewarding.
       <description><![CDATA[Leaving Octopress, embracing org-mode]]></description>
       <pubDate>2015-09-11</pubDate>
       <guid>http://hyegar.com/blog/2015/09/07/simpler-blogging</guid>
-    </item>
-    <item>
-      <title>Emacs for Linux Coding Part I</title>
-      <link>http://hyegar.com/blog/2015/09/11/setting-up-emacs-for-linux-coding</link>
-      <description><![CDATA[Config emacs for kernel hacking]]></description>
-      <pubDate>2015-09-11</pubDate>
-      <guid>http://hyegar.com/blog/2015/09/11/setting-up-emacs-for-linux-coding</guid>
     </item>
   </channel>
 </rss>
