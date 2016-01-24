@@ -41,7 +41,104 @@ is opam!
 <h2 id="orgheadline1">First steps</h2>
 <div class="outline-text-2" id="text-orgheadline1">
 <p>
-You'll need the cross compiler. 
+You'll need the cross compiler. Follow the README instructions
+mentioned <a href="https://github.com/fxfactorial/opam-ios">here</a>. This will provide you with the cross compiler based on
+OCaml 4.02.0.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline2" class="outline-2">
+<h2 id="orgheadline2">Example Code</h2>
+<div class="outline-text-2" id="text-orgheadline2">
+<p>
+Now I'll show you an example of calling OCaml from Objective-C. Much
+of this code will have simplifications as its an example for getting
+you started. Also note that dealing at the C level and the OCaml
+runtime can be tricky and is not for beginners. 
+</p>
+
+<p>
+Here's the OCaml code first, assume it is named code.ml
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-ocaml"><span class="linenr">1: </span>let make_string () =
+<span class="linenr">2: </span>  print_endline "Hello Word from OCaml";
+<span class="linenr">3: </span>  "Hello World "
+<span class="linenr">4: </span>
+<span class="linenr">5: </span>let () =
+<span class="linenr">6: </span>  Callback.register "make_string" make_string
+</pre>
+</div>
+
+<p>
+We're essentially telling the runtime to make this function
+available to grab as a handle, in this case it's a handle on a
+closure.
+</p>
+
+<p>
+And now the Objective-C code, assume it is named main.c
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-objective-c"><span class="linenr"> 1: </span>#define CAML_NAME_SPACE
+<span class="linenr"> 2: </span>
+<span class="linenr"> 3: </span>#import &lt;Foundation/Foundation.h&gt;
+<span class="linenr"> 4: </span>
+<span class="linenr"> 5: </span>#include &lt;caml/callback.h&gt;
+<span class="linenr"> 6: </span>#include &lt;caml/mlvalues.h&gt;
+<span class="linenr"> 7: </span>
+<span class="linenr"> 8: </span>int main (int argc, char **argv)
+<span class="linenr"> 9: </span>{
+<span class="linenr">10: </span>  caml_startup(argv);
+<span class="linenr">11: </span>  caml_callback(*caml_named_value("make_string"), Val_unit);
+<span class="linenr">12: </span>  NSLog(@"Now using objective-c code");
+<span class="linenr">13: </span>  return 0;
+<span class="linenr">14: </span>}
+</pre>
+</div>
+
+<p>
+Its important to call <code>caml_startup</code> before any OCaml callbacks. Then
+we get a handle on the closure and call it with unit.
+</p>
+
+<p>
+To compile this code you'll need the cross-compiler which was
+installed by following the directions on my opam-ios repo, the command
+you use is:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-shell">$ ocamloptrev -rev 8.3 -ccopt -ObjC -cclib '-framework Foundation' main.c code.ml -o F
+</pre>
+</div>
+
+<p>
+The 8.3 is the iOS SDK you want to link against, again see the README
+on the github repo for opam-ios for more details.
+</p>
+
+<p>
+The output we get, <code>F</code> is an arm executable, when we run it on the
+iPhone we will get an output of:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-shell">$ some_iphone :~/  ./F
+Hello Word from OCaml
+2016-01-23 22:44:04.889 F[1977:507] Now using objective-c code
+</pre>
+</div>
+
+<p>
+Yay!
 </p>
 </div>
 </div>
