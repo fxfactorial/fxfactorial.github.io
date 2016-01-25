@@ -4,10 +4,17 @@
     <title>Edgar Aroutiounian</title>
     <link>http://hyegar.com</link>
     <description>Thoughts and Musings</description>
-    <pubDate>Sat, 23 Jan 2016 22:46:52 PST</pubDate>
-    <lastBuildDate>Sat, 23 Jan 2016 22:46:52 PST</lastBuildDate>
+    <pubDate>Sun, 24 Jan 2016 23:44:15 PST</pubDate>
+    <lastBuildDate>Sun, 24 Jan 2016 23:44:15 PST</lastBuildDate>
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>Org-page static site generator (https://github.com/kelvinh/org-page)</generator>
+    <item>
+      <title>See your HTTP traffic like a pro</title>
+      <link>http://hyegar.com/blog/2016/01/24/local-transparent-proxy</link>
+      <description><![CDATA[Easy to use transparent proxy]]></description>
+      <pubDate>2016-01-24</pubDate>
+      <guid>http://hyegar.com/blog/2016/01/24/local-transparent-proxy</guid>
+    </item>
     <item>
       <title>Calling OCaml from Objective-C on the iPhone</title>
       <link>http://hyegar.com/blog/2016/01/23/calling-ocaml-from-objective-c-on-the-iphone</link>
@@ -277,13 +284,6 @@ rewarding.
       <description><![CDATA[Part II, emacs and kernel]]></description>
       <pubDate>2015-09-11</pubDate>
       <guid>http://hyegar.com/blog/2015/09/11/emacs-for-linux-coding-part-ii</guid>
-    </item>
-    <item>
-      <title>Simpler Blogging</title>
-      <link>http://hyegar.com/blog/2015/09/07/simpler-blogging</link>
-      <description><![CDATA[Leaving Octopress, embracing org-mode]]></description>
-      <pubDate>2015-09-11</pubDate>
-      <guid>http://hyegar.com/blog/2015/09/07/simpler-blogging</guid>
     </item>
   </channel>
 </rss>
