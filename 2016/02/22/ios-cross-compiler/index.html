@@ -55,7 +55,22 @@
 <h1 id="the-solution">The solution</h1>
 <p>I found this <a href="https://github.com/tpoechtrager/osxcross">project</a> but it was very hands on and difficult to reproduce on multiple machines. How could I reliably build this code? My solution was <code>NixOS</code>, specifically the <code>nixpkgs</code> package manager (I won’t go into the benefits of <code>Nix</code> in this post). Now you can also benefit from this work by getting an <code>armv7</code> iOS cross compiler for up to <code>iOS 9.2</code> by simply doing:</p>
 <pre class="shell"><code>$ nix-env -i clang ios-cross-compile</code></pre>
-<p>This will crap out initially because I cannot redistribute iOS SDKs, but it does give you instructions on how to manually add something to the <code>nix-store</code>. After you follow the instructions run the command again and then you’ll have an iOS compiler installed for SDK <code>7.0-9.2</code>!</p>
+<p>This will crap out initially because I cannot redistribute iOS SDKs, but it does give you instructions on how to manually add something to the <code>nix-store</code>. After you follow the instructions run the command again and then you’ll have all these tools</p>
+<pre><code>armv7-apple-darwin11-ar                 armv7-apple-darwin11-nm
+armv7-apple-darwin11-as                 armv7-apple-darwin11-nmedit
+armv7-apple-darwin11-bitcode_strip      armv7-apple-darwin11-ObjectDump
+armv7-apple-darwin11-checksyms          armv7-apple-darwin11-otool
+armv7-apple-darwin11-clang              armv7-apple-darwin11-pagestuff
+armv7-apple-darwin11-clang++            armv7-apple-darwin11-ranlib
+armv7-apple-darwin11-codesign_allocate  armv7-apple-darwin11-redo_prebinding
+armv7-apple-darwin11-dyldinfo           armv7-apple-darwin11-seg_addr_table
+armv7-apple-darwin11-indr               armv7-apple-darwin11-segedit
+armv7-apple-darwin11-install_name_tool  armv7-apple-darwin11-seg_hack
+armv7-apple-darwin11-ld                 armv7-apple-darwin11-size
+armv7-apple-darwin11-libtool            armv7-apple-darwin11-strings
+armv7-apple-darwin11-lipo               armv7-apple-darwin11-strip
+armv7-apple-darwin11-machocheck         armv7-apple-darwin11-unwinddump</code></pre>
+<p>…installed and they will work for SDK <code>7.0-9.2</code>!</p>
 <h1 id="stay-tuned">Stay tuned</h1>
 <p>I’ll have more blog posts lined up including:</p>
 <ol style="list-style-type: decimal">
