@@ -208,6 +208,108 @@ PKG cmdliner js_of_ocaml</code></pre>
 <h1 id="stick-with-it">Stick with it!</h1>
 <p>This style of coding might be new to you or maybe its your first programming language, stick with it and continue. <code>OCaml</code> offers many awesome features and has many strengths including a very professional and pragmatic community.</p>
 </article>
+<article>
+    <header>
+        <h1>
+            <a href="./2015/10/07/elegant/" title="Permalink">
+                2015-10-07-elegant
+            </a>
+        </h1>
+        <span class="post-date">October  7, 2015</span> in 
+        <span class="post-tags"></span>
+    </header>
+    <p>I love elegant code, code that just flows and lets you “see” how the data moves through execution. As part of my <a href="https://github.com/fxfactorial/brozip">brozip</a> application, I wanted to give the feature of recursively compressing or decompressing a directory. So I just wrote exactly what came to mind and came up with this</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> <span class="kw">rec</span> walk_and_action action node =
+  <span class="kw">if</span> Sys<span class="kw">.</span>is_directory node
+  <span class="kw">then</span> (Sys<span class="kw">.</span>readdir node
+        |&gt; Array<span class="kw">.</span>to_list
+        |&gt; List<span class="kw">.</span>map (Filename<span class="kw">.</span>concat node)
+        |&gt; Lwt_list<span class="kw">.</span>iter_p (walk_and_action action))
+  <span class="kw">else</span> action node</code></pre></div>
+<p>Where <code>action</code> has type: <code>string -&gt; unit Lwt.t</code> (a function that takes a <code>string</code> and returns <code>unit Lwt.t</code>) and <code>node</code> is just a <code>string</code> for the file name. Translating the code into English, we first check if the file name represents a directory, if its a directory then we</p>
+<blockquote>
+<ol style="list-style-type: decimal">
+<li>Read the directory’s contents</li>
+<li>Convert the returned array into a list</li>
+<li>Use a partially evaluated function, <code>Filename.concat node</code> and finish that computation for each of the file names in the list</li>
+<li>Use correct concatenated strings to feed to <code>Lwt_list.iter_p</code> which will call the partially evaluated function <code>walk_and_action action</code> on each of the files. The <code>iter_p</code> function tells us that it will call its given function concurrently, which is very nice.</li>
+</ol>
+</blockquote>
+<p>If its not a directory then we just call the function for the given file.</p>
+<p>Notice how elegant this code is, the whole function body is just one expression and the data just flows from the output of one function as the input of the other, there’s no separation between the function calls.</p>
+</article>
+<article>
+    <header>
+        <h1>
+            <a href="./2015/09/11/cool-latex/" title="Permalink">
+                2015-09-11-cool-latex
+            </a>
+        </h1>
+        <span class="post-date">September 11, 2015</span> in 
+        <span class="post-tags"></span>
+    </header>
+    <p>This post is going to add a lot of value to your life; I’m going to show you how to:</p>
+<ol style="list-style-type: decimal">
+<li>Install LaTeX on OS X, without too much junk.</li>
+<li>Use org-mode on emacs along with some creature comforts</li>
+<li>Use animations inside a PDF. Yes, I’m serious.</li>
+</ol>
+<h1 id="installing-latex">Installing LaTeX</h1>
+<p>Most folks that install LaTeX on OS X probably do it with the <a href="https://tug.org/mactex/">MacTex</a> package. This is probably fine for most people, but the trouble with MacTex is the size of the install; Its huge! The last time I checked, MacTex ended up using at least 1.5 <strong>gigabytes</strong>. That’s a lot of wasted space, especially for things like the LaTeX editor (since I do my LaTeX work in emacs). So here are the steps I recommend to installing LaTeX on OS X.</p>
+<h2 id="installing-latex-on-os-x">Installing LaTeX on OS X</h2>
+<ol style="list-style-type: decimal">
+<li>If you already have MacTex installed, get rid of it. Its pretty simple, just follow the directions <a href="https://tug.org/mactex/uninstalling.html">here</a>.</li>
+<li>Install BasicTex. This gives you stuff like pdfLatex, aka the compiler and core LaTeX. You can get the package installer from <a href="http://www.tug.org/mactex/morepackages.html">here</a>.</li>
+<li>Download the Tex Live Utility from <a href="https://github.com/amaxwell/tlutility">here</a>. Tex Live Utility is your new LaTeX best friend. It will let you update all packages and install new ones whenever you need them, and you will need them since you only installed BasicTex. We will use it later on in this post.</li>
+</ol>
+<h1 id="org-mode">Org Mode</h1>
+<p>I’m going to assume that you already know what emacs is, but I’ll explain org-mode. Org-mode is an amazing mode that lets your write notes, presentation, and more. Side note, these posts are written in org-mode. I write them in org-mode, then org-mode exports them to HTML; its pretty neat and convenient.</p>
+<p>Okay, back to org-mode. In org-mode, you can put some configurations, things like:</p>
+<pre class="org-mode"><code>#+AUTHOR: Edgar
+#+LATEX_HEADER: \usepackage{lmodern}
+#+OPTIONS: toc:nil</code></pre>
+<p>Writing those things out on each new <code>.org</code> file is annoying. Fortunately emacs already comes with a solution. You’ll want to add this to your <code>init.el</code></p>
+<pre class="emacs-lisp"><code>;; This turns on auto-insert-mode
+(auto-insert-mode)
+;; This turns off the prompt that auto-insert-mode asks before 
+;; it actually inserts text/code for you
+(setq auto-insert-query nil)
+;; This is what you'll have inserted for a new .org file
+(define-skeleton my-org-defaults
+  &quot;Org defaults I use&quot;
+  nil
+  &quot;#+AUTHOR:   Your name\n&quot;
+  &quot;#+EMAIL:    your.email@gmail.com\n&quot;
+  &quot;#+LANGUAGE: en\n&quot;
+  &quot;#+LATEX_HEADER: \\usepackage{lmodern}\n&quot;
+  &quot;#+LATEX_HEADER: \\usepackage[T1]{fontenc}\n&quot;
+  &quot;#+OPTIONS:  toc:nil num:0\n&quot;)
+;; This is how to tell auto-insert what to use for .org files
+(define-auto-insert &quot;\\.org\\'&quot; 'my-org-defaults)</code></pre>
+<p>Now whenever you open a new <code>.org</code> file, you’ll have these common things already there in the buffer. You can do this for other modes too, I do it for common <code>#include</code> items for C coding.</p>
+<h1 id="writing-latex-via-org-mode">Writing LaTeX via org-mode</h1>
+<p>You’ll notice that in <code>my-org-defaults</code>, I included some items for LaTeX. I used to write LaTeX in emacs by hand using Auctex and I actually still recommend newcomers to LaTeX start by writing it by hand. I use org-mode because the writing is so much easier in it, and I can always drop down to LaTeX whenever I need to, like when I need specific packages. For example, the <code>\usepackage{lmodern}</code> is a LaTeX package for really nice modern latin font. To get this package, you’ll need to install it via the newly installed Tex Live Utility application. Just open Tex Live Utility, go to the Packages tab, search for lmodern and right click and install.</p>
+<p>To export the <code>.org</code> file to PDF, just do: <code>C-c C-e l p</code>, where that last <code>p</code> can be replaced with <code>o</code> to open the newly created PDF. Another neat thing in org mode that I like is seeing LaTeX before its a PDF, that is, I want to preview the LaTeX inside the buffer. This, assuming you already have <code>imagemagick</code> installed, is easily done with <code>C-c C-x C-l</code>.</p>
+<p>Just to let you know my work-flow, I usually have a buffer open with the PDF of my work and another buffer of my <code>.org</code> file. Then I export to PDF and since I have <code>doc-view-mode</code> poll for updates, I see the changes to my work nearly instantly in the PDF buffer.</p>
+<h1 id="animations-in-a-pdf">Animations in a PDF</h1>
+<p>For a final paper on modifications to the <a href="http://en.wikipedia.org/wiki/Perceptron">Perceptron</a> algorithm, I wanted to include a neat animation of the Perceptron converging. Naturally I did my paper in emacs. Here are the steps needed.</p>
+<ol style="list-style-type: decimal">
+<li>Install the <code>animate</code> package using Tex Live Utility</li>
+<li><p>Add the following two lines to your <code>.org</code> file.</p>
+<pre class="org-mode"><code>#+LATEX_HEADER: \usepackage{animate}
+#+LATEX_HEADER: \usepackage{graphics}</code></pre></li>
+<li><p>For the place where you want to add the animation, add code like the following to your <code>.org</code> file:</p>
+<pre class="tex"><code>\begin{center}
+%                                            fps filename from to
+  \animategraphics[autoplay, loop, width=4in]{2}{p_N200_it}{1}{68}
+\end{center}</code></pre>
+<p>In this example, I gave it some optional arguments and said use 2 frames per second and for all the filenames that start with p_N200_it, go from 1 to 68, for example <code>p_N200_it4.png</code>.</p>
+<p><strong>Note:</strong> <code>\animategraphics</code> can take other optional arguments, like <code>controls</code>. Please sure to check out its easily googlable manual for all the details.</p></li>
+</ol>
+<p>After exporting the PDF, you’ll have a real animation that is completely self contained in the PDF.</p>
+<p><strong>Note:</strong> The Preview.app on OS X is kind of crappy and doesn’t actually animate the graphic for reasons unknown to me, I recommend you use Adobe Reader.</p>
+<p>I hope this post helps makes your papers all that more exciting and rewarding.</p>
+</article>
 
 
 <footer>
