@@ -47,6 +47,54 @@
       <article>
     <header>
         <h1>
+            <a href="./2016/01/23/calling-ocaml-from-objective-c/" title="Permalink">
+                2016-01-23-calling-ocaml-from-objective-c
+            </a>
+        </h1>
+        <span class="post-date">January 23, 2016</span> in 
+        <span class="post-tags"></span>
+    </header>
+    <p>I love iOS and I love OCaml, so I’ve packaged up an OCaml compiler for iOS via opam. Now all you need to build OCaml programs on the iPhone is opam!</p>
+<h1 id="first-steps">First steps</h1>
+<p>You’ll need the cross compiler. Follow the README instructions mentioned <a href="https://github.com/fxfactorial/opam-ios">here</a>. This will provide you with the cross compiler based on OCaml 4.02.0.</p>
+<h1 id="example-code">Example Code</h1>
+<p>Now I’ll show you an example of calling OCaml from Objective-C. Much of this code will have simplifications as its an example for getting you started. Also note that dealing at the C level and the OCaml runtime can be tricky and is not for beginners.</p>
+<p>Here’s the OCaml code first, assume it is named code.ml</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="dv">1</span>  <span class="kw">let</span> make_string () =
+<span class="dv">2</span>    print_endline <span class="st">&quot;Hello Word from OCaml&quot;</span>;
+<span class="dv">3</span>    <span class="st">&quot;Hello World &quot;</span>
+<span class="dv">4</span>  
+<span class="dv">5</span>  <span class="kw">let</span> () =
+<span class="dv">6</span>    Callback<span class="kw">.</span>register <span class="st">&quot;make_string&quot;</span> make_string</code></pre></div>
+<p>We’re essentially telling the runtime to make this function available to grab as a handle, in this case it’s a handle on a closure.</p>
+<p>And now the Objective-C code, assume it is named main.c</p>
+<div class="sourceCode"><pre class="sourceCode objectivec"><code class="sourceCode objectivec"> <span class="dv">1</span>  #define CAML_NAME_SPACE
+ <span class="dv">2</span>  
+ <span class="dv">3</span>  #import &lt;Foundation/Foundation.h&gt;
+ <span class="dv">4</span>  
+ <span class="dv">5</span>  #include &lt;caml/callback.h&gt;
+ <span class="dv">6</span>  #include &lt;caml/mlvalues.h&gt;
+ <span class="dv">7</span>  
+ <span class="dv">8</span>  <span class="dt">int</span> main (<span class="dt">int</span> argc, <span class="dt">char</span> **argv)
+ <span class="dv">9</span>  {
+<span class="dv">10</span>    caml_startup(argv);
+<span class="dv">11</span>    caml_callback(*caml_named_value(<span class="st">&quot;make_string&quot;</span>), Val_unit);
+<span class="dv">12</span>    NSLog(<span class="st">@&quot;Now using objective-c code&quot;</span>);
+<span class="dv">13</span>    <span class="kw">return</span> <span class="dv">0</span>;
+<span class="dv">14</span>  }</code></pre></div>
+<p>Its important to call <code>caml_startup</code> before any OCaml callbacks. Then we get a handle on the closure and call it with unit.</p>
+<p>To compile this code you’ll need the cross-compiler which was installed by following the directions on my opam-ios repo, the command you use is:</p>
+<pre class="shell"><code>$ ocamloptrev -rev 8.3 -ccopt -ObjC -cclib '-framework Foundation' main.c code.ml -o F</code></pre>
+<p>The 8.3 is the iOS SDK you want to link against, again see the README on the github repo for opam-ios for more details.</p>
+<p>The output we get, <code>F</code> is an arm executable, when we run it on the iPhone we will get an output of:</p>
+<pre class="shell"><code>$ some_iphone :~/  ./F
+Hello Word from OCaml
+2016-01-23 22:44:04.889 F[1977:507] Now using objective-c code</code></pre>
+<p>Yay!</p>
+</article>
+<article>
+    <header>
+        <h1>
             <a href="./2015/10/20/so-youre-learning-ocaml/" title="Permalink">
                 2015-10-20-so-youre-learning-ocaml
             </a>
@@ -59,10 +107,10 @@
 <p>These are some key notes that you should know.</p>
 <ol style="list-style-type: decimal">
 <li><p><code>opam</code> is the package manager for OCaml. It is very advanced and supports many features. The most basic of which is</p>
-<pre><code>$ opam install &lt;some_package&gt;</code></pre>
+<pre class="shell"><code>$ opam install &lt;some_package&gt;</code></pre>
 <p>For people on <code>OS X</code>, you can get it on <code>brew</code> and all the <code>Linux</code> distros should have <code>opam</code> for you to install. For Windows people, get a VM. EDIT: To be clear, OCaml can build <strong>native</strong> executables on Windows just fine, but opam doesn’t work on this platform and for a beginner you’ll waste a lot of time with environment issues or libraries that assume Unix.</p></li>
 <li><p>Once you have <code>opam</code> installed, you probably want to do:</p>
-<pre><code>$ opam switch 4.02.3</code></pre>
+<pre class="shell"><code>$ opam switch 4.02.3</code></pre>
 <p>This will install the latest version of the compiler.</p></li>
 <li><p><code>ocamlfind</code> is a program that predates <code>opam</code> and wraps the standard <code>OCaml</code> compilers: <code>ocamlc</code> and <code>ocamlopt</code>. The former is a byte code compiler and the latter creates native code.</p></li>
 <li><p><code>ocamlbuild</code> is a tool that helps build <code>OCaml</code> programs, many people have strong opinions on it.</p></li>
@@ -70,7 +118,7 @@
 <p>5.1) Create a directory.</p>
 <p>5.2) Go to the directory and create a file named <strong>_oasis</strong> and directory named <code>src</code></p>
 <p>5.3) Here is a template of the contents of the <strong>_oasis</strong> file</p>
-<pre><code>OASISFormat:  0.4
+<pre class="shell"><code>OASISFormat:  0.4
 OCamlVersion: &gt;= 4.02.3
 Name:         opam_package_name
 Version:      0.1
@@ -104,13 +152,13 @@ Library pg
   CompiledObject: byte
   BuildDepends: some_package</code></pre>
 <p>5.4) Generate the Makefile, setup.ml, configure and other build crap.</p>
-<pre><code>$ oasis setup -setup-update dynamic</code></pre>
+<pre class="shell"><code>$ oasis setup -setup-update dynamic</code></pre>
 <p>5.5) Actually build your code, yes its just a call to make.</p>
-<pre><code>$ make</code></pre>
+<pre class="shell"><code>$ make</code></pre>
 <p>5.6) You can stop here, but you can go even further with <code>oasis2opam</code>. Install it with: <code>opam install oasis2opam</code>, then in your project’s root directory, aka the directory with the _oasis file, do: <code>oasis2opam --local</code>. This creates the <code>opam</code> directory and some meta data for the opam packaging system. Your local package can now be a first class citizen with opam just by doing this in the same project root directory:</p>
-<pre><code>$ opam pin add &lt;your_package_name&gt; . -y</code></pre></li>
+<pre class="shell"><code>$ opam pin add &lt;your_package_name&gt; . -y</code></pre></li>
 <li><p><code>merlin</code> is a OCaml program that is simply amazing it drives code completion for plugins available in <code>emacs</code> and <code>vim</code>. Once you have merlin installed and running, add a <code>.merlin</code> file to your project so that <code>merlin</code> knows what packages to code complete for, a sample <code>.merlin</code> file looks like this:</p>
-<pre><code>B _build/src
+<pre class="shell"><code>B _build/src
 S src
 PKG cmdliner js_of_ocaml</code></pre>
 <p>Notice how I put the <code>B _build/src</code> That sort of assumes you’re using <code>_oasis</code> and you made the <code>src</code> directory I mentioned earlier.</p></li>
@@ -124,18 +172,20 @@ PKG cmdliner js_of_ocaml</code></pre>
 <h1 id="doing-simple-tasks-shameless-plug">Doing simple tasks (shameless plug)</h1>
 <p>I try using <code>OCaml</code> for literally everything and that includes going to hackathons, to make this less painful I wrote a library called <code>Podge</code> which helps with simple stuff. I don’t claim its a standard library replacement, just a library for getting stuff done. These two code samples assume the file is named <code>code.ml</code> and can be run with <code>utop code.ml</code></p>
 <p>First install with opam:</p>
-<pre><code>$ opam install podge</code></pre>
+<pre class="shell"><code>$ opam install podge</code></pre>
 <ol style="list-style-type: decimal">
-<li><p>Reading output of a process</p>
-<h1 id="require-podge">require “podge”</h1>
-<p>let () = Podge.Unix.read_process_output “ls -halt” |&gt; List.iter print_endline</p></li>
+<li>Reading output of a process</li>
 </ol>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">#require &quot;podge&quot;</span>
+<span class="kw">let</span> () = 
+  Podge<span class="kw">.</span>Unix<span class="kw">.</span>read_process_output <span class="st">&quot;ls -halt&quot;</span> |&gt; List<span class="kw">.</span>iter print_endline</code></pre></div>
 <p>The <code>|&gt;</code> just means piping, its piping the output of <code>read_process_output</code> into the input of the partially applied function <code>iter</code></p>
 <ol style="list-style-type: decimal">
-<li><p>Reading a file</p>
-<h1 id="require-podge-1">require “podge”</h1>
-<p>let () = Podge.Unix.read_lines “code.ml” |&gt; List.iter print_endline</p></li>
+<li>Reading a file</li>
 </ol>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">#require &quot;podge&quot;</span>
+<span class="kw">let</span> () = 
+  Podge<span class="kw">.</span>Unix<span class="kw">.</span>read_lines <span class="st">&quot;code.ml&quot;</span> |&gt; List<span class="kw">.</span>iter print_endline</code></pre></div>
 <p>Similar to 1, this reads all lines of file and gives it to the input of the partially applied function <code>iter</code>.</p>
 <p>These are two simple code samples from <code>Podge</code>, check out the <a href="https://github.com/fxfactorial/podge">repo</a> for other useful modules like: (The README has code examples)</p>
 <ol style="list-style-type: decimal">
