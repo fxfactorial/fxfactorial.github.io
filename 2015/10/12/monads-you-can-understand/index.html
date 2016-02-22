@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Personal blog of Edgar Aroutiounian">
+    <meta name="author" content="Edgar Aroutiounian">
+    <title>hyegar.com - 2015-10-12-monads-you-can-understand</title>
+    <link rel="canonical" href="http://hyegar.com">
+    <link rel="icon" href="../../../../favicon.png" type="image/png">
+    <link rel="apple-touch-icon" sizes="60x60" href="../../../../images/favicon-60.png" type="image/png">
+    <link rel="apple-touch-icon" sizes="76x76" href="../../../../images/favicon-76.png" type="image/png">
+    <link rel="apple-touch-icon" sizes="120x120" href="../../../../images/favicon-120.png" type="image/png">
+    <link rel="apple-touch-icon" sizes="152x152" href="../../../../images/favicon-152.png" type="image/png">
+    <link rel="stylesheet" type="text/css" href="../../../../css/main.css">
+    <link href="../../../../atom.xml" rel="alternate" title="hyegar.com - A personal and developer blog" type="application/atom+xml">
+    <link type="text/plain" rel="author" href="../../../../humans.txt">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      
+      ga('create', 'UA-57031124-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+
+  </head>
+
+  <body>
+    <header id="page_header">
+    <h1><a href="../../../../" title="Home">Edgar Aroutiounian</a></h1>
+</header>
+
+    <nav id="page_navigation">
+    <ul>
+        <li><a href="../../../../">Home</a></li>
+        <li><a href="../../../../about">About</a></li>
+        <li><a href="../../../../archive">Archive</a></li>
+        <li><a href="../../../../notes">Notes</a></li>
+        <li><a href="../../../../talks">Talks</a></li>
+    </ul>
+</nav>
+
+    
+    <section id="content">
+      <article>
+    <header>
+        <h1>2015-10-12-monads-you-can-understand</h1>
+        <span class="post-date">October 12, 2015</span> in 
+        <span class="post-tags"></span>
+    </header>
+    <p>Let’s learn about monads as programmers, that is let’s use them for building something and in the process we’ll build up a intuition; practice first, then you can go back to theory later.</p>
+<p>This post is split in two parts:</p>
+<p>Part 1 is just to get the ideas out the door</p>
+<p>Part 2 (Currently not written) is for an OCaml audience, just to improve the quality of the OCaml code itself</p>
+<p>As Bryan O’Sullivan said (From Real World Haskell) “…we need something that’s non-trivial but still chewey.” So we’ll build a real working example in OCaml that will be the starting point of a library to the <a href="https://stripe.com/docs/api">Stripe API</a> and it will use monads.</p>
+<h1 id="prereqs">Prereqs</h1>
+<p>We need to make sure we have all the same starting point for this code, I assume you have <a href="https://opam.ocaml.org">opam</a> installed. Now do:</p>
+<pre class="shell"><code>$ opam install lwt cohttp yojson uri</code></pre>
+<p>These are the libaries we will use: <code>lwt</code> is for threading, <code>cohttp.lwt</code> is for our HTTP requests, <code>uri</code> for handling URIs and <code>yojson</code>, an easy to use and <strong>de facto</strong> json library.</p>
+<h1 id="stripe">Stripe</h1>
+<p>The Stripe API is a straight forward REST API. You’ll need to have a developer account from which you’ll get your Test Key, hence forth known as <code>key</code>. We’ll focus on one task, we’ll start the process of charging a credit card. Point your browser to this <a href="https://stripe.com/docs/api#create_charge">link</a> which shows how to create the “Charge” object. Be sure to be looking at that page while logged in because we’ll need the value for the <code>source</code> parameter, we’ll call it the <strong>source token</strong> From there we see we need to do a <code>POST</code> to <a href="https://api.stripe.com/v1/charges" class="uri">https://api.stripe.com/v1/charges</a> with several required arguments:</p>
+<ol style="list-style-type: decimal">
+<li>The amount to charge</li>
+<li>The ISO code for currency</li>
+<li>Either the Customer or Source</li>
+</ol>
+<p>All of Stripe’s API returns JSON, so we can already sketch out our function’s signature and helper data structure, something like:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">type</span> t = { authed : Cohttp<span class="kw">.</span>Headers<span class="kw">.</span>t; 
+           end_point : <span class="dt">string</span>; }
+
+<span class="kw">val</span> make_handle : <span class="dt">unit</span> -&gt; t
+
+<span class="kw">val</span> create_charge : <span class="dt">int</span> -&gt; 
+                    <span class="dt">string</span> -&gt; 
+                    <span class="dt">string</span> -&gt;
+                    t -&gt;  
+                    Yojson<span class="kw">.</span>Basic<span class="kw">.</span>json Lwt<span class="kw">.</span>t</code></pre></div>
+<p>Mostly straight forward, although that <code>Lwt.t</code> should look at little strange. The quick answer that that <code>create_charge</code> will give back an <code>Lwt.t</code> monad which in this case will contain a <code>json</code> object.</p>
+<p>Let’s start filling out the <code>make_handle</code> function,</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> make_handle () = 
+  <span class="kw">let</span> auth_me k = 
+    <span class="kw">let</span> starter = Cohttp<span class="kw">.</span>Header<span class="kw">.</span>init () <span class="kw">in</span> 
+    Cohttp<span class="kw">.</span>Auth<span class="kw">.</span>credential_of_string (<span class="st">&quot;Bearer &quot;</span> ^ k)
+    |&gt; Cohttp<span class="kw">.</span>Header<span class="kw">.</span>add_authorization starter
+  <span class="kw">in</span>
+  {authed = auth_me <span class="st">&quot;YOUR STRIPE KEY&quot;</span>; 
+   <span class="co">(** Hardcoding to the charge create path *)</span>
+   end_point = <span class="st">&quot;https://api.stripe.com/v1/charges&quot;</span>}</code></pre></div>
+<p>This creates our record needed for making a post. Stripe requires a key in each request so we’ll make this record to encapsulate that, otherwise we have to write boilerplate code, never fun.</p>
+<p>Now the first cut of out <code>create_charge</code> function:</p>
+<p>(<strong>META NOTE</strong> This is horrible indentation, I’m only doing it because of the sizing done in the exporting of this document and I want it to be clear what’s happening and the coloring is wrong because <sub>’</sub> can be used in a value’s name but its messing up the coding exporter)</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"> <span class="dv">1</span>  <span class="kw">let</span> create_charge amount currency source handle = 
+ <span class="dv">2</span>    <span class="kw">let</span> <span class="ot">open</span> Cohttp_lwt_unix <span class="kw">in</span>
+ <span class="dv">3</span>    <span class="kw">let</span> this_uri = Uri<span class="kw">.</span>of_string handle.end_point <span class="kw">in</span>
+ <span class="dv">4</span>    [(<span class="st">&quot;amount&quot;</span>, string_of_int amount);
+ <span class="dv">5</span>     (<span class="st">&quot;currency&quot;</span>, currency);]
+ <span class="dv">6</span>     (<span class="st">&quot;source&quot;</span>, source)]
+ <span class="dv">7</span>    |&gt; Uri<span class="kw">.</span>add_query_params' this_uri
+ <span class="dv">8</span>    |&gt; Client<span class="kw">.</span>post ~headers:handle.authed &gt;&gt;= 
+ <span class="dv">9</span>       <span class="kw">fun</span> (resp, body) -&gt; 
+<span class="dv">10</span>       <span class="co">(* This can also be done more succinctly</span>
+<span class="co">11          with:</span>
+<span class="co">12          Cohttp_lwt_body.to_string body &gt;|=</span>
+<span class="co">13          Yojson.Basic.from_string  *)</span>
+<span class="dv">14</span>       Cohttp_lwt_body<span class="kw">.</span>to_string body &gt;&gt;= <span class="kw">fun</span> j -&gt; 
+<span class="dv">15</span>       Yojson<span class="kw">.</span>Basic<span class="kw">.</span>from_string j |&gt; return</code></pre></div>
+<p>Okay, so what the hell is going on. Line 2 open the <code>Cohttp_lwt_unix</code> module locally to this function so that we can type <code>Client.post</code> instead of <code>Cohttp_lwt_unix.Client.post</code>. Line 3 creates a <code>uri</code> object, lines 4-6 are the query parameters we want to add to our <code>uri</code> object. The <code>|&gt;</code> symbol is a function, you can call it reverse apply, you can define it as</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> ( |&gt; ) f x = x f</code></pre></div>
+<p>but you don’t need to, it comes with OCaml. It just says take the left side as the input to the right side, aka a Unix Pipe. Now let’s see the signature of <code>Client.post</code>, its:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">val</span> post ?ctx:Cohttp_lwt_unix<span class="kw">.</span>Client<span class="kw">.</span>ctx -&gt;
+         ?body:Cohttp_lwt_body<span class="kw">.</span>t -&gt;
+         ?chunked:<span class="dt">bool</span> -&gt;
+         ?headers:Cohttp<span class="kw">.</span>Header<span class="kw">.</span>t -&gt;
+         Uri<span class="kw">.</span>t -&gt; 
+         (Cohttp<span class="kw">.</span>Response<span class="kw">.</span>t * Cohttp_lwt_body<span class="kw">.</span>t) Lwt<span class="kw">.</span>t</code></pre></div>
+<p>Looks big but we don’t care about most of it, in fact we could just care about the <code>Uri.t</code> parameter since the rest of the parameters, the ones with <code>?</code>, have default values but we can override them as we do on line 8’s <code>Client.post ~headers:handle.authed</code>. Now notice the final value of a call to <code>Client.post</code>, its:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">(Cohttp<span class="kw">.</span>Response<span class="kw">.</span>t * Cohttp_lwt_body<span class="kw">.</span>t) Lwt<span class="kw">.</span>t</code></pre></div>
+<p>This says that <code>post</code> will give back an <code>Lwt.t</code> monad which contains a tuple of a response object and the body, again completely reasonable. The line of line 8 features the famous <code>&gt;&gt;=</code> operator, aka <code>bind</code> it’s signature is:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">val</span> ( &gt;&gt;= ) : 'a Lwt<span class="kw">.</span>t -&gt; ('a -&gt; 'b Lwt<span class="kw">.</span>t) -&gt; 'b Lwt<span class="kw">.</span>t</code></pre></div>
+<p>And this says that <code>&gt;&gt;=</code> takes something wrapped in the <code>Lwt.t</code> monad on the left side and passes the unwrapped value to a function on the right side which has to return something wrapped in the <code>Lwt.t</code> monad where the two somethings can be different or the same. So in our code that right side is this anonymous function, this lambda:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">fun</span> (resp, body) -&gt;</code></pre></div>
+<p>Now we have a handle on the http response and the body, we won’t do any error checking so let’s just look at the body with line 10’s usage of <code>Cohttp_lwt_body.to_string</code> whose signature is:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">val</span> to_string : Cohttp_lwt_body<span class="kw">.</span>t -&gt; <span class="dt">string</span> Lwt<span class="kw">.</span>t</code></pre></div>
+<p>Translation: Takes a body and gives back a string wrapped in a Lwt.t monad. Remember our goal is to get the body as a json object, so we could just pipe it to <code>Yojson.Basic.from_string</code> but still recall that our <code>create_charge</code> function had final value of <code>Yojson.Basic.json Lwt.t</code>, not a plain <code>Yojson.Basic.json</code> so we pipe it to the other famous monad related function, <code>return</code>. <code>return</code> really should have been called inject because it takes a plain value and “injects” it into a monad, let’s see its value here:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">val</span> return : 'a -&gt; 'a Lwt<span class="kw">.</span>t</code></pre></div>
+<p>We are using it to turn our plain <code>Yojson.Basic.json</code> into a <code>Yojson.Basic.json Lwt.t</code> Now let’s use this code to actually do something.</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> program = 
+  <span class="kw">let</span> this_handle = make_handle () <span class="kw">in</span>
+  <span class="kw">let</span> st = <span class="st">&quot;SOURCE_TOKEN_MENTIONED_EARLIER&quot;</span> <span class="kw">in</span>
+  create_charge <span class="dv">500</span> <span class="st">&quot;usd&quot;</span> this_handle &gt;&gt;= <span class="kw">fun</span> j -&gt; 
+  Yojson<span class="kw">.</span>Basic<span class="kw">.</span>pretty_to_string j |&gt; Lwt_io<span class="kw">.</span>printl 
+
+<span class="kw">let</span> () = 
+  Lwt_main<span class="kw">.</span>run program</code></pre></div>
+<p>At this point this should be understandable, our create_charge is returning a monad so we pass its output to <code>&gt;&gt;=</code>, which passes a json object to a lambda, we turn the json value to a pretty printed string and pipe it out to <code>Lwt_io.printl</code>, a <code>printf</code> for the <code>Lwt</code> library.</p>
+<h1 id="build-and-run">Build and Run</h1>
+<p>Now let’s build our program and run it, assuming all the code is in <code>code.ml</code> we invoke the OCaml toolchain as so:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">$ ocamlfind ocamlopt -linkpkg code.ml -packages lwt.unix,cohttp.lwt,yojson,uri -o <span class="dt">T</span></code></pre></div>
+<p>assuming everything well, you should have an executable T, which will print something like:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">$ ./<span class="dt">T</span>
+{
+  <span class="st">&quot;object&quot;</span>: <span class="st">&quot;charge&quot;</span>,
+  <span class="st">&quot;created&quot;</span>: <span class="dv">1443072037</span>,
+  <span class="st">&quot;livemode&quot;</span>: <span class="kw">false</span>,
+  <span class="st">&quot;paid&quot;</span>: <span class="kw">true</span>,
+  <span class="st">&quot;status&quot;</span>: <span class="st">&quot;succeeded&quot;</span>,
+  <span class="st">&quot;amount&quot;</span>: <span class="dv">500</span>,
+  <span class="st">&quot;currency&quot;</span>: <span class="st">&quot;usd&quot;</span>,
+  <span class="st">&quot;refunded&quot;</span>: <span class="kw">false</span>,
+  <span class="st">&quot;source&quot;</span>: {
+    <span class="st">&quot;object&quot;</span>: <span class="st">&quot;card&quot;</span>,
+    <span class="st">&quot;brand&quot;</span>: <span class="st">&quot;Visa&quot;</span>,
+    <span class="st">&quot;funding&quot;</span>: <span class="st">&quot;credit&quot;</span>,
+    <span class="st">&quot;exp_month&quot;</span>: <span class="dv">8</span>,
+    <span class="st">&quot;exp_year&quot;</span>: <span class="dv">2016</span>,
+    <span class="st">&quot;country&quot;</span>: <span class="st">&quot;US&quot;</span>,
+    <span class="st">&quot;name&quot;</span>: null,
+    <span class="st">&quot;address_line1&quot;</span>: null,
+    <span class="st">&quot;address_line2&quot;</span>: null,
+    <span class="st">&quot;address_city&quot;</span>: null,
+    <span class="st">&quot;address_state&quot;</span>: null,
+    <span class="st">&quot;address_zip&quot;</span>: null,
+    <span class="st">&quot;address_country&quot;</span>: null,
+    <span class="st">&quot;cvc_check&quot;</span>: null,
+    <span class="st">&quot;address_line1_check&quot;</span>: null,
+    <span class="st">&quot;address_zip_check&quot;</span>: null,
+    <span class="st">&quot;tokenization_method&quot;</span>: null,
+    <span class="st">&quot;dynamic_last4&quot;</span>: null,
+    <span class="st">&quot;metadata&quot;</span>: {},
+    <span class="st">&quot;customer&quot;</span>: null
+  },
+  <span class="st">&quot;captured&quot;</span>: <span class="kw">true</span>,
+  <span class="st">&quot;failure_message&quot;</span>: null,
+  <span class="st">&quot;failure_code&quot;</span>: null,
+  <span class="st">&quot;amount_refunded&quot;</span>: <span class="dv">0</span>,
+  <span class="st">&quot;customer&quot;</span>: null,
+  <span class="st">&quot;invoice&quot;</span>: null,
+  <span class="st">&quot;dispute&quot;</span>: null,
+  <span class="st">&quot;metadata&quot;</span>: {},
+  <span class="st">&quot;statement_descriptor&quot;</span>: null,
+  <span class="st">&quot;fraud_details&quot;</span>: {},
+  <span class="st">&quot;receipt_email&quot;</span>: null,
+  <span class="st">&quot;receipt_number&quot;</span>: null,
+  <span class="st">&quot;shipping&quot;</span>: null,
+  <span class="st">&quot;destination&quot;</span>: null,
+  <span class="st">&quot;application_fee&quot;</span>: null,
+  <span class="st">&quot;refunds&quot;</span>: {
+    <span class="st">&quot;object&quot;</span>: <span class="st">&quot;list&quot;</span>,
+    <span class="st">&quot;total_count&quot;</span>: <span class="dv">0</span>,
+    <span class="st">&quot;has_more&quot;</span>: <span class="kw">false</span>,
+    <span class="st">&quot;url&quot;</span>: <span class="st">&quot;/v1/charges/ch_16oS9pJDURztdKY9Z7QS8c8D/refunds&quot;</span>,
+    <span class="st">&quot;data&quot;</span>: []
+  }
+}</code></pre></div>
+<p>Yay success.</p>
+<h1 id="moral-of-the-story">Moral of the Story</h1>
+<p>So in terms of actually day to day coding, you don’t actually need to know what a monad “is”, you just need to know how to use it and honestly that’s completely fine, in fact just following the type signatures can take you pretty far in a new, unfamiliar library.</p>
+</article>
+
+    </section>
+
+    <footer id="page_footer">
+    <a href="http://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC-4.0</a>
+    &mdash;
+    Built with 
+    <a href="http://jaspervdj.be/hakyll">Hakyll</a>.
+    &mdash;
+    Source on 
+    <a href="https://github.com/fxfactorial/hblog">GitHub</a>
+    &mdash;
+    <a href="http://hyegar.com/atom.xml">RSS feed</a>
+</footer>
+
+  </body>
+</html>

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Personal blog of Edgar Aroutiounian">
+    <meta name="author" content="Edgar Aroutiounian">
+    <title>hyegar.com - 2015-09-21-ocaml-love</title>
+    <link rel="canonical" href="http://hyegar.com">
+    <link rel="icon" href="../../../../favicon.png" type="image/png">
+    <link rel="apple-touch-icon" sizes="60x60" href="../../../../images/favicon-60.png" type="image/png">
+    <link rel="apple-touch-icon" sizes="76x76" href="../../../../images/favicon-76.png" type="image/png">
+    <link rel="apple-touch-icon" sizes="120x120" href="../../../../images/favicon-120.png" type="image/png">
+    <link rel="apple-touch-icon" sizes="152x152" href="../../../../images/favicon-152.png" type="image/png">
+    <link rel="stylesheet" type="text/css" href="../../../../css/main.css">
+    <link href="../../../../atom.xml" rel="alternate" title="hyegar.com - A personal and developer blog" type="application/atom+xml">
+    <link type="text/plain" rel="author" href="../../../../humans.txt">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      
+      ga('create', 'UA-57031124-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+
+  </head>
+
+  <body>
+    <header id="page_header">
+    <h1><a href="../../../../" title="Home">Edgar Aroutiounian</a></h1>
+</header>
+
+    <nav id="page_navigation">
+    <ul>
+        <li><a href="../../../../">Home</a></li>
+        <li><a href="../../../../about">About</a></li>
+        <li><a href="../../../../archive">Archive</a></li>
+        <li><a href="../../../../notes">Notes</a></li>
+        <li><a href="../../../../talks">Talks</a></li>
+    </ul>
+</nav>
+
+    
+    <section id="content">
+      <article>
+    <header>
+        <h1>2015-09-21-ocaml-love</h1>
+        <span class="post-date">September 21, 2015</span> in 
+        <span class="post-tags"></span>
+    </header>
+    <p>Programmers usually have a choice of language to use via what job they decide to seek. Its probably the case that the majority of programmers don’t really care what language they use and really just care about the paycheck and this is pretty much fine I think, at the end of the day it really is just a job. That said there are indeed some programmers that care about what language they use for the majority of their adult waking life, I liken it to a carpenter caring about the brand of hammers they’re using.</p>
+<h1 id="my-choice">My choice</h1>
+<p>For me the best language to use is <a href="http://ocaml.org">OCaml</a>. Its a statically typed functional programming language that has a powerful type system. In addition to being a functional language, OCaml lets me write imperative code with real mutation and this is often very useful, i.e having a local reference variable really makes some code so much cleaner and easier to deal with and that really ought to be our goal, clean and easy to reason about code.</p>
+<h1 id="what-can-you-do-with-it">What can you do with it?</h1>
+<p>I keep getting this question and its a little strange. What can I do with this language? Well anything else you can do in any other programming language. For me I’m working in the day-time as an OCamler and I use it for my <a href="https://github.com/fxfactorial">personal projects</a>. I even write JavaScript in OCaml via <a href="http://ocsigen.org/js_of_ocaml/">js_of_ocaml</a>.</p>
+<p>Here’s an example straight from my bindings to <a href="https://github.com/maxmind/libmaxminddb">libmaxminddb</a>.</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="co">(* File named loc_dump.ml *)</span>
+<span class="ot">#require &quot;maxminddb&quot;</span>
+
+<span class="kw">let</span> () =
+  <span class="kw">let</span> some_ip = <span class="st">&quot;172.56.31.240&quot;</span> <span class="kw">in</span>
+  <span class="kw">let</span> this_mmdb = Maxminddb<span class="kw">.</span>create <span class="st">&quot;etc/GeoLite2-City.mmdb&quot;</span> <span class="kw">in</span>
+  <span class="kw">let</span> loc = Maxminddb<span class="kw">.</span>location some_ip this_mmdb <span class="kw">in</span>
+  <span class="kw">let</span> <span class="ot">open</span> Maxminddb <span class="kw">in</span>
+  Printf<span class="kw">.</span>sprintf <span class="st">&quot;%f %f %d %s&quot;</span> loc.latitude loc.longitude loc.metro_code loc.time_zone
+  |&gt; print_endline;
+  <span class="kw">let</span> geo_borders = borders ~lang:<span class="dt">French</span> ~ip:some_ip this_mmdb <span class="kw">in</span>
+  Printf<span class="kw">.</span>sprintf
+    <span class="st">&quot;%s %s %s %s %s&quot;</span>
+    geo_borders.postal_code
+    geo_borders.city_name
+    geo_borders.country_name
+    geo_borders.continent_name
+    geo_borders.iso_code
+  |&gt; print_endline</code></pre></div>
+<p>And the corresponding result on the shell</p>
+<pre class="shell"><code>$ utop loc_dump.ml
+33.895900 -118.220100 803 America/Los_Angeles
+90221 Compton États-Unis Amérique du Nord US</code></pre>
+<p>In any case if you’re a programmer and reading this post then I recommend that you try OCaml, especially if you have been burned by Haskell’s mental overhead but still want to do functional programming.</p>
+</article>
+
+    </section>
+
+    <footer id="page_footer">
+    <a href="http://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC-4.0</a>
+    &mdash;
+    Built with 
+    <a href="http://jaspervdj.be/hakyll">Hakyll</a>.
+    &mdash;
+    Source on 
+    <a href="https://github.com/fxfactorial/hblog">GitHub</a>
+    &mdash;
+    <a href="http://hyegar.com/atom.xml">RSS feed</a>
+</footer>
+
+  </body>
+</html>

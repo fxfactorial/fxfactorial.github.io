@@ -211,6 +211,164 @@ PKG cmdliner js_of_ocaml</code></pre>
 <article>
     <header>
         <h1>
+            <a href="./2015/10/12/monads-you-can-understand/" title="Permalink">
+                2015-10-12-monads-you-can-understand
+            </a>
+        </h1>
+        <span class="post-date">October 12, 2015</span> in 
+        <span class="post-tags"></span>
+    </header>
+    <p>Let’s learn about monads as programmers, that is let’s use them for building something and in the process we’ll build up a intuition; practice first, then you can go back to theory later.</p>
+<p>This post is split in two parts:</p>
+<p>Part 1 is just to get the ideas out the door</p>
+<p>Part 2 (Currently not written) is for an OCaml audience, just to improve the quality of the OCaml code itself</p>
+<p>As Bryan O’Sullivan said (From Real World Haskell) “…we need something that’s non-trivial but still chewey.” So we’ll build a real working example in OCaml that will be the starting point of a library to the <a href="https://stripe.com/docs/api">Stripe API</a> and it will use monads.</p>
+<h1 id="prereqs">Prereqs</h1>
+<p>We need to make sure we have all the same starting point for this code, I assume you have <a href="https://opam.ocaml.org">opam</a> installed. Now do:</p>
+<pre class="shell"><code>$ opam install lwt cohttp yojson uri</code></pre>
+<p>These are the libaries we will use: <code>lwt</code> is for threading, <code>cohttp.lwt</code> is for our HTTP requests, <code>uri</code> for handling URIs and <code>yojson</code>, an easy to use and <strong>de facto</strong> json library.</p>
+<h1 id="stripe">Stripe</h1>
+<p>The Stripe API is a straight forward REST API. You’ll need to have a developer account from which you’ll get your Test Key, hence forth known as <code>key</code>. We’ll focus on one task, we’ll start the process of charging a credit card. Point your browser to this <a href="https://stripe.com/docs/api#create_charge">link</a> which shows how to create the “Charge” object. Be sure to be looking at that page while logged in because we’ll need the value for the <code>source</code> parameter, we’ll call it the <strong>source token</strong> From there we see we need to do a <code>POST</code> to <a href="https://api.stripe.com/v1/charges" class="uri">https://api.stripe.com/v1/charges</a> with several required arguments:</p>
+<ol style="list-style-type: decimal">
+<li>The amount to charge</li>
+<li>The ISO code for currency</li>
+<li>Either the Customer or Source</li>
+</ol>
+<p>All of Stripe’s API returns JSON, so we can already sketch out our function’s signature and helper data structure, something like:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">type</span> t = { authed : Cohttp<span class="kw">.</span>Headers<span class="kw">.</span>t; 
+           end_point : <span class="dt">string</span>; }
+
+<span class="kw">val</span> make_handle : <span class="dt">unit</span> -&gt; t
+
+<span class="kw">val</span> create_charge : <span class="dt">int</span> -&gt; 
+                    <span class="dt">string</span> -&gt; 
+                    <span class="dt">string</span> -&gt;
+                    t -&gt;  
+                    Yojson<span class="kw">.</span>Basic<span class="kw">.</span>json Lwt<span class="kw">.</span>t</code></pre></div>
+<p>Mostly straight forward, although that <code>Lwt.t</code> should look at little strange. The quick answer that that <code>create_charge</code> will give back an <code>Lwt.t</code> monad which in this case will contain a <code>json</code> object.</p>
+<p>Let’s start filling out the <code>make_handle</code> function,</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> make_handle () = 
+  <span class="kw">let</span> auth_me k = 
+    <span class="kw">let</span> starter = Cohttp<span class="kw">.</span>Header<span class="kw">.</span>init () <span class="kw">in</span> 
+    Cohttp<span class="kw">.</span>Auth<span class="kw">.</span>credential_of_string (<span class="st">&quot;Bearer &quot;</span> ^ k)
+    |&gt; Cohttp<span class="kw">.</span>Header<span class="kw">.</span>add_authorization starter
+  <span class="kw">in</span>
+  {authed = auth_me <span class="st">&quot;YOUR STRIPE KEY&quot;</span>; 
+   <span class="co">(** Hardcoding to the charge create path *)</span>
+   end_point = <span class="st">&quot;https://api.stripe.com/v1/charges&quot;</span>}</code></pre></div>
+<p>This creates our record needed for making a post. Stripe requires a key in each request so we’ll make this record to encapsulate that, otherwise we have to write boilerplate code, never fun.</p>
+<p>Now the first cut of out <code>create_charge</code> function:</p>
+<p>(<strong>META NOTE</strong> This is horrible indentation, I’m only doing it because of the sizing done in the exporting of this document and I want it to be clear what’s happening and the coloring is wrong because <sub>’</sub> can be used in a value’s name but its messing up the coding exporter)</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"> <span class="dv">1</span>  <span class="kw">let</span> create_charge amount currency source handle = 
+ <span class="dv">2</span>    <span class="kw">let</span> <span class="ot">open</span> Cohttp_lwt_unix <span class="kw">in</span>
+ <span class="dv">3</span>    <span class="kw">let</span> this_uri = Uri<span class="kw">.</span>of_string handle.end_point <span class="kw">in</span>
+ <span class="dv">4</span>    [(<span class="st">&quot;amount&quot;</span>, string_of_int amount);
+ <span class="dv">5</span>     (<span class="st">&quot;currency&quot;</span>, currency);]
+ <span class="dv">6</span>     (<span class="st">&quot;source&quot;</span>, source)]
+ <span class="dv">7</span>    |&gt; Uri<span class="kw">.</span>add_query_params' this_uri
+ <span class="dv">8</span>    |&gt; Client<span class="kw">.</span>post ~headers:handle.authed &gt;&gt;= 
+ <span class="dv">9</span>       <span class="kw">fun</span> (resp, body) -&gt; 
+<span class="dv">10</span>       <span class="co">(* This can also be done more succinctly</span>
+<span class="co">11          with:</span>
+<span class="co">12          Cohttp_lwt_body.to_string body &gt;|=</span>
+<span class="co">13          Yojson.Basic.from_string  *)</span>
+<span class="dv">14</span>       Cohttp_lwt_body<span class="kw">.</span>to_string body &gt;&gt;= <span class="kw">fun</span> j -&gt; 
+<span class="dv">15</span>       Yojson<span class="kw">.</span>Basic<span class="kw">.</span>from_string j |&gt; return</code></pre></div>
+<p>Okay, so what the hell is going on. Line 2 open the <code>Cohttp_lwt_unix</code> module locally to this function so that we can type <code>Client.post</code> instead of <code>Cohttp_lwt_unix.Client.post</code>. Line 3 creates a <code>uri</code> object, lines 4-6 are the query parameters we want to add to our <code>uri</code> object. The <code>|&gt;</code> symbol is a function, you can call it reverse apply, you can define it as</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> ( |&gt; ) f x = x f</code></pre></div>
+<p>but you don’t need to, it comes with OCaml. It just says take the left side as the input to the right side, aka a Unix Pipe. Now let’s see the signature of <code>Client.post</code>, its:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">val</span> post ?ctx:Cohttp_lwt_unix<span class="kw">.</span>Client<span class="kw">.</span>ctx -&gt;
+         ?body:Cohttp_lwt_body<span class="kw">.</span>t -&gt;
+         ?chunked:<span class="dt">bool</span> -&gt;
+         ?headers:Cohttp<span class="kw">.</span>Header<span class="kw">.</span>t -&gt;
+         Uri<span class="kw">.</span>t -&gt; 
+         (Cohttp<span class="kw">.</span>Response<span class="kw">.</span>t * Cohttp_lwt_body<span class="kw">.</span>t) Lwt<span class="kw">.</span>t</code></pre></div>
+<p>Looks big but we don’t care about most of it, in fact we could just care about the <code>Uri.t</code> parameter since the rest of the parameters, the ones with <code>?</code>, have default values but we can override them as we do on line 8’s <code>Client.post ~headers:handle.authed</code>. Now notice the final value of a call to <code>Client.post</code>, its:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">(Cohttp<span class="kw">.</span>Response<span class="kw">.</span>t * Cohttp_lwt_body<span class="kw">.</span>t) Lwt<span class="kw">.</span>t</code></pre></div>
+<p>This says that <code>post</code> will give back an <code>Lwt.t</code> monad which contains a tuple of a response object and the body, again completely reasonable. The line of line 8 features the famous <code>&gt;&gt;=</code> operator, aka <code>bind</code> it’s signature is:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">val</span> ( &gt;&gt;= ) : 'a Lwt<span class="kw">.</span>t -&gt; ('a -&gt; 'b Lwt<span class="kw">.</span>t) -&gt; 'b Lwt<span class="kw">.</span>t</code></pre></div>
+<p>And this says that <code>&gt;&gt;=</code> takes something wrapped in the <code>Lwt.t</code> monad on the left side and passes the unwrapped value to a function on the right side which has to return something wrapped in the <code>Lwt.t</code> monad where the two somethings can be different or the same. So in our code that right side is this anonymous function, this lambda:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">fun</span> (resp, body) -&gt;</code></pre></div>
+<p>Now we have a handle on the http response and the body, we won’t do any error checking so let’s just look at the body with line 10’s usage of <code>Cohttp_lwt_body.to_string</code> whose signature is:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">val</span> to_string : Cohttp_lwt_body<span class="kw">.</span>t -&gt; <span class="dt">string</span> Lwt<span class="kw">.</span>t</code></pre></div>
+<p>Translation: Takes a body and gives back a string wrapped in a Lwt.t monad. Remember our goal is to get the body as a json object, so we could just pipe it to <code>Yojson.Basic.from_string</code> but still recall that our <code>create_charge</code> function had final value of <code>Yojson.Basic.json Lwt.t</code>, not a plain <code>Yojson.Basic.json</code> so we pipe it to the other famous monad related function, <code>return</code>. <code>return</code> really should have been called inject because it takes a plain value and “injects” it into a monad, let’s see its value here:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">val</span> return : 'a -&gt; 'a Lwt<span class="kw">.</span>t</code></pre></div>
+<p>We are using it to turn our plain <code>Yojson.Basic.json</code> into a <code>Yojson.Basic.json Lwt.t</code> Now let’s use this code to actually do something.</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> program = 
+  <span class="kw">let</span> this_handle = make_handle () <span class="kw">in</span>
+  <span class="kw">let</span> st = <span class="st">&quot;SOURCE_TOKEN_MENTIONED_EARLIER&quot;</span> <span class="kw">in</span>
+  create_charge <span class="dv">500</span> <span class="st">&quot;usd&quot;</span> this_handle &gt;&gt;= <span class="kw">fun</span> j -&gt; 
+  Yojson<span class="kw">.</span>Basic<span class="kw">.</span>pretty_to_string j |&gt; Lwt_io<span class="kw">.</span>printl 
+
+<span class="kw">let</span> () = 
+  Lwt_main<span class="kw">.</span>run program</code></pre></div>
+<p>At this point this should be understandable, our create_charge is returning a monad so we pass its output to <code>&gt;&gt;=</code>, which passes a json object to a lambda, we turn the json value to a pretty printed string and pipe it out to <code>Lwt_io.printl</code>, a <code>printf</code> for the <code>Lwt</code> library.</p>
+<h1 id="build-and-run">Build and Run</h1>
+<p>Now let’s build our program and run it, assuming all the code is in <code>code.ml</code> we invoke the OCaml toolchain as so:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">$ ocamlfind ocamlopt -linkpkg code.ml -packages lwt.unix,cohttp.lwt,yojson,uri -o <span class="dt">T</span></code></pre></div>
+<p>assuming everything well, you should have an executable T, which will print something like:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">$ ./<span class="dt">T</span>
+{
+  <span class="st">&quot;object&quot;</span>: <span class="st">&quot;charge&quot;</span>,
+  <span class="st">&quot;created&quot;</span>: <span class="dv">1443072037</span>,
+  <span class="st">&quot;livemode&quot;</span>: <span class="kw">false</span>,
+  <span class="st">&quot;paid&quot;</span>: <span class="kw">true</span>,
+  <span class="st">&quot;status&quot;</span>: <span class="st">&quot;succeeded&quot;</span>,
+  <span class="st">&quot;amount&quot;</span>: <span class="dv">500</span>,
+  <span class="st">&quot;currency&quot;</span>: <span class="st">&quot;usd&quot;</span>,
+  <span class="st">&quot;refunded&quot;</span>: <span class="kw">false</span>,
+  <span class="st">&quot;source&quot;</span>: {
+    <span class="st">&quot;object&quot;</span>: <span class="st">&quot;card&quot;</span>,
+    <span class="st">&quot;brand&quot;</span>: <span class="st">&quot;Visa&quot;</span>,
+    <span class="st">&quot;funding&quot;</span>: <span class="st">&quot;credit&quot;</span>,
+    <span class="st">&quot;exp_month&quot;</span>: <span class="dv">8</span>,
+    <span class="st">&quot;exp_year&quot;</span>: <span class="dv">2016</span>,
+    <span class="st">&quot;country&quot;</span>: <span class="st">&quot;US&quot;</span>,
+    <span class="st">&quot;name&quot;</span>: null,
+    <span class="st">&quot;address_line1&quot;</span>: null,
+    <span class="st">&quot;address_line2&quot;</span>: null,
+    <span class="st">&quot;address_city&quot;</span>: null,
+    <span class="st">&quot;address_state&quot;</span>: null,
+    <span class="st">&quot;address_zip&quot;</span>: null,
+    <span class="st">&quot;address_country&quot;</span>: null,
+    <span class="st">&quot;cvc_check&quot;</span>: null,
+    <span class="st">&quot;address_line1_check&quot;</span>: null,
+    <span class="st">&quot;address_zip_check&quot;</span>: null,
+    <span class="st">&quot;tokenization_method&quot;</span>: null,
+    <span class="st">&quot;dynamic_last4&quot;</span>: null,
+    <span class="st">&quot;metadata&quot;</span>: {},
+    <span class="st">&quot;customer&quot;</span>: null
+  },
+  <span class="st">&quot;captured&quot;</span>: <span class="kw">true</span>,
+  <span class="st">&quot;failure_message&quot;</span>: null,
+  <span class="st">&quot;failure_code&quot;</span>: null,
+  <span class="st">&quot;amount_refunded&quot;</span>: <span class="dv">0</span>,
+  <span class="st">&quot;customer&quot;</span>: null,
+  <span class="st">&quot;invoice&quot;</span>: null,
+  <span class="st">&quot;dispute&quot;</span>: null,
+  <span class="st">&quot;metadata&quot;</span>: {},
+  <span class="st">&quot;statement_descriptor&quot;</span>: null,
+  <span class="st">&quot;fraud_details&quot;</span>: {},
+  <span class="st">&quot;receipt_email&quot;</span>: null,
+  <span class="st">&quot;receipt_number&quot;</span>: null,
+  <span class="st">&quot;shipping&quot;</span>: null,
+  <span class="st">&quot;destination&quot;</span>: null,
+  <span class="st">&quot;application_fee&quot;</span>: null,
+  <span class="st">&quot;refunds&quot;</span>: {
+    <span class="st">&quot;object&quot;</span>: <span class="st">&quot;list&quot;</span>,
+    <span class="st">&quot;total_count&quot;</span>: <span class="dv">0</span>,
+    <span class="st">&quot;has_more&quot;</span>: <span class="kw">false</span>,
+    <span class="st">&quot;url&quot;</span>: <span class="st">&quot;/v1/charges/ch_16oS9pJDURztdKY9Z7QS8c8D/refunds&quot;</span>,
+    <span class="st">&quot;data&quot;</span>: []
+  }
+}</code></pre></div>
+<p>Yay success.</p>
+<h1 id="moral-of-the-story">Moral of the Story</h1>
+<p>So in terms of actually day to day coding, you don’t actually need to know what a monad “is”, you just need to know how to use it and honestly that’s completely fine, in fact just following the type signatures can take you pretty far in a new, unfamiliar library.</p>
+</article>
+<article>
+    <header>
+        <h1>
             <a href="./2015/10/07/elegant/" title="Permalink">
                 2015-10-07-elegant
             </a>
@@ -241,74 +399,43 @@ PKG cmdliner js_of_ocaml</code></pre>
 <article>
     <header>
         <h1>
-            <a href="./2015/09/11/cool-latex/" title="Permalink">
-                2015-09-11-cool-latex
+            <a href="./2015/09/21/ocaml-love/" title="Permalink">
+                2015-09-21-ocaml-love
             </a>
         </h1>
-        <span class="post-date">September 11, 2015</span> in 
+        <span class="post-date">September 21, 2015</span> in 
         <span class="post-tags"></span>
     </header>
-    <p>This post is going to add a lot of value to your life; I’m going to show you how to:</p>
-<ol style="list-style-type: decimal">
-<li>Install LaTeX on OS X, without too much junk.</li>
-<li>Use org-mode on emacs along with some creature comforts</li>
-<li>Use animations inside a PDF. Yes, I’m serious.</li>
-</ol>
-<h1 id="installing-latex">Installing LaTeX</h1>
-<p>Most folks that install LaTeX on OS X probably do it with the <a href="https://tug.org/mactex/">MacTex</a> package. This is probably fine for most people, but the trouble with MacTex is the size of the install; Its huge! The last time I checked, MacTex ended up using at least 1.5 <strong>gigabytes</strong>. That’s a lot of wasted space, especially for things like the LaTeX editor (since I do my LaTeX work in emacs). So here are the steps I recommend to installing LaTeX on OS X.</p>
-<h2 id="installing-latex-on-os-x">Installing LaTeX on OS X</h2>
-<ol style="list-style-type: decimal">
-<li>If you already have MacTex installed, get rid of it. Its pretty simple, just follow the directions <a href="https://tug.org/mactex/uninstalling.html">here</a>.</li>
-<li>Install BasicTex. This gives you stuff like pdfLatex, aka the compiler and core LaTeX. You can get the package installer from <a href="http://www.tug.org/mactex/morepackages.html">here</a>.</li>
-<li>Download the Tex Live Utility from <a href="https://github.com/amaxwell/tlutility">here</a>. Tex Live Utility is your new LaTeX best friend. It will let you update all packages and install new ones whenever you need them, and you will need them since you only installed BasicTex. We will use it later on in this post.</li>
-</ol>
-<h1 id="org-mode">Org Mode</h1>
-<p>I’m going to assume that you already know what emacs is, but I’ll explain org-mode. Org-mode is an amazing mode that lets your write notes, presentation, and more. Side note, these posts are written in org-mode. I write them in org-mode, then org-mode exports them to HTML; its pretty neat and convenient.</p>
-<p>Okay, back to org-mode. In org-mode, you can put some configurations, things like:</p>
-<pre class="org-mode"><code>#+AUTHOR: Edgar
-#+LATEX_HEADER: \usepackage{lmodern}
-#+OPTIONS: toc:nil</code></pre>
-<p>Writing those things out on each new <code>.org</code> file is annoying. Fortunately emacs already comes with a solution. You’ll want to add this to your <code>init.el</code></p>
-<pre class="emacs-lisp"><code>;; This turns on auto-insert-mode
-(auto-insert-mode)
-;; This turns off the prompt that auto-insert-mode asks before 
-;; it actually inserts text/code for you
-(setq auto-insert-query nil)
-;; This is what you'll have inserted for a new .org file
-(define-skeleton my-org-defaults
-  &quot;Org defaults I use&quot;
-  nil
-  &quot;#+AUTHOR:   Your name\n&quot;
-  &quot;#+EMAIL:    your.email@gmail.com\n&quot;
-  &quot;#+LANGUAGE: en\n&quot;
-  &quot;#+LATEX_HEADER: \\usepackage{lmodern}\n&quot;
-  &quot;#+LATEX_HEADER: \\usepackage[T1]{fontenc}\n&quot;
-  &quot;#+OPTIONS:  toc:nil num:0\n&quot;)
-;; This is how to tell auto-insert what to use for .org files
-(define-auto-insert &quot;\\.org\\'&quot; 'my-org-defaults)</code></pre>
-<p>Now whenever you open a new <code>.org</code> file, you’ll have these common things already there in the buffer. You can do this for other modes too, I do it for common <code>#include</code> items for C coding.</p>
-<h1 id="writing-latex-via-org-mode">Writing LaTeX via org-mode</h1>
-<p>You’ll notice that in <code>my-org-defaults</code>, I included some items for LaTeX. I used to write LaTeX in emacs by hand using Auctex and I actually still recommend newcomers to LaTeX start by writing it by hand. I use org-mode because the writing is so much easier in it, and I can always drop down to LaTeX whenever I need to, like when I need specific packages. For example, the <code>\usepackage{lmodern}</code> is a LaTeX package for really nice modern latin font. To get this package, you’ll need to install it via the newly installed Tex Live Utility application. Just open Tex Live Utility, go to the Packages tab, search for lmodern and right click and install.</p>
-<p>To export the <code>.org</code> file to PDF, just do: <code>C-c C-e l p</code>, where that last <code>p</code> can be replaced with <code>o</code> to open the newly created PDF. Another neat thing in org mode that I like is seeing LaTeX before its a PDF, that is, I want to preview the LaTeX inside the buffer. This, assuming you already have <code>imagemagick</code> installed, is easily done with <code>C-c C-x C-l</code>.</p>
-<p>Just to let you know my work-flow, I usually have a buffer open with the PDF of my work and another buffer of my <code>.org</code> file. Then I export to PDF and since I have <code>doc-view-mode</code> poll for updates, I see the changes to my work nearly instantly in the PDF buffer.</p>
-<h1 id="animations-in-a-pdf">Animations in a PDF</h1>
-<p>For a final paper on modifications to the <a href="http://en.wikipedia.org/wiki/Perceptron">Perceptron</a> algorithm, I wanted to include a neat animation of the Perceptron converging. Naturally I did my paper in emacs. Here are the steps needed.</p>
-<ol style="list-style-type: decimal">
-<li>Install the <code>animate</code> package using Tex Live Utility</li>
-<li><p>Add the following two lines to your <code>.org</code> file.</p>
-<pre class="org-mode"><code>#+LATEX_HEADER: \usepackage{animate}
-#+LATEX_HEADER: \usepackage{graphics}</code></pre></li>
-<li><p>For the place where you want to add the animation, add code like the following to your <code>.org</code> file:</p>
-<pre class="tex"><code>\begin{center}
-%                                            fps filename from to
-  \animategraphics[autoplay, loop, width=4in]{2}{p_N200_it}{1}{68}
-\end{center}</code></pre>
-<p>In this example, I gave it some optional arguments and said use 2 frames per second and for all the filenames that start with p_N200_it, go from 1 to 68, for example <code>p_N200_it4.png</code>.</p>
-<p><strong>Note:</strong> <code>\animategraphics</code> can take other optional arguments, like <code>controls</code>. Please sure to check out its easily googlable manual for all the details.</p></li>
-</ol>
-<p>After exporting the PDF, you’ll have a real animation that is completely self contained in the PDF.</p>
-<p><strong>Note:</strong> The Preview.app on OS X is kind of crappy and doesn’t actually animate the graphic for reasons unknown to me, I recommend you use Adobe Reader.</p>
-<p>I hope this post helps makes your papers all that more exciting and rewarding.</p>
+    <p>Programmers usually have a choice of language to use via what job they decide to seek. Its probably the case that the majority of programmers don’t really care what language they use and really just care about the paycheck and this is pretty much fine I think, at the end of the day it really is just a job. That said there are indeed some programmers that care about what language they use for the majority of their adult waking life, I liken it to a carpenter caring about the brand of hammers they’re using.</p>
+<h1 id="my-choice">My choice</h1>
+<p>For me the best language to use is <a href="http://ocaml.org">OCaml</a>. Its a statically typed functional programming language that has a powerful type system. In addition to being a functional language, OCaml lets me write imperative code with real mutation and this is often very useful, i.e having a local reference variable really makes some code so much cleaner and easier to deal with and that really ought to be our goal, clean and easy to reason about code.</p>
+<h1 id="what-can-you-do-with-it">What can you do with it?</h1>
+<p>I keep getting this question and its a little strange. What can I do with this language? Well anything else you can do in any other programming language. For me I’m working in the day-time as an OCamler and I use it for my <a href="https://github.com/fxfactorial">personal projects</a>. I even write JavaScript in OCaml via <a href="http://ocsigen.org/js_of_ocaml/">js_of_ocaml</a>.</p>
+<p>Here’s an example straight from my bindings to <a href="https://github.com/maxmind/libmaxminddb">libmaxminddb</a>.</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="co">(* File named loc_dump.ml *)</span>
+<span class="ot">#require &quot;maxminddb&quot;</span>
+
+<span class="kw">let</span> () =
+  <span class="kw">let</span> some_ip = <span class="st">&quot;172.56.31.240&quot;</span> <span class="kw">in</span>
+  <span class="kw">let</span> this_mmdb = Maxminddb<span class="kw">.</span>create <span class="st">&quot;etc/GeoLite2-City.mmdb&quot;</span> <span class="kw">in</span>
+  <span class="kw">let</span> loc = Maxminddb<span class="kw">.</span>location some_ip this_mmdb <span class="kw">in</span>
+  <span class="kw">let</span> <span class="ot">open</span> Maxminddb <span class="kw">in</span>
+  Printf<span class="kw">.</span>sprintf <span class="st">&quot;%f %f %d %s&quot;</span> loc.latitude loc.longitude loc.metro_code loc.time_zone
+  |&gt; print_endline;
+  <span class="kw">let</span> geo_borders = borders ~lang:<span class="dt">French</span> ~ip:some_ip this_mmdb <span class="kw">in</span>
+  Printf<span class="kw">.</span>sprintf
+    <span class="st">&quot;%s %s %s %s %s&quot;</span>
+    geo_borders.postal_code
+    geo_borders.city_name
+    geo_borders.country_name
+    geo_borders.continent_name
+    geo_borders.iso_code
+  |&gt; print_endline</code></pre></div>
+<p>And the corresponding result on the shell</p>
+<pre class="shell"><code>$ utop loc_dump.ml
+33.895900 -118.220100 803 America/Los_Angeles
+90221 Compton États-Unis Amérique du Nord US</code></pre>
+<p>In any case if you’re a programmer and reading this post then I recommend that you try OCaml, especially if you have been burned by Haskell’s mental overhead but still want to do functional programming.</p>
 </article>
 
 
