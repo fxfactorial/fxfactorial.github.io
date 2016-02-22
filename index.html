@@ -48,11 +48,11 @@
     <header>
         <h1>
             <a href="./2016/01/24/see-http-traffic-with-proxy/" title="Permalink">
-                2016-01-24-see-http-traffic-with-proxy
+                Proxy yourself
             </a>
         </h1>
         <span class="post-date">January 24, 2016</span> in 
-        <span class="post-tags"></span>
+        <span class="post-tags"><a href="./tags/infosec/">infosec</a>, <a href="./tags/proxy/">proxy</a>, <a href="./tags/mitmproxy/">mitmproxy</a></span>
     </header>
     <p>Often times we want to see our network traffic in an organized way, one tool we can use is <code>tcpdump</code> but its a pretty low level tool and often times HTTP is all we actually care about.</p>
 <h1 id="mitmproxy-man-in-the-middle-proxy">mitmproxy (man in the middle proxy)</h1>
@@ -75,11 +75,11 @@
     <header>
         <h1>
             <a href="./2016/01/23/calling-ocaml-from-objective-c/" title="Permalink">
-                2016-01-23-calling-ocaml-from-objective-c
+                Calling OCaml from Objective-C
             </a>
         </h1>
         <span class="post-date">January 23, 2016</span> in 
-        <span class="post-tags"></span>
+        <span class="post-tags"><a href="./tags/OCaml/">OCaml</a>, <a href="./tags/objective-c/">objective-c</a>, <a href="./tags/cross%20compiler/">cross compiler</a></span>
     </header>
     <p>I love iOS and I love OCaml, so I’ve packaged up an OCaml compiler for iOS via opam. Now all you need to build OCaml programs on the iPhone is opam!</p>
 <h1 id="first-steps">First steps</h1>
@@ -401,9 +401,7 @@ PKG cmdliner js_of_ocaml</code></pre>
 </ol>
 <p>The <code>|&gt;</code> just means piping, its piping the output of <code>read_process_output</code> into the input of the partially applied function <code>iter</code></p>
 <ol style="list-style-type: decimal">
-<li><p>Reading a file</p>
-<h1 id="require-podge-1">require “podge”</h1>
-<p>let () = Podge.Unix.read_lines “code.ml” |&gt; List.iter print_endline</p></li>
+<li>Reading a file <code>ocaml #require &quot;podge&quot; let () =    Podge.Unix.read_lines &quot;code.ml&quot; |&gt; List.iter print_endline</code></li>
 </ol>
 <p>Similar to 1, this reads all lines of file and gives it to the input of the partially applied function <code>iter</code>.</p>
 <p>These are two simple code samples from <code>Podge</code>, check out the <a href="https://github.com/fxfactorial/podge">repo</a> for other useful modules like: (The README has code examples)</p>

@@ -127,9 +127,7 @@ PKG cmdliner js_of_ocaml</code></pre>
 </ol>
 <p>The <code>|&gt;</code> just means piping, its piping the output of <code>read_process_output</code> into the input of the partially applied function <code>iter</code></p>
 <ol style="list-style-type: decimal">
-<li><p>Reading a file</p>
-<h1 id="require-podge-1">require “podge”</h1>
-<p>let () = Podge.Unix.read_lines “code.ml” |&gt; List.iter print_endline</p></li>
+<li>Reading a file <code>ocaml #require &quot;podge&quot; let () =    Podge.Unix.read_lines &quot;code.ml&quot; |&gt; List.iter print_endline</code></li>
 </ol>
 <p>Similar to 1, this reads all lines of file and gives it to the input of the partially applied function <code>iter</code>.</p>
 <p>These are two simple code samples from <code>Podge</code>, check out the <a href="https://github.com/fxfactorial/podge">repo</a> for other useful modules like: (The README has code examples)</p>

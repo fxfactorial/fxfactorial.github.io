@@ -9,7 +9,7 @@
                    type="application/rss+xml" />
         <lastBuildDate>Sun, 24 Jan 2016 00:00:00 UT</lastBuildDate>
         <item>
-    <title>2016-01-24-see-http-traffic-with-proxy</title>
+    <title>Proxy yourself</title>
     <link>http://beancode.io/2016/01/24/see-http-traffic-with-proxy/index.html</link>
     <description><![CDATA[<p>Often times we want to see our network traffic in an organized way, one tool we can use is <code>tcpdump</code> but its a pretty low level tool and often times HTTP is all we actually care about.</p>
 <h1 id="mitmproxy-man-in-the-middle-proxy">mitmproxy (man in the middle proxy)</h1>
@@ -32,7 +32,7 @@
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 <item>
-    <title>2016-01-23-calling-ocaml-from-objective-c</title>
+    <title>Calling OCaml from Objective-C</title>
     <link>http://beancode.io/2016/01/23/calling-ocaml-from-objective-c/index.html</link>
     <description><![CDATA[<p>I love iOS and I love OCaml, so I’ve packaged up an OCaml compiler for iOS via opam. Now all you need to build OCaml programs on the iPhone is opam!</p>
 <h1 id="first-steps">First steps</h1>
@@ -346,9 +346,7 @@ PKG cmdliner js_of_ocaml</code></pre>
 </ol>
 <p>The <code>|&gt;</code> just means piping, its piping the output of <code>read_process_output</code> into the input of the partially applied function <code>iter</code></p>
 <ol style="list-style-type: decimal">
-<li><p>Reading a file</p>
-<h1 id="require-podge-1">require “podge”</h1>
-<p>let () = Podge.Unix.read_lines “code.ml” |&gt; List.iter print_endline</p></li>
+<li>Reading a file <code>ocaml #require &quot;podge&quot; let () =    Podge.Unix.read_lines &quot;code.ml&quot; |&gt; List.iter print_endline</code></li>
 </ol>
 <p>Similar to 1, this reads all lines of file and gives it to the input of the partially applied function <code>iter</code>.</p>
 <p>These are two simple code samples from <code>Podge</code>, check out the <a href="https://github.com/fxfactorial/podge">repo</a> for other useful modules like: (The README has code examples)</p>
@@ -593,7 +591,7 @@ PKG cmdliner js_of_ocaml</code></pre>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 <item>
-    <title>2015-09-17-healthcare</title>
+    <title>Healthcare still sucks</title>
     <link>http://beancode.io/2015/09/17/healthcare/index.html</link>
     <description><![CDATA[<p>My dad lives in Florida and isn’t too well off. So much so that since the early part of this year I’ve been paying for his health insurance, its the first time he has ever had regular healthcare since leaving the Soviet Union in 1993.</p>
 <h1 id="getting-healthcare">Getting healthcare</h1>
