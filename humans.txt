@@ -1,0 +1,16 @@
+/* humanstxt.org */
+
+/* TEAM */
+Author: Edgar Aroutiounian
+Contact: edgar@beancode.io
+Twitter: @edgararout
+LinkedIn: http://www.linkedin.com/e/fpf/82724921
+GitHub: http://github.com/fxfactorial
+From: Oakland, CA
+
+/* Site */
+Language: English
+Standards: HTML5, CSS3
+Components: Hakyll, PureCSS
+IDE: Emacs
+Colours: I'm using the Solarized Light palette.
