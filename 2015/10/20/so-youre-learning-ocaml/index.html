@@ -1,17 +1,56 @@
-<?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"
-    xmlns:dc="http://purl.org/dc/elements/1.1/">
-    <channel>
-        <title>hyegar.com - All posts</title>
-        <link>http://beancode.io</link>
-        <description><![CDATA[Personal blog of Edgar Aroutiounian]]></description>
-        <atom:link href="http://beancode.io/atom.xml" rel="self"
-                   type="application/rss+xml" />
-        <lastBuildDate>Tue, 20 Oct 2015 00:00:00 UT</lastBuildDate>
-        <item>
-    <title>2015-10-20-so-youre-learning-ocaml</title>
-    <link>http://beancode.io/2015/10/20/so-youre-learning-ocaml/index.html</link>
-    <description><![CDATA[<p>Today was the first day of the Introduction to Functional Programming in <code>OCaml</code> course, located <a href="https://www.france-universite-numerique-mooc.fr/courses/parisdiderot/56002/session01/about">here</a>. Apparently over 2,000 people signed up and while doubtlessly many will drop out, there will still be 2,000 more programmers that are now aware of this amazing language called <code>OCaml</code>.</p>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Personal blog of Edgar Aroutiounian">
+    <meta name="author" content="Edgar Aroutiounian">
+    <title>hyegar.com - 2015-10-20-so-youre-learning-ocaml</title>
+    <link rel="canonical" href="http://hyegar.com">
+    <link rel="icon" href="../../../../favicon.png" type="image/png">
+    <link rel="apple-touch-icon" sizes="60x60" href="../../../../images/favicon-60.png" type="image/png">
+    <link rel="apple-touch-icon" sizes="76x76" href="../../../../images/favicon-76.png" type="image/png">
+    <link rel="apple-touch-icon" sizes="120x120" href="../../../../images/favicon-120.png" type="image/png">
+    <link rel="apple-touch-icon" sizes="152x152" href="../../../../images/favicon-152.png" type="image/png">
+    <link rel="stylesheet" type="text/css" href="../../../../css/main.css">
+    <link href="../../../../atom.xml" rel="alternate" title="hyegar.com - A personal and developer blog" type="application/atom+xml">
+    <link type="text/plain" rel="author" href="../../../../humans.txt">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      
+      ga('create', 'UA-57031124-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+
+  </head>
+
+  <body>
+    <header id="page_header">
+    <h1><a href="../../../../" title="Home">Edgar Aroutiounian</a></h1>
+</header>
+
+    <nav id="page_navigation">
+    <ul>
+        <li><a href="../../../../">Home</a></li>
+        <li><a href="../../../../about">About</a></li>
+        <li><a href="../../../../archive">Archive</a></li>
+        <li><a href="../../../../notes">Notes</a></li>
+        <li><a href="../../../../talks">Talks</a></li>
+    </ul>
+</nav>
+
+    
+    <section id="content">
+      <article>
+    <header>
+        <h1>2015-10-20-so-youre-learning-ocaml</h1>
+        <span class="post-date">October 20, 2015</span> in 
+        <span class="post-tags"></span>
+    </header>
+    <p>Today was the first day of the Introduction to Functional Programming in <code>OCaml</code> course, located <a href="https://www.france-universite-numerique-mooc.fr/courses/parisdiderot/56002/session01/about">here</a>. Apparently over 2,000 people signed up and while doubtlessly many will drop out, there will still be 2,000 more programmers that are now aware of this amazing language called <code>OCaml</code>.</p>
 <h1 id="crash-course-on-the-ocaml-ecosystem.">Crash course on the OCaml ecosystem.</h1>
 <p>These are some key notes that you should know.</p>
 <ol style="list-style-type: decimal">
@@ -56,7 +95,7 @@ Library pg
   Path:         src
   # oasis will figure out the dependencies, 
   # Just list the modules you want public, 
-  # Note that there&#39;s no .ml, just give the name
+  # Note that there's no .ml, just give the name
   Modules:      Pg
   CompiledObject: byte
   BuildDepends: some_package</code></pre>
@@ -77,7 +116,7 @@ PKG cmdliner js_of_ocaml</code></pre>
 <h1 id="library-situation">Library situation</h1>
 <p><code>OCaml</code> does have a standard library but it sucks. It was only created to serve the needs of the compiler programmers, ie its not like <code>Python</code>’s standard library which has everything under the sun + the moon. There are a few standard library replacements, one is called <code>Core</code> and its provided by Jane Street. Its the library used in the <strong>Real World OCaml</strong> book/website. Another standard library replacement is called <code>Batteries</code>, this is more “community” supported. There is a more recent contender called <code>Containers</code>. For a categorized list of contemporary and well liked/must have libraries, checkout the <a href="https://github.com/rizo/awesome-ocaml">awesome-ocaml</a> repository.</p>
 <h1 id="speaking-of-libraries">Speaking of Libraries…</h1>
-<p>This is “functional programming,” so many of the real world libraries you’ll encounter will have Monadic interfaces, like <code>lwt</code> or Core’s <code>async</code>, both are asynchronous threading libraries, use Monads and that wacky <code>&gt;&gt;=</code> function. But you really shouldn’t fret about what a Monad is or represents, just follow the type signature and you’ll be fine. For a more detailed treatment of Monads in OCaml and a code example to talk to the <code>Stripe</code> API, see <a href="http://hyegar.com/blog/2015/09/23/let&#39;s-just-use-monads/">this</a>.</p>
+<p>This is “functional programming,” so many of the real world libraries you’ll encounter will have Monadic interfaces, like <code>lwt</code> or Core’s <code>async</code>, both are asynchronous threading libraries, use Monads and that wacky <code>&gt;&gt;=</code> function. But you really shouldn’t fret about what a Monad is or represents, just follow the type signature and you’ll be fine. For a more detailed treatment of Monads in OCaml and a code example to talk to the <code>Stripe</code> API, see <a href="http://hyegar.com/blog/2015/09/23/let's-just-use-monads/">this</a>.</p>
 <h1 id="doing-simple-tasks-shameless-plug">Doing simple tasks (shameless plug)</h1>
 <p>I try using <code>OCaml</code> for literally everything and that includes going to hackathons, to make this less painful I wrote a library called <code>Podge</code> which helps with simple stuff. I don’t claim its a standard library replacement, just a library for getting stuff done. These two code samples assume the file is named <code>code.ml</code> and can be run with <code>utop code.ml</code></p>
 <p>First install with opam:</p>
@@ -113,11 +152,22 @@ PKG cmdliner js_of_ocaml</code></pre>
 </ol>
 <p>…And I’m sure there’s more I haven’t mentioned…</p>
 <h1 id="stick-with-it">Stick with it!</h1>
-<p>This style of coding might be new to you or maybe its your first programming language, stick with it and continue. <code>OCaml</code> offers many awesome features and has many strengths including a very professional and pragmatic community.</p>]]></description>
-    <pubDate>Tue, 20 Oct 2015 00:00:00 UT</pubDate>
-    <guid>http://beancode.io/2015/10/20/so-youre-learning-ocaml/index.html</guid>
-    <dc:creator>Edgar Aroutiounian</dc:creator>
-</item>
+<p>This style of coding might be new to you or maybe its your first programming language, stick with it and continue. <code>OCaml</code> offers many awesome features and has many strengths including a very professional and pragmatic community.</p>
+</article>
 
-    </channel>
-</rss>
+    </section>
+
+    <footer id="page_footer">
+    <a href="http://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC-4.0</a>
+    &mdash;
+    Built with 
+    <a href="http://jaspervdj.be/hakyll">Hakyll</a>.
+    &mdash;
+    Source on 
+    <a href="https://github.com/fxfactorial/hblog">GitHub</a>
+    &mdash;
+    <a href="http://hyegar.com/atom.xml">RSS feed</a>
+</footer>
+
+  </body>
+</html>

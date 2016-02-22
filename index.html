@@ -44,7 +44,121 @@
 
     
     <section id="content">
-      
+      <article>
+    <header>
+        <h1>
+            <a href="./2015/10/20/so-youre-learning-ocaml/" title="Permalink">
+                2015-10-20-so-youre-learning-ocaml
+            </a>
+        </h1>
+        <span class="post-date">October 20, 2015</span> in 
+        <span class="post-tags"></span>
+    </header>
+    <p>Today was the first day of the Introduction to Functional Programming in <code>OCaml</code> course, located <a href="https://www.france-universite-numerique-mooc.fr/courses/parisdiderot/56002/session01/about">here</a>. Apparently over 2,000 people signed up and while doubtlessly many will drop out, there will still be 2,000 more programmers that are now aware of this amazing language called <code>OCaml</code>.</p>
+<h1 id="crash-course-on-the-ocaml-ecosystem.">Crash course on the OCaml ecosystem.</h1>
+<p>These are some key notes that you should know.</p>
+<ol style="list-style-type: decimal">
+<li><p><code>opam</code> is the package manager for OCaml. It is very advanced and supports many features. The most basic of which is</p>
+<pre><code>$ opam install &lt;some_package&gt;</code></pre>
+<p>For people on <code>OS X</code>, you can get it on <code>brew</code> and all the <code>Linux</code> distros should have <code>opam</code> for you to install. For Windows people, get a VM. EDIT: To be clear, OCaml can build <strong>native</strong> executables on Windows just fine, but opam doesn’t work on this platform and for a beginner you’ll waste a lot of time with environment issues or libraries that assume Unix.</p></li>
+<li><p>Once you have <code>opam</code> installed, you probably want to do:</p>
+<pre><code>$ opam switch 4.02.3</code></pre>
+<p>This will install the latest version of the compiler.</p></li>
+<li><p><code>ocamlfind</code> is a program that predates <code>opam</code> and wraps the standard <code>OCaml</code> compilers: <code>ocamlc</code> and <code>ocamlopt</code>. The former is a byte code compiler and the latter creates native code.</p></li>
+<li><p><code>ocamlbuild</code> is a tool that helps build <code>OCaml</code> programs, many people have strong opinions on it.</p></li>
+<li><p><code>oasis</code> is a tool that helps abstract usage of 3, 4. I resisted it for a while and wrote Makefiles instead, don’t do that, just use oasis. The oasis flow basically goes like this: (Be aware that oasis is really finicky and its error messages are useless)</p>
+<p>5.1) Create a directory.</p>
+<p>5.2) Go to the directory and create a file named <strong>_oasis</strong> and directory named <code>src</code></p>
+<p>5.3) Here is a template of the contents of the <strong>_oasis</strong> file</p>
+<pre><code>OASISFormat:  0.4
+OCamlVersion: &gt;= 4.02.3
+Name:         opam_package_name
+Version:      0.1
+Maintainers:  New OCaml programmer
+Homepage:     http://my_coolsite.com
+Synopsis:     Some short description
+Authors:      Cool@me.com
+License:      BSD-3-clause
+Plugins:      META (0.4), DevFiles (0.4)
+AlphaFeatures: ocamlbuild_more_args
+
+Description:
+  Some cool description
+
+# This is a comment and this below creates an binary program    
+Executable &lt;some_program_name&gt;
+  Path: src
+  BuildTools:ocamlbuild
+  install: true
+  MainIs: main.ml
+  CompiledObject: native
+  BuildDepends: package_one, package_two
+
+# Another comment, this builds a library called pg
+Library pg
+  Path:         src
+  # oasis will figure out the dependencies, 
+  # Just list the modules you want public, 
+  # Note that there's no .ml, just give the name
+  Modules:      Pg
+  CompiledObject: byte
+  BuildDepends: some_package</code></pre>
+<p>5.4) Generate the Makefile, setup.ml, configure and other build crap.</p>
+<pre><code>$ oasis setup -setup-update dynamic</code></pre>
+<p>5.5) Actually build your code, yes its just a call to make.</p>
+<pre><code>$ make</code></pre>
+<p>5.6) You can stop here, but you can go even further with <code>oasis2opam</code>. Install it with: <code>opam install oasis2opam</code>, then in your project’s root directory, aka the directory with the _oasis file, do: <code>oasis2opam --local</code>. This creates the <code>opam</code> directory and some meta data for the opam packaging system. Your local package can now be a first class citizen with opam just by doing this in the same project root directory:</p>
+<pre><code>$ opam pin add &lt;your_package_name&gt; . -y</code></pre></li>
+<li><p><code>merlin</code> is a OCaml program that is simply amazing it drives code completion for plugins available in <code>emacs</code> and <code>vim</code>. Once you have merlin installed and running, add a <code>.merlin</code> file to your project so that <code>merlin</code> knows what packages to code complete for, a sample <code>.merlin</code> file looks like this:</p>
+<pre><code>B _build/src
+S src
+PKG cmdliner js_of_ocaml</code></pre>
+<p>Notice how I put the <code>B _build/src</code> That sort of assumes you’re using <code>_oasis</code> and you made the <code>src</code> directory I mentioned earlier.</p></li>
+<li><p>There are no full blown IDEs for OCaml, learn <code>emacs</code> or <code>vim</code>. EDIT: apparently <code>Sublime Text</code> has a merlin plugin, if you’re already familiar with Sublime Text then just stick with it, merlin is really what matters here.</p></li>
+<li><p><code>utop</code> is an enhanced repl, its better than the plain <code>ocaml</code> repl. Install it with <code>opam install utop</code></p></li>
+</ol>
+<h1 id="library-situation">Library situation</h1>
+<p><code>OCaml</code> does have a standard library but it sucks. It was only created to serve the needs of the compiler programmers, ie its not like <code>Python</code>’s standard library which has everything under the sun + the moon. There are a few standard library replacements, one is called <code>Core</code> and its provided by Jane Street. Its the library used in the <strong>Real World OCaml</strong> book/website. Another standard library replacement is called <code>Batteries</code>, this is more “community” supported. There is a more recent contender called <code>Containers</code>. For a categorized list of contemporary and well liked/must have libraries, checkout the <a href="https://github.com/rizo/awesome-ocaml">awesome-ocaml</a> repository.</p>
+<h1 id="speaking-of-libraries">Speaking of Libraries…</h1>
+<p>This is “functional programming,” so many of the real world libraries you’ll encounter will have Monadic interfaces, like <code>lwt</code> or Core’s <code>async</code>, both are asynchronous threading libraries, use Monads and that wacky <code>&gt;&gt;=</code> function. But you really shouldn’t fret about what a Monad is or represents, just follow the type signature and you’ll be fine. For a more detailed treatment of Monads in OCaml and a code example to talk to the <code>Stripe</code> API, see <a href="http://hyegar.com/blog/2015/09/23/let's-just-use-monads/">this</a>.</p>
+<h1 id="doing-simple-tasks-shameless-plug">Doing simple tasks (shameless plug)</h1>
+<p>I try using <code>OCaml</code> for literally everything and that includes going to hackathons, to make this less painful I wrote a library called <code>Podge</code> which helps with simple stuff. I don’t claim its a standard library replacement, just a library for getting stuff done. These two code samples assume the file is named <code>code.ml</code> and can be run with <code>utop code.ml</code></p>
+<p>First install with opam:</p>
+<pre><code>$ opam install podge</code></pre>
+<ol style="list-style-type: decimal">
+<li><p>Reading output of a process</p>
+<h1 id="require-podge">require “podge”</h1>
+<p>let () = Podge.Unix.read_process_output “ls -halt” |&gt; List.iter print_endline</p></li>
+</ol>
+<p>The <code>|&gt;</code> just means piping, its piping the output of <code>read_process_output</code> into the input of the partially applied function <code>iter</code></p>
+<ol style="list-style-type: decimal">
+<li><p>Reading a file</p>
+<h1 id="require-podge-1">require “podge”</h1>
+<p>let () = Podge.Unix.read_lines “code.ml” |&gt; List.iter print_endline</p></li>
+</ol>
+<p>Similar to 1, this reads all lines of file and gives it to the input of the partially applied function <code>iter</code>.</p>
+<p>These are two simple code samples from <code>Podge</code>, check out the <a href="https://github.com/fxfactorial/podge">repo</a> for other useful modules like: (The README has code examples)</p>
+<ol style="list-style-type: decimal">
+<li><code>Web</code> for simple HTTP requests and getting data back as JSON,</li>
+<li><code>Xml</code> for querying simple XML documents</li>
+<li><code>ANSITerminal</code> for creating colored shell output</li>
+<li><code>String</code> which is all due to <a href="http://rgrinberg.com">Rudi Grinberg</a>.</li>
+</ol>
+<h1 id="what-can-you-do-with-it">What can you do with it?</h1>
+<p>Loads.</p>
+<ol style="list-style-type: decimal">
+<li>Compilers!, lots of compilers/compiler tools are written in OCaml: Facebook uses OCaml for <a href="https://github.com/facebook/pfff">pfff</a> and <a href="https://github.com/facebook/flow">flow</a> and the first cut of Rust was written in OCaml.</li>
+<li>Financial world, <a href="https://www.janestreet.com">Jane Street</a> uses OCaml for basically everything (AFAIK)</li>
+<li>Systems Programming: <a href="https://ahrefs.com">ahrefs</a>, my employer, uses OCaml for heavy systems programming.</li>
+<li>Kernels: Unikernels are hot right now, the most prominent one is the <a href="https://mirage.io">Mirage-OS</a> project and its all OCaml.</li>
+<li>Shameless plug: I use OCaml as well for <code>js_of_ocaml</code>, in fact I’m using it to write an Electron app with a node backend (All code is OCaml compiled into JS, then run on node/Electron), see <a href="https://github.com/fxfactorial/ocaml-electron">here.</a></li>
+<li>Genomics/Bioinformatics: <a href="https://github.com/hammerlab">Hammer Lab</a> in NYC uses OCaml for their genomics/sequencing work.</li>
+</ol>
+<p>…And I’m sure there’s more I haven’t mentioned…</p>
+<h1 id="stick-with-it">Stick with it!</h1>
+<p>This style of coding might be new to you or maybe its your first programming language, stick with it and continue. <code>OCaml</code> offers many awesome features and has many strengths including a very professional and pragmatic community.</p>
+</article>
+
 
 <footer>
     See older posts in the <a href="./archive/">archive</a>
