@@ -76,7 +76,7 @@ Hello Word from OCaml
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 <item>
-    <title>2015-12-03-write_ocaml_on_node</title>
+    <title>Write OCaml, run on node</title>
     <link>http://beancode.io/2015/12/03/write_ocaml_on_node/index.html</link>
     <description><![CDATA[<p>I’ve been exposed to Node, its an amazing ecosystem with great cross platform support and a great standard library; my only issue is <strong>JavaScript</strong>. So I’ve been writing several libraries, bindings, that compile OCaml to JavaScript which I then run on <code>node</code>.</p>
 <h1 id="sample-code">Sample Code</h1>
@@ -273,17 +273,24 @@ $ node T.js</code></pre>
 <h1 id="crash-course-on-the-ocaml-ecosystem.">Crash course on the OCaml ecosystem.</h1>
 <p>These are some key notes that you should know.</p>
 <ol style="list-style-type: decimal">
-<li><p><code>opam</code> is the package manager for OCaml. It is very advanced and supports many features. The most basic of which is</p>
+<li><code>opam</code> is the package manager for OCaml. It is very advanced and supports many features. The most basic of which is</li>
+</ol>
 <pre class="shell"><code>$ opam install &lt;some_package&gt;</code></pre>
-<p>For people on <code>OS X</code>, you can get it on <code>brew</code> and all the <code>Linux</code> distros should have <code>opam</code> for you to install. For Windows people, get a VM. EDIT: To be clear, OCaml can build <strong>native</strong> executables on Windows just fine, but opam doesn’t work on this platform and for a beginner you’ll waste a lot of time with environment issues or libraries that assume Unix.</p></li>
-<li><p>Once you have <code>opam</code> installed, you probably want to do:</p>
+<p>For people on <code>OS X</code>, you can get it on <code>brew</code> and all the <code>Linux</code> distros should have <code>opam</code> for you to install. For Windows people, get a VM. EDIT: To be clear, OCaml can build <strong>native</strong> executables on Windows just fine, but opam doesn’t work on this platform and for a beginner you’ll waste a lot of time with environment issues or libraries that assume Unix.</p>
+<ol start="2" style="list-style-type: decimal">
+<li>Once you have <code>opam</code> installed, you probably want to do:</li>
+</ol>
 <pre class="shell"><code>$ opam switch 4.02.3</code></pre>
-<p>This will install the latest version of the compiler.</p></li>
+<p>This will install the latest version of the compiler.</p>
+<ol start="3" style="list-style-type: decimal">
 <li><p><code>ocamlfind</code> is a program that predates <code>opam</code> and wraps the standard <code>OCaml</code> compilers: <code>ocamlc</code> and <code>ocamlopt</code>. The former is a byte code compiler and the latter creates native code.</p></li>
 <li><p><code>ocamlbuild</code> is a tool that helps build <code>OCaml</code> programs, many people have strong opinions on it.</p></li>
+</ol>
+<ol start="5" style="list-style-type: decimal">
 <li><p><code>oasis</code> is a tool that helps abstract usage of 3, 4. I resisted it for a while and wrote Makefiles instead, don’t do that, just use oasis. The oasis flow basically goes like this: (Be aware that oasis is really finicky and its error messages are useless)</p>
 <p>5.1) Create a directory.</p>
-<p>5.2) Go to the directory and create a file named <strong>_oasis</strong> and directory named <code>src</code></p>
+<p>5.2) Go to the directory and create a file named <strong>_oasis</strong> and directory named <code>src</code></p></li>
+</ol>
 <p>5.3) Here is a template of the contents of the <strong>_oasis</strong> file</p>
 <pre class="conf"><code>OASISFormat:  0.4
 OCamlVersion: &gt;= 4.02.3
@@ -300,7 +307,7 @@ AlphaFeatures: ocamlbuild_more_args
 Description:
 Some cool description
 
-# This is a comment and this below creates an binary program    
+# This is a comment and this below creates an binary program
 Executable &lt;some_program_name&gt;
 Path: src
 BuildTools:ocamlbuild
@@ -322,12 +329,16 @@ BuildDepends: some_package</code></pre>
 <pre class="shell"><code>$ oasis setup -setup-update dynamic</code></pre>
 <p>5.5) Actually build your code, yes its just a call to make.</p>
 <pre class="shell"><code>$ make</code></pre>
-5.6) You can stop here, but you can go even further with <code>oasis2opam</code>. Install it with: <code>opam install oasis2opam</code>, then in your project’s root directory, aka the directory with the _oasis file, do: <code>oasis2opam --local</code>. This creates the <code>opam</code> directory and some meta data for the opam packaging system. Your local package can now be a first class citizen with opam just by doing this in the same project root directory: <code>$ opam pin add &lt;your_package_name&gt; . -y</code></li>
-<li><p><code>merlin</code> is a OCaml program that is simply amazing it drives code completion for plugins available in <code>emacs</code> and <code>vim</code>. Once you have merlin installed and running, add a <code>.merlin</code> file to your project so that <code>merlin</code> knows what packages to code complete for, a sample <code>.merlin</code> file looks like this:</p>
+<p>5.6) You can stop here, but you can go even further with <code>oasis2opam</code>. Install it with: <code>opam install oasis2opam</code>, then in your project’s root directory, aka the directory with the _oasis file, do: <code>oasis2opam --local</code>. This creates the <code>opam</code> directory and some meta data for the opam packaging system. Your local package can now be a first class citizen with opam just by doing this in the same project root directory:</p>
+<pre><code>$ opam pin add &lt;your_package_name&gt; . -y</code></pre>
+<ol start="6" style="list-style-type: decimal">
+<li><code>merlin</code> is a OCaml program that is simply amazing it drives code completion for plugins available in <code>emacs</code> and <code>vim</code>. Once you have merlin installed and running, add a <code>.merlin</code> file to your project so that <code>merlin</code> knows what packages to code complete for, a sample <code>.merlin</code> file looks like this:</li>
+</ol>
 <pre class="shell"><code>B _build/src
 S src
 PKG cmdliner js_of_ocaml</code></pre>
-<p>Notice how I put the <code>B _build/src</code> That sort of assumes you’re using <code>_oasis</code> and you made the <code>src</code> directory I mentioned earlier.</p></li>
+<p>Notice how I put the <code>B _build/src</code> That sort of assumes you’re using <code>_oasis</code> and you made the <code>src</code> directory I mentioned earlier.</p>
+<ol start="7" style="list-style-type: decimal">
 <li><p>There are no full blown IDEs for OCaml, learn <code>emacs</code> or <code>vim</code>. EDIT: apparently <code>Sublime Text</code> has a merlin plugin, if you’re already familiar with Sublime Text then just stick with it, merlin is really what matters here.</p></li>
 <li><p><code>utop</code> is an enhanced repl, its better than the plain <code>ocaml</code> repl. Install it with <code>opam install utop</code></p></li>
 </ol>
@@ -337,17 +348,17 @@ PKG cmdliner js_of_ocaml</code></pre>
 <p>This is “functional programming,” so many of the real world libraries you’ll encounter will have Monadic interfaces, like <code>lwt</code> or Core’s <code>async</code>, both are asynchronous threading libraries, use Monads and that wacky <code>&gt;&gt;=</code> function. But you really shouldn’t fret about what a Monad is or represents, just follow the type signature and you’ll be fine. For a more detailed treatment of Monads in OCaml and a code example to talk to the <code>Stripe</code> API, see <a href="http://hyegar.com/blog/2015/09/23/let&#39;s-just-use-monads/">this</a>.</p>
 <h1 id="doing-simple-tasks-shameless-plug">Doing simple tasks (shameless plug)</h1>
 <p>I try using <code>OCaml</code> for literally everything and that includes going to hackathons, to make this less painful I wrote a library called <code>Podge</code> which helps with simple stuff. I don’t claim its a standard library replacement, just a library for getting stuff done. These two code samples assume the file is named <code>code.ml</code> and can be run with <code>utop code.ml</code></p>
-<p>First install with opam:</p>
-<pre><code>$ opam install podge</code></pre>
-<ol style="list-style-type: decimal">
-<li><p>Reading output of a process</p>
-<h1 id="require-podge">require “podge”</h1>
-<p>let () = Podge.Unix.read_process_output “ls -halt” |&gt; List.iter print_endline</p></li>
-</ol>
+<p>First install with opam: <code>$ opam install podge</code> 1) Reading output of a process</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">#require &quot;podge&quot;</span>
+<span class="kw">let</span> () = 
+  Podge<span class="kw">.</span>Unix<span class="kw">.</span>read_process_output <span class="st">&quot;ls -halt&quot;</span> |&gt; List<span class="kw">.</span>iter print_endline</code></pre></div>
 <p>The <code>|&gt;</code> just means piping, its piping the output of <code>read_process_output</code> into the input of the partially applied function <code>iter</code></p>
-<ol style="list-style-type: decimal">
-<li>Reading a file <code>ocaml #require &quot;podge&quot; let () =    Podge.Unix.read_lines &quot;code.ml&quot; |&gt; List.iter print_endline</code></li>
+<ol start="2" style="list-style-type: decimal">
+<li>Reading a file</li>
 </ol>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">#require &quot;podge&quot;</span>
+<span class="kw">let</span> () = 
+Podge<span class="kw">.</span>Unix<span class="kw">.</span>read_lines <span class="st">&quot;code.ml&quot;</span> |&gt; List<span class="kw">.</span>iter print_endline</code></pre></div>
 <p>Similar to 1, this reads all lines of file and gives it to the input of the partially applied function <code>iter</code>.</p>
 <p>These are two simple code samples from <code>Podge</code>, check out the <a href="https://github.com/fxfactorial/podge">repo</a> for other useful modules like: (The README has code examples)</p>
 <ol style="list-style-type: decimal">
