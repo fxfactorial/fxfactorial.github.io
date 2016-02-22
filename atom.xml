@@ -3,14 +3,33 @@
     xmlns:dc="http://purl.org/dc/elements/1.1/">
     <channel>
         <title>hyegar.com - All posts</title>
-        <link>http://beancode.io</link>
+        <link>http://hyegar.com</link>
         <description><![CDATA[Personal blog of Edgar Aroutiounian]]></description>
-        <atom:link href="http://beancode.io/atom.xml" rel="self"
+        <atom:link href="http://hyegar.com/atom.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Sun, 24 Jan 2016 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Mon, 22 Feb 2016 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Getting an iOS compiler on Linux, full Objective-C support</title>
+    <link>http://hyegar.com/2016/02/22/ios-cross-compiler/index.html</link>
+    <description><![CDATA[<h1 id="the-problem">The problem</h1>
+<p>Lately I’ve been doing iPhone low level debugging, forensics, and reverse engineering. For that I need an <code>iOS</code> compiler and that has usually only been available on <code>OS X</code>. However my day time development environment is Linux which clearly doesn’t have an <code>objective-c</code> runtime or libraries…how to solve this?</p>
+<h1 id="the-solution">The solution</h1>
+<p>I found this <a href="https://github.com/tpoechtrager/osxcross">project</a> but it was very hands on and difficult to reproduce on multiple machines. How could I reliably build this code? My solution was <code>NixOS</code>, specifically the <code>nixpkgs</code> package manager (I won’t go into the benefits of <code>Nix</code> in this post). Now you can also benefit from this work by getting an <code>armv7</code> iOS cross compiler for up to <code>iOS 9.2</code> by simply doing:</p>
+<pre class="shell"><code>$ nix-env -i clang ios-cross-compile</code></pre>
+<p>This will crap out initially because I cannot redistribute iOS SDKs, but it does give you instructions on how to manually add something to the <code>nix-store</code>. After you follow the instructions run the command again and then you’ll have an iOS compiler installed for SDK <code>7.0-9.2</code>!</p>
+<h1 id="stay-tuned">Stay tuned</h1>
+<p>I’ll have more blog posts lined up including:</p>
+<ol style="list-style-type: decimal">
+<li><p>How to get correct code completion for objective-c on Linux in emacs</p></li>
+<li><p>Creating iPhone command line tools, tweaks in C++, Objective-C using theos.</p></li>
+</ol>]]></description>
+    <pubDate>Mon, 22 Feb 2016 00:00:00 UT</pubDate>
+    <guid>http://hyegar.com/2016/02/22/ios-cross-compiler/index.html</guid>
+    <dc:creator>Edgar Aroutiounian</dc:creator>
+</item>
+<item>
     <title>Proxy yourself</title>
-    <link>http://beancode.io/2016/01/24/see-http-traffic-with-proxy/index.html</link>
+    <link>http://hyegar.com/2016/01/24/see-http-traffic-with-proxy/index.html</link>
     <description><![CDATA[<p>Often times we want to see our network traffic in an organized way, one tool we can use is <code>tcpdump</code> but its a pretty low level tool and often times HTTP is all we actually care about.</p>
 <h1 id="mitmproxy-man-in-the-middle-proxy">mitmproxy (man in the middle proxy)</h1>
 <p>I’ve been using <code>mitmproxy</code>, its an incredible Python tool that is designed for HTTP and I especially love the command line ncurses interface. Its designed for man in the middle attacks but you can also use it as a debugging tool. Its installable with <code>pip</code> but I just settle for the version that is present on the package manager. With <code>mitmproxy</code> we’ll see all the HTTP traffic in a clean and organized way; <code>mitmproxy</code> is MUCH nicer than using squid and the icky configurations that come along with squid.</p>
@@ -28,12 +47,12 @@
 <pre class="shell"><code>$ mitmproxy -T -p 9001</code></pre>
 <p>And this will start the proxy interceptions.</p>]]></description>
     <pubDate>Sun, 24 Jan 2016 00:00:00 UT</pubDate>
-    <guid>http://beancode.io/2016/01/24/see-http-traffic-with-proxy/index.html</guid>
+    <guid>http://hyegar.com/2016/01/24/see-http-traffic-with-proxy/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 <item>
     <title>Calling OCaml from Objective-C</title>
-    <link>http://beancode.io/2016/01/23/calling-ocaml-from-objective-c/index.html</link>
+    <link>http://hyegar.com/2016/01/23/calling-ocaml-from-objective-c/index.html</link>
     <description><![CDATA[<p>I love iOS and I love OCaml, so I’ve packaged up an OCaml compiler for iOS via opam. Now all you need to build OCaml programs on the iPhone is opam!</p>
 <h1 id="first-steps">First steps</h1>
 <p>You’ll need the cross compiler. Follow the README instructions mentioned <a href="https://github.com/fxfactorial/opam-ios">here</a>. This will provide you with the cross compiler based on OCaml 4.02.0.</p>
@@ -72,12 +91,12 @@ Hello Word from OCaml
 2016-01-23 22:44:04.889 F[1977:507] Now using objective-c code</code></pre>
 <p>Yay!</p>]]></description>
     <pubDate>Sat, 23 Jan 2016 00:00:00 UT</pubDate>
-    <guid>http://beancode.io/2016/01/23/calling-ocaml-from-objective-c/index.html</guid>
+    <guid>http://hyegar.com/2016/01/23/calling-ocaml-from-objective-c/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 <item>
     <title>Write OCaml, run on node</title>
-    <link>http://beancode.io/2015/12/03/write_ocaml_on_node/index.html</link>
+    <link>http://hyegar.com/2015/12/03/write_ocaml_on_node/index.html</link>
     <description><![CDATA[<p>I’ve been exposed to Node, its an amazing ecosystem with great cross platform support and a great standard library; my only issue is <strong>JavaScript</strong>. So I’ve been writing several libraries, bindings, that compile OCaml to JavaScript which I then run on <code>node</code>.</p>
 <h1 id="sample-code">Sample Code</h1>
 <p>Here are some working examples, many are directly from the README at <a href="https://github.com/fxfactorial/ocaml-nodejs/blob/master/README.md">ocaml-nodejs</a>.</p>
@@ -263,12 +282,12 @@ $ node T.js</code></pre>
 <p><a href="https://github.com/fxfactorial/ocaml-nodejs">nodejs repo</a></p>
 <p><a href="https://github.com/fxfactorial/ocaml-electron">electron repo</a></p>]]></description>
     <pubDate>Thu, 03 Dec 2015 00:00:00 UT</pubDate>
-    <guid>http://beancode.io/2015/12/03/write_ocaml_on_node/index.html</guid>
+    <guid>http://hyegar.com/2015/12/03/write_ocaml_on_node/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 <item>
     <title>So you're learning OCaml</title>
-    <link>http://beancode.io/2015/10/20/so-youre-learning-ocaml/index.html</link>
+    <link>http://hyegar.com/2015/10/20/so-youre-learning-ocaml/index.html</link>
     <description><![CDATA[<p>Today was the first day of the Introduction to Functional Programming in <code>OCaml</code> course, located <a href="https://www.france-universite-numerique-mooc.fr/courses/parisdiderot/56002/session01/about">here</a>. Apparently over 2,000 people signed up and while doubtlessly many will drop out, there will still be 2,000 more programmers that are now aware of this amazing language called <code>OCaml</code>.</p>
 <h1 id="crash-course-on-the-ocaml-ecosystem.">Crash course on the OCaml ecosystem.</h1>
 <p>These are some key notes that you should know.</p>
@@ -381,12 +400,12 @@ Podge<span class="kw">.</span>Unix<span class="kw">.</span>read_lines <span clas
 <h1 id="stick-with-it">Stick with it!</h1>
 <p>This style of coding might be new to you or maybe its your first programming language, stick with it and continue. <code>OCaml</code> offers many awesome features and has many strengths including a very professional and pragmatic community.</p>]]></description>
     <pubDate>Tue, 20 Oct 2015 00:00:00 UT</pubDate>
-    <guid>http://beancode.io/2015/10/20/so-youre-learning-ocaml/index.html</guid>
+    <guid>http://hyegar.com/2015/10/20/so-youre-learning-ocaml/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 <item>
     <title>2015-10-12-monads-you-can-understand</title>
-    <link>http://beancode.io/2015/10/12/monads-you-can-understand/index.html</link>
+    <link>http://hyegar.com/2015/10/12/monads-you-can-understand/index.html</link>
     <description><![CDATA[<p>Let’s learn about monads as programmers, that is let’s use them for building something and in the process we’ll build up a intuition; practice first, then you can go back to theory later.</p>
 <p>This post is split in two parts:</p>
 <p>Part 1 is just to get the ideas out the door</p>
@@ -535,12 +554,12 @@ Podge<span class="kw">.</span>Unix<span class="kw">.</span>read_lines <span clas
 <h1 id="moral-of-the-story">Moral of the Story</h1>
 <p>So in terms of actually day to day coding, you don’t actually need to know what a monad “is”, you just need to know how to use it and honestly that’s completely fine, in fact just following the type signatures can take you pretty far in a new, unfamiliar library.</p>]]></description>
     <pubDate>Mon, 12 Oct 2015 00:00:00 UT</pubDate>
-    <guid>http://beancode.io/2015/10/12/monads-you-can-understand/index.html</guid>
+    <guid>http://hyegar.com/2015/10/12/monads-you-can-understand/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 <item>
     <title>2015-10-07-elegant</title>
-    <link>http://beancode.io/2015/10/07/elegant/index.html</link>
+    <link>http://hyegar.com/2015/10/07/elegant/index.html</link>
     <description><![CDATA[<p>I love elegant code, code that just flows and lets you “see” how the data moves through execution. As part of my <a href="https://github.com/fxfactorial/brozip">brozip</a> application, I wanted to give the feature of recursively compressing or decompressing a directory. So I just wrote exactly what came to mind and came up with this</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> <span class="kw">rec</span> walk_and_action action node =
   <span class="kw">if</span> Sys<span class="kw">.</span>is_directory node
@@ -561,12 +580,12 @@ Podge<span class="kw">.</span>Unix<span class="kw">.</span>read_lines <span clas
 <p>If its not a directory then we just call the function for the given file.</p>
 <p>Notice how elegant this code is, the whole function body is just one expression and the data just flows from the output of one function as the input of the other, there’s no separation between the function calls.</p>]]></description>
     <pubDate>Wed, 07 Oct 2015 00:00:00 UT</pubDate>
-    <guid>http://beancode.io/2015/10/07/elegant/index.html</guid>
+    <guid>http://hyegar.com/2015/10/07/elegant/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 <item>
     <title>OCaml love</title>
-    <link>http://beancode.io/2015/09/21/ocaml-love/index.html</link>
+    <link>http://hyegar.com/2015/09/21/ocaml-love/index.html</link>
     <description><![CDATA[<p>Programmers usually have a choice of language to use via what job they decide to seek. Its probably the case that the majority of programmers don’t really care what language they use and really just care about the paycheck and this is pretty much fine I think, at the end of the day it really is just a job. That said there are indeed some programmers that care about what language they use for the majority of their adult waking life, I liken it to a carpenter caring about the brand of hammers they’re using.</p>
 <h1 id="my-choice">My choice</h1>
 <p>For me the best language to use is <a href="http://ocaml.org">OCaml</a>. Its a statically typed functional programming language that has a powerful type system. In addition to being a functional language, OCaml lets me write imperative code with real mutation and this is often very useful, i.e having a local reference variable really makes some code so much cleaner and easier to deal with and that really ought to be our goal, clean and easy to reason about code.</p>
@@ -598,12 +617,12 @@ Podge<span class="kw">.</span>Unix<span class="kw">.</span>read_lines <span clas
 90221 Compton États-Unis Amérique du Nord US</code></pre>
 <p>In any case if you’re a programmer and reading this post then I recommend that you try OCaml, especially if you have been burned by Haskell’s mental overhead but still want to do functional programming.</p>]]></description>
     <pubDate>Mon, 21 Sep 2015 00:00:00 UT</pubDate>
-    <guid>http://beancode.io/2015/09/21/ocaml-love/index.html</guid>
+    <guid>http://hyegar.com/2015/09/21/ocaml-love/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 <item>
     <title>Healthcare still sucks</title>
-    <link>http://beancode.io/2015/09/17/healthcare/index.html</link>
+    <link>http://hyegar.com/2015/09/17/healthcare/index.html</link>
     <description><![CDATA[<p>My dad lives in Florida and isn’t too well off. So much so that since the early part of this year I’ve been paying for his health insurance, its the first time he has ever had regular healthcare since leaving the Soviet Union in 1993.</p>
 <h1 id="getting-healthcare">Getting healthcare</h1>
 <p>Because it was for an individual and I was handling everything, I had to use healthcare.gov. This is like two years since the site had been up, I think, so I presumed all the bugs had been hashed out or at least the easy ones (my dad’s application was basically the simplest one out there). Hint, the site still had bugs and didn’t actually work on Chrome. (What amazing things a startup could have done with $300 million)</p>
@@ -619,12 +638,12 @@ Podge<span class="kw">.</span>Unix<span class="kw">.</span>read_lines <span clas
 </blockquote>
 <p>And it stuck to me because I also believe that, every experience we’ve had with the government is bad or a waste of time and its why I’m suspicious of white leftists espousing the wisdom of “if we only spent more money on <their favorite moral issue>…” Thought-experiments and ideas need to hit reality at some point, its similar to why I like Silicon Valley and open source coding; the idea should be good but the implementation is more important. In any case the point I want to make is simple: <strong>Healthcare.gov still sucks.</strong></p>]]></description>
     <pubDate>Thu, 17 Sep 2015 00:00:00 UT</pubDate>
-    <guid>http://beancode.io/2015/09/17/healthcare/index.html</guid>
+    <guid>http://hyegar.com/2015/09/17/healthcare/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 <item>
     <title>2015-09-11-setup-emacs-linux</title>
-    <link>http://beancode.io/2015/09/11/setup-emacs-linux/index.html</link>
+    <link>http://hyegar.com/2015/09/11/setup-emacs-linux/index.html</link>
     <description><![CDATA[<p><strong>Note</strong> This series initially appeared on my previous blog and I’m just porting it over to here with small stylistic changes.</p>
 <p>This post will share some configurations I did to setup emacs for linux kernel coding. Some minor context, the following emacs setup came as a result of my Operating Systems class fall 2014. Note, a lot of what I will go over is due to the great tutorials and walkthroughs made by the emacs community, especially by Tuhdo’s <a href="http://tuhdo.github.io/c-ide.html">great post</a>.</p>
 <h1 id="the-tools">The tools</h1>
@@ -682,76 +701,7 @@ Podge<span class="kw">.</span>Unix<span class="kw">.</span>read_lines <span clas
 <p>Basically I wipe away the values that might be defined for semantic and impose the ones of interest to me. I call this function via another function that I use as a helper, it mainly opens a file in the VM and calls <code>os-s</code>. You’ll notice some commented out code, the first was some time wasted with tramp and the second was trying to use an alias in the remote shell, hint: it didn’t work.</p>
 <p>That’s it for this post. <a href="http://hyegar.com/blog/2015/09/11/emacs-for-linux-coding-part-ii/">Part Two</a> relates to gnu global/helm.</p>]]></description>
     <pubDate>Fri, 11 Sep 2015 00:00:00 UT</pubDate>
-    <guid>http://beancode.io/2015/09/11/setup-emacs-linux/index.html</guid>
-    <dc:creator>Edgar Aroutiounian</dc:creator>
-</item>
-<item>
-    <title>Linux Part II</title>
-    <link>http://beancode.io/2015/09/11/linux/index.html</link>
-    <description><![CDATA[<h1 id="tags">Tags</h1>
-<p>If you are using etags, stop doing that. The best tag system is gnu global, it is simply amazing. If you are on a debian machine, I recommend getting <a href="http://www.gnu.org/software/global/download.html">gnu global</a> from sourc hand. The reason is that the version of gnu global on apt-get is incredibly outdated. Once you have it installed, go to the root of your linux, or any C project, directory and type <code>gtags</code>. This will create all the infrastructure that we will soon be using in emacs. Note that the gtags file for Linux takes a few moments and clocks in at about 100mb, this is Linux source code after all…</p>
-<h1 id="emacs-side">Emacs Side</h1>
-<p>Now that we have gtags up and running, we can now focus on the emacs portion of things. Here’s my hook for C-mode in emacs:</p>
-<pre class="emacs-lisp"><code>(add-hook &#39;c-mode-hook &#39;(lambda ()
-                          (setq-local show-trailing-whitespace t)
-                          (semantic-mode)
-                          (auto-complete-mode -1)
-                          (company-mode)
-                          (global-set-key (kbd &quot;C-c C-f&quot;) &#39;helm-command-prefix)
-                          (global-unset-key (kbd &quot;C-x c&quot;))
-                          (define-key helm-gtags-mode-map (kbd &quot;M-s&quot;) &#39;helm-gtags-select)
-                          (setq helm-quick-update                     t ; do not display invisible candidates
-                                helm-split-window-in-side-p           t ; open helm buffer inside current window, not occupy whole other window
-                                helm-buffers-fuzzy-matching           t ; fuzzy matching buffer names when non--nil
-                                helm-move-to-line-cycle-in-source     t ; move to end or beginning of source when reaching top or bottom of source.
-                                helm-ff-search-library-in-sexp        t ; search for library in `require&#39; and `declare-function&#39; sexp.
-                                helm-scroll-amount                    8 ; scroll 8 lines other window using M-&lt;next&gt;/M-&lt;prior&gt;
-                                helm-ff-file-name-history-use-recentf t
-                                helm-gtags-ignore-case t
-                                helm-gtags-auto-update t
-                                helm-gtags-use-input-at-cursor t
-                                helm-gtags-pulse-at-cursor t
-                                helm-gtags-prefix-key &quot;\C-cg&quot;
-                                helm-gtags-suggested-key-mapping t)
-                          (helm-gtags-mode)
-                          (define-key helm-gtags-mode-map (kbd &quot;M-.&quot;) &#39;helm-gtags-dwim)
-                          (define-key helm-gtags-mode-map (kbd &quot;M-,&quot;) &#39;helm-gtags-pop-stack)
-                          ;;Too complex for me right now. 
-                          ;;(helm-mode)
-                          (define-key company-mode-map (kbd &quot;M-h&quot;) &#39;company-c-headers)
-                          (hs-minor-mode)
-                          (define-key hs-minor-mode-map (kbd &quot;C-c C-t&quot;) &#39;hs-toggle-hiding)
-                          (define-key c-mode-map (kbd &quot;C-c C-c&quot;) &#39;compile)
-                          (semantic-mru-bookmark-mode)
-                          (define-key semantic-mode-map (kbd &quot;M-]&quot;) &#39;semantic-ia-fast-jump)
-                          (define-key semantic-mode-map (kbd &quot;M-[&quot;) &#39;semantic-ia-fast-jump-back)
-                          (define-key c-mode-map (kbd &quot;C-c C-i&quot;) &#39;default-c-includes)
-                          (ggtags-mode)
-                          (define-key ggtags-mode-map (kbd &quot;M-.&quot;) nil)
-                          (define-key ggtags-mode-map (kbd &quot;M-&lt;&quot;) nil)
-                          (define-key ggtags-mode-map (kbd &quot;M-&gt;&quot;) nil)
-                          (define-key ggtags-mode-map (kbd &quot;M-n&quot;) nil)
-                          (define-key ggtags-mode-map (kbd &quot;M-p&quot;) nil)
-                          (define-key ggtags-mode-map (kbd &quot;M-,&quot;) nil)
-                          (define-key ggtags-mode-map (kbd &quot;M-]&quot;) nil)
-                          (define-key ggtags-mode-map (kbd &quot;M--&quot;) &#39;ggtags-find-reference)
-                          ;;Flycheck has issues with tramp, just FYI. 
-                          ;;(flycheck-mode)
-                          (linux-c-mode)))</code></pre>
-<p>That’s quite a bit, but I’ll explain all the relevant parts. I don’t really use helm, other than for the features of <code>helm-gtags-dwin</code> and <code>helm-gtags-pop-stack</code> simply because Helm is too big for my tastes and it goes against how most of emacs “does” things. Basically whenever I want to find where a struct, function, etc is defined, I can just hit <code>M-.</code> and gtags will take me there, if I want to come back to where I was before looking up the definition, then I hit M-,. The reader might notice that I define many of the keys from <code>ggtags-mode-map</code> to <code>nil</code>, this is because the keys conflicted with my desired key bindings and the only thing that I found of use from ggtags-mode was finding all the references made to a piece of code, this is via the <code>ggtags-find-reference</code> function. This is a feature that Semantic can supposedly do, but getting it to work right with the remote machine and the messed up header paths was just too much work, plus it had some issues about <code>call-process</code>. Ggtags-mode is able to do this incredibly well and fast. Finally there is the call to <code>linux-c-mode</code>, that is simply defined as:</p>
-<pre class="emacs-lisp"><code>(defun linux-c-mode ()
-  &quot;C mode with adjusted defaults for use with the linux kernel.&quot;
-  (interactive)
-  (setq c-set-style &quot;linux&quot;)
-  (setq c-brace-offset -8)
-  (setq c-default-style &quot;linux&quot;)
-  (setq c-basic-offset 8)
-  (setq tab-width 8))</code></pre>
-<p>Since our homework assignments had Linux’s <code>checkpatch.pl</code> script run against them, it made sense to just start out with Linux style C-coding enforced in emacs itself.</p>
-<h1 id="wrapping-up">Wrapping up</h1>
-<p>That’s basically it. I skipped over a few things, but if you have questions, feel free to ask in the comments and I’ll try to answer them. For reference, my <code>init.el</code> is [[<a href="https://github.com/fxfactorial/emacsd/blob/m" class="uri">https://github.com/fxfactorial/emacsd/blob/m</a> other goodies.</p>]]></description>
-    <pubDate>Fri, 11 Sep 2015 00:00:00 UT</pubDate>
-    <guid>http://beancode.io/2015/09/11/linux/index.html</guid>
+    <guid>http://hyegar.com/2015/09/11/setup-emacs-linux/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 
