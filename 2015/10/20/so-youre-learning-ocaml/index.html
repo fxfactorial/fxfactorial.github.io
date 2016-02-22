@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Personal blog of Edgar Aroutiounian">
     <meta name="author" content="Edgar Aroutiounian">
-    <title>hyegar.com - 2015-10-20-so-youre-learning-ocaml</title>
+    <title>hyegar.com - So you're learning OCaml</title>
     <link rel="canonical" href="http://hyegar.com">
     <link rel="icon" href="../../../../favicon.png" type="image/png">
     <link rel="apple-touch-icon" sizes="60x60" href="../../../../images/favicon-60.png" type="image/png">
@@ -46,9 +46,9 @@
     <section id="content">
       <article>
     <header>
-        <h1>2015-10-20-so-youre-learning-ocaml</h1>
+        <h1>So you're learning OCaml</h1>
         <span class="post-date">October 20, 2015</span> in 
-        <span class="post-tags"></span>
+        <span class="post-tags"><a href="../../../../tags/OCaml/">OCaml</a>, <a href="../../../../tags/functional%20programming/">functional programming</a></span>
     </header>
     <p>Today was the first day of the Introduction to Functional Programming in <code>OCaml</code> course, located <a href="https://www.france-universite-numerique-mooc.fr/courses/parisdiderot/56002/session01/about">here</a>. Apparently over 2,000 people signed up and while doubtlessly many will drop out, there will still be 2,000 more programmers that are now aware of this amazing language called <code>OCaml</code>.</p>
 <h1 id="crash-course-on-the-ocaml-ecosystem.">Crash course on the OCaml ecosystem.</h1>
@@ -66,7 +66,7 @@
 <p>5.1) Create a directory.</p>
 <p>5.2) Go to the directory and create a file named <strong>_oasis</strong> and directory named <code>src</code></p>
 <p>5.3) Here is a template of the contents of the <strong>_oasis</strong> file</p>
-<pre class="shell"><code>OASISFormat:  0.4
+<pre class="conf"><code>OASISFormat:  0.4
 OCamlVersion: &gt;= 4.02.3
 Name:         opam_package_name
 Version:      0.1
@@ -79,32 +79,31 @@ Plugins:      META (0.4), DevFiles (0.4)
 AlphaFeatures: ocamlbuild_more_args
 
 Description:
-  Some cool description
+Some cool description
 
 # This is a comment and this below creates an binary program    
 Executable &lt;some_program_name&gt;
-  Path: src
-  BuildTools:ocamlbuild
-  install: true
-  MainIs: main.ml
-  CompiledObject: native
-  BuildDepends: package_one, package_two
+Path: src
+BuildTools:ocamlbuild
+install: true
+MainIs: main.ml
+CompiledObject: native
+BuildDepends: package_one, package_two
 
 # Another comment, this builds a library called pg
 Library pg
-  Path:         src
-  # oasis will figure out the dependencies, 
-  # Just list the modules you want public, 
-  # Note that there's no .ml, just give the name
-  Modules:      Pg
-  CompiledObject: byte
-  BuildDepends: some_package</code></pre>
+Path:         src
+# oasis will figure out the dependencies, 
+# Just list the modules you want public, 
+# Note that there's no .ml, just give the name
+Modules:      Pg
+CompiledObject: byte
+BuildDepends: some_package</code></pre>
 <p>5.4) Generate the Makefile, setup.ml, configure and other build crap.</p>
 <pre class="shell"><code>$ oasis setup -setup-update dynamic</code></pre>
 <p>5.5) Actually build your code, yes its just a call to make.</p>
 <pre class="shell"><code>$ make</code></pre>
-<p>5.6) You can stop here, but you can go even further with <code>oasis2opam</code>. Install it with: <code>opam install oasis2opam</code>, then in your project’s root directory, aka the directory with the _oasis file, do: <code>oasis2opam --local</code>. This creates the <code>opam</code> directory and some meta data for the opam packaging system. Your local package can now be a first class citizen with opam just by doing this in the same project root directory:</p>
-<pre class="shell"><code>$ opam pin add &lt;your_package_name&gt; . -y</code></pre></li>
+5.6) You can stop here, but you can go even further with <code>oasis2opam</code>. Install it with: <code>opam install oasis2opam</code>, then in your project’s root directory, aka the directory with the _oasis file, do: <code>oasis2opam --local</code>. This creates the <code>opam</code> directory and some meta data for the opam packaging system. Your local package can now be a first class citizen with opam just by doing this in the same project root directory: <code>$ opam pin add &lt;your_package_name&gt; . -y</code></li>
 <li><p><code>merlin</code> is a OCaml program that is simply amazing it drives code completion for plugins available in <code>emacs</code> and <code>vim</code>. Once you have merlin installed and running, add a <code>.merlin</code> file to your project so that <code>merlin</code> knows what packages to code complete for, a sample <code>.merlin</code> file looks like this:</p>
 <pre class="shell"><code>B _build/src
 S src
@@ -120,20 +119,18 @@ PKG cmdliner js_of_ocaml</code></pre>
 <h1 id="doing-simple-tasks-shameless-plug">Doing simple tasks (shameless plug)</h1>
 <p>I try using <code>OCaml</code> for literally everything and that includes going to hackathons, to make this less painful I wrote a library called <code>Podge</code> which helps with simple stuff. I don’t claim its a standard library replacement, just a library for getting stuff done. These two code samples assume the file is named <code>code.ml</code> and can be run with <code>utop code.ml</code></p>
 <p>First install with opam:</p>
-<pre class="shell"><code>$ opam install podge</code></pre>
+<pre><code>$ opam install podge</code></pre>
 <ol style="list-style-type: decimal">
-<li>Reading output of a process</li>
+<li><p>Reading output of a process</p>
+<h1 id="require-podge">require “podge”</h1>
+<p>let () = Podge.Unix.read_process_output “ls -halt” |&gt; List.iter print_endline</p></li>
 </ol>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">#require &quot;podge&quot;</span>
-<span class="kw">let</span> () = 
-  Podge<span class="kw">.</span>Unix<span class="kw">.</span>read_process_output <span class="st">&quot;ls -halt&quot;</span> |&gt; List<span class="kw">.</span>iter print_endline</code></pre></div>
 <p>The <code>|&gt;</code> just means piping, its piping the output of <code>read_process_output</code> into the input of the partially applied function <code>iter</code></p>
 <ol style="list-style-type: decimal">
-<li>Reading a file</li>
+<li><p>Reading a file</p>
+<h1 id="require-podge-1">require “podge”</h1>
+<p>let () = Podge.Unix.read_lines “code.ml” |&gt; List.iter print_endline</p></li>
 </ol>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">#require &quot;podge&quot;</span>
-<span class="kw">let</span> () = 
-  Podge<span class="kw">.</span>Unix<span class="kw">.</span>read_lines <span class="st">&quot;code.ml&quot;</span> |&gt; List<span class="kw">.</span>iter print_endline</code></pre></div>
 <p>Similar to 1, this reads all lines of file and gives it to the input of the partially applied function <code>iter</code>.</p>
 <p>These are two simple code samples from <code>Podge</code>, check out the <a href="https://github.com/fxfactorial/podge">repo</a> for other useful modules like: (The README has code examples)</p>
 <ol style="list-style-type: decimal">
@@ -147,7 +144,7 @@ PKG cmdliner js_of_ocaml</code></pre>
 <ol style="list-style-type: decimal">
 <li>Compilers!, lots of compilers/compiler tools are written in OCaml: Facebook uses OCaml for <a href="https://github.com/facebook/pfff">pfff</a> and <a href="https://github.com/facebook/flow">flow</a> and the first cut of Rust was written in OCaml.</li>
 <li>Financial world, <a href="https://www.janestreet.com">Jane Street</a> uses OCaml for basically everything (AFAIK)</li>
-<li>Systems Programming: <a href="https://ahrefs.com">ahrefs</a>, my employer, uses OCaml for heavy systems programming.</li>
+<li>Systems Programming: <a href="https://ahrefs.com">ahrefs</a>, my former employer Ahrefs uses OCaml for heavy systems programming.</li>
 <li>Kernels: Unikernels are hot right now, the most prominent one is the <a href="https://mirage.io">Mirage-OS</a> project and its all OCaml.</li>
 <li>Shameless plug: I use OCaml as well for <code>js_of_ocaml</code>, in fact I’m using it to write an Electron app with a node backend (All code is OCaml compiled into JS, then run on node/Electron), see <a href="https://github.com/fxfactorial/ocaml-electron">here.</a></li>
 <li>Genomics/Bioinformatics: <a href="https://github.com/hammerlab">Hammer Lab</a> in NYC uses OCaml for their genomics/sequencing work.</li>
