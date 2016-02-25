@@ -7,8 +7,168 @@
         <description><![CDATA[Personal blog of Edgar Aroutiounian]]></description>
         <atom:link href="http://hyegar.com/atom.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Wed, 24 Feb 2016 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Thu, 25 Feb 2016 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Let's hack on Facebook flow</title>
+    <link>http://hyegar.com/2016/02/25/lets-hack-on-flow/index.html</link>
+    <description><![CDATA[<p>I’m writing this post for the JavaScript developer that wants to hack on flow but doesn’t know OCaml and is eager enough to learn some OCaml in pursuit of their hacking goals.</p>
+<h1 id="getting-started.">Getting started.</h1>
+<p>You’ll need to have <code>opam</code> installed, it is OCaml’s package manager. On <code>OS X</code> you can get it with <code>brew install opam</code>, on <code>debian</code> just use apt-get’s version and if on <code>Ubuntu</code> use this <a href="https://launchpad.net/~avsm/+archive/ubuntu/ppa">ppa</a></p>
+<p>The very act of installing <code>opam</code> should have also installed a compiler, which we’ll need for building <code>flow</code>.</p>
+<p>For completeness’s sake, we’ll do:</p>
+<pre class="shell"><code>$ opam install ocamlfind ocamlbuild</code></pre>
+<p>This should provide us with all the tools we need to build flow.</p>
+<h1 id="building-flow-and-setting-goals">Building Flow and setting goals</h1>
+<p>Now let’s build flow</p>
+<pre class="shell"><code>$ git clone https://github.com/facebook/flow
+$ cd flow
+$ make</code></pre>
+<p>and a sanity check:</p>
+<pre class="shell"><code>$ bin/flow examples/01_HelloWorld
+The flow server&#39;s version didn&#39;t match the client&#39;s, so it exited.
+Going to launch a new one.
+
+Launching Flow server for /Users/Edgar/Repos/flow/examples/01_HelloWorld
+Spawned flow server (child pid=37837)
+Logs will go to /private/tmp/flow/zSUserszSEdgarzSReposzSflowzSexampleszS01_HelloWorld.log
+examples/01_HelloWorld/hello.js:7
+  7: foo(&quot;Hello, world!&quot;);
+     ^^^^^^^^^^^^^^^^^^^^ function call
+  4:   return x*10;
+              ^ string. This type is incompatible with
+  4:   return x*10;
+              ^^^^ number
+
+
+Found 1 error</code></pre>
+<p>this is expected of course. Let’s say our goal is to add some extra behavior around string <code>This type is incompatible</code>. First we try to find it.</p>
+<pre class="shell"><code>$ cd src
+$ grep -nIr &quot;This type is incompatible&quot; .</code></pre>
+<p>Of the many hits we get we see that only two end in <code>.ml</code> which is the file extension for <code>OCaml</code> source code.</p>
+<pre><code>./typing/flow_js.ml:3586:      let msg = &quot;This type is incompatible with&quot; in
+./typing/flow_js.ml:3772:    &quot;This type is incompatible with&quot;</code></pre>
+<p>Let’s open the second one on line <code>3772</code>, we see this function</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">and</span> err_msg l u =
+  <span class="kw">if</span> is_use u
+  <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
+  <span class="kw">else</span> <span class="st">&quot;This type is incompatible with&quot;</span></code></pre></div>
+<p>it looks a little bit weird because it starts with an <code>and</code>. That’s okay, the <code>and</code> means that its being used in a function before its defined, otherwise it would have been:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> err_msg l u =
+  <span class="kw">if</span> is_use u
+  <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
+  <span class="kw">else</span> <span class="st">&quot;This type is incompatible with&quot;</span></code></pre></div>
+<p>The function is named <code>err_msg</code>, it takes <code>l</code> and <code>u</code> and produces a <code>string</code>.</p>
+<p>Let’s add a prefix to the string, we’ll change it to:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">and</span> err_msg l u =
+  <span class="kw">if</span> is_use u
+  <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
+  <span class="kw">else</span> <span class="st">&quot;Hello JS World-&gt; This type is incompatible with&quot;</span></code></pre></div>
+<p>for completeness sake I assume you’re still in the <code>src</code> directory.</p>
+<pre class="shell"><code>$ cd ..
+$ make clean
+$ make
+$ bin/flow examples/01_HelloWorld 
+The flow server&#39;s version didn&#39;t match the client&#39;s, so it exited.
+Going to launch a new one.
+
+Launching Flow server for /Users/Edgar/Repos/flow/examples/01_HelloWorld
+Spawned flow server (child pid=40942)
+Logs will go to /private/tmp/flow/zSUserszSEdgarzSReposzSflowzSexampleszS01_HelloWorld.log
+examples/01_HelloWorld/hello.js:7
+  7: foo(&quot;Hello, world!&quot;);
+     ^^^^^^^^^^^^^^^^^^^^ function call
+  4:   return x*10;
+              ^ string. Hello JS World -&gt; This type is incompatible with
+  4:   return x*10;
+              ^^^^ number
+
+
+Found 1 error</code></pre>
+<p>Yay, we found the spot and changed it.</p>
+<h1 id="now-lets-iterate-on-our-success">Now let’s iterate on our success</h1>
+<p>Great, we changed the string, but let’s say we want to have some other stuff happen, let’s try some printing to the screen. We change <code>err_msg</code> to this instead:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">and</span> err_msg l u =
+  <span class="kw">if</span> is_use u
+  <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
+  <span class="kw">else</span> <span class="kw">begin</span>
+    print_endline <span class="st">&quot;Hey Coder Reading hyegar.com&quot;</span>;
+    <span class="st">&quot;Hello JS World -&gt; This type is incompatible with&quot;</span>
+  <span class="kw">end</span></code></pre></div>
+<h2 id="interesting-sidenotes">Interesting Sidenotes</h2>
+<p>The <code>begin</code>, <code>end</code> are just syntax. I could have also written it using <code>( )</code> like so:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">and</span> err_msg l u =
+  <span class="kw">if</span> is_use u
+  <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
+  <span class="kw">else</span> (
+    print_endline <span class="st">&quot;Hey Coder Reading hyegar.com&quot;</span>;
+    <span class="st">&quot;Hello JS World -&gt; This type is incompatible with&quot;</span>)</code></pre></div>
+<p>More interesting is the usage of <code>;</code>. First think to yourself, what is the return value of printing to the screen, nothing really. In OCaml we represent side effect and dummy values with <code>()</code>, said outloud as unit and written in type signatures as <code>unit</code>. When you see <code>unit</code> in a signature then it usually means the function is doing some kind of side effect like printing to screen or talking to a db.</p>
+<p>So I could have also written it as:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">and</span> err_msg l u =
+  <span class="kw">if</span> is_use u
+  <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
+  <span class="kw">else</span> (
+    <span class="kw">let</span> () = print_endline <span class="st">&quot;Hey Coder Reading hyegar.com&quot;</span> <span class="kw">in</span>
+    <span class="st">&quot;Hello JS World -&gt; This type is incompatible with&quot;</span>)</code></pre></div>
+<p>but the <code>;</code> is simplier and shorter.</p>
+<p>Back to our coding:</p>
+<p>…and now we do the same procedure as before including the <code>make clean</code> step. Now we run the code</p>
+<pre class="shell"><code>$ bin/flow examples/01_HelloWorld
+The flow server&#39;s version didn&#39;t match the client&#39;s, so it exited.
+Going to launch a new one.
+
+Launching Flow server for /Users/Edgar/Repos/flow/examples/01_HelloWorld
+Spawned flow server (child pid=43811)
+Logs will go to /private/tmp/flow/zSUserszSEdgarzSReposzSflowzSexampleszS01_HelloWorld.log
+examples/01_HelloWorld/hello.js:7
+  7: foo(&quot;Hello, world!&quot;);
+     ^^^^^^^^^^^^^^^^^^^^ function call
+  4:   return x*10;
+              ^ string. Hello JS World -&gt; This type is incompatible with
+  4:   return x*10;
+              ^^^^ number
+
+
+Found 1 error</code></pre>
+<p>But where is our printed string of <code>Hey Coder Reading hyegar.com</code>?</p>
+<h1 id="put-on-your-thinking-hat">Put on your thinking hat</h1>
+<p>First clue is this: the error message is being created by the flow server. Many servers use logs and will redirect stdout, stderr to those logs, just makes sense to do that. Second clue is that <code>print_endline</code> prints to <code>stdout</code> and the third and final clue is that <code>flow</code> itself said at the beginning of invocation that:</p>
+<pre><code>Logs will go to /private/tmp/flow/zSUserszSEdgarzSReposzSflowzSexampleszS01_HelloWorld.log</code></pre>
+<p>and now we do a simple cat on this log file, yours will be named something unique to your machine, and see our calls to <code>print_endline</code> being made a surprisingly large number of times (Perhaps a question for the <code>flow</code> developers themselves)</p>
+<pre class="shell"><code>cat /private/tmp/flow/zSUserszSEdgarzSReposzSflowzSexampleszS01_HelloWorld.log             ⏎
+[2016-02-25 00:58:54] Initializing Server (This might take some time)
+[2016-02-25 00:58:54] executable=/Users/Edgar/Repos/flow/bin/flow
+[2016-02-25 00:58:54] version=0.22.0
+[2016-02-25 00:58:54] Parsing
+[2016-02-25 00:58:54] Building package heap
+[2016-02-25 00:58:54] Running local inference
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+[2016-02-25 00:58:55] Re-resolving directly dependent files
+[2016-02-25 00:58:55] Calculating dependencies
+[2016-02-25 00:58:55] Merging
+[2016-02-25 00:58:55] Done
+[2016-02-25 00:58:55] Server is READY
+[2016-02-25 00:58:55] Took 0.431947 seconds to initialize.
+[2016-02-25 00:58:55] Status: Error</code></pre>
+<p>And there you have it, now you start hacking on <code>OCaml</code> in flow. Be sure to check out my numerous other blog posts about <code>OCaml</code> including the jargon and build situation located <a href="http://hyegar.com/2015/10/20/so-youre-learning-ocaml/">here</a></p>]]></description>
+    <pubDate>Thu, 25 Feb 2016 00:00:00 UT</pubDate>
+    <guid>http://hyegar.com/2016/02/25/lets-hack-on-flow/index.html</guid>
+    <dc:creator>Edgar Aroutiounian</dc:creator>
+</item>
+<item>
     <title>Use OCaml to create statically typed HTML</title>
     <link>http://hyegar.com/2016/02/24/tyxml-ocaml-example/index.html</link>
     <description><![CDATA[<h1 id="motivation">Motivation</h1>
@@ -740,27 +900,6 @@ Podge<span class="kw">.</span>Unix<span class="kw">.</span>read_lines <span clas
 <p>In any case if you’re a programmer and reading this post then I recommend that you try OCaml, especially if you have been burned by Haskell’s mental overhead but still want to do functional programming.</p>]]></description>
     <pubDate>Mon, 21 Sep 2015 00:00:00 UT</pubDate>
     <guid>http://hyegar.com/2015/09/21/ocaml-love/index.html</guid>
-    <dc:creator>Edgar Aroutiounian</dc:creator>
-</item>
-<item>
-    <title>Healthcare still sucks</title>
-    <link>http://hyegar.com/2015/09/17/healthcare/index.html</link>
-    <description><![CDATA[<p>My dad lives in Florida and isn’t too well off. So much so that since the early part of this year I’ve been paying for his health insurance, its the first time he has ever had regular healthcare since leaving the Soviet Union in 1993.</p>
-<h1 id="getting-healthcare">Getting healthcare</h1>
-<p>Because it was for an individual and I was handling everything, I had to use healthcare.gov. This is like two years since the site had been up, I think, so I presumed all the bugs had been hashed out or at least the easy ones (my dad’s application was basically the simplest one out there). Hint, the site still had bugs and didn’t actually work on Chrome. (What amazing things a startup could have done with $300 million)</p>
-<p>We discovered he had prostate cancer and he underwent surgery on the 31st of August. I was relieved and glad that I was taking care of my dad, the bill was on autopay and he was doing well. A few days later I got a call from my dad saying his insurance was canceled, very strange to me since I already paid that month’s bill.</p>
-<h1 id="no-one-takes-responsibility">No one takes responsibility</h1>
-<p>So I called Florida Blue, being in San Francisco that three hour time difference can be annoying. Florida Blue told me that the Marketplace, aka healthcare.gov, terminated the plan. That was immediately strange to me as the Marketplace never asked me whether I wanted the plan canceled. I called the Marketplace and they told me they never canceled the plan and subsequently told me to call Florida Blue; you can see how this is getting aggravating. The Marketplace then told me they would assign a case worker to this and of course it would take up to 30 days, 30 days to do what is essentially some SQL queries and other record lookups. Of course I’m having to waste many hours on the phone and explain this all over to my dad. I think I’ve said my name and requested authorization to speak on dad’s behalf about sixteen times already.</p>
-<h1 id="wait-a-month">Wait a Month</h1>
-<p>So now my dad, who underwent surgery on the 31st of August, has no insurance for the entire month of September. All his followup doctor visits, medications are canceled. He has to wait until October 1st until the insurance is reinstated all because of the incompetence of a third party that forcibly injected itself into the patient-doctor realm.</p>
-<h1 id="something-to-be-said">Something to be said</h1>
-<p>My dad grew up in the Soviet Union so everything that he knew was ultimately state owned, both physically and intellectually. But he said the following to me,</p>
-<blockquote>
-<p>Why is the government involved between me and the doctors, or the insurance company we choose?</p>
-</blockquote>
-<p>And it stuck to me because I also believe that, every experience we’ve had with the government is bad or a waste of time and its why I’m suspicious of white leftists espousing the wisdom of “if we only spent more money on <their favorite moral issue>…” Thought-experiments and ideas need to hit reality at some point, its similar to why I like Silicon Valley and open source coding; the idea should be good but the implementation is more important. In any case the point I want to make is simple: <strong>Healthcare.gov still sucks.</strong></p>]]></description>
-    <pubDate>Thu, 17 Sep 2015 00:00:00 UT</pubDate>
-    <guid>http://hyegar.com/2015/09/17/healthcare/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 

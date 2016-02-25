@@ -47,6 +47,170 @@
       <article>
     <header>
         <h1>
+            <a href="./2016/02/25/lets-hack-on-flow/" title="Permalink">
+                Let's hack on Facebook flow
+            </a>
+        </h1>
+        <span class="post-date">February 25, 2016</span> in 
+        <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/facebook/">facebook</a>, <a href="./tags/flow/">flow</a>, <a href="./tags/javascript/">javascript</a></span>
+    </header>
+    <p>I’m writing this post for the JavaScript developer that wants to hack on flow but doesn’t know OCaml and is eager enough to learn some OCaml in pursuit of their hacking goals.</p>
+<h1 id="getting-started.">Getting started.</h1>
+<p>You’ll need to have <code>opam</code> installed, it is OCaml’s package manager. On <code>OS X</code> you can get it with <code>brew install opam</code>, on <code>debian</code> just use apt-get’s version and if on <code>Ubuntu</code> use this <a href="https://launchpad.net/~avsm/+archive/ubuntu/ppa">ppa</a></p>
+<p>The very act of installing <code>opam</code> should have also installed a compiler, which we’ll need for building <code>flow</code>.</p>
+<p>For completeness’s sake, we’ll do:</p>
+<pre class="shell"><code>$ opam install ocamlfind ocamlbuild</code></pre>
+<p>This should provide us with all the tools we need to build flow.</p>
+<h1 id="building-flow-and-setting-goals">Building Flow and setting goals</h1>
+<p>Now let’s build flow</p>
+<pre class="shell"><code>$ git clone https://github.com/facebook/flow
+$ cd flow
+$ make</code></pre>
+<p>and a sanity check:</p>
+<pre class="shell"><code>$ bin/flow examples/01_HelloWorld
+The flow server's version didn't match the client's, so it exited.
+Going to launch a new one.
+
+Launching Flow server for /Users/Edgar/Repos/flow/examples/01_HelloWorld
+Spawned flow server (child pid=37837)
+Logs will go to /private/tmp/flow/zSUserszSEdgarzSReposzSflowzSexampleszS01_HelloWorld.log
+examples/01_HelloWorld/hello.js:7
+  7: foo(&quot;Hello, world!&quot;);
+     ^^^^^^^^^^^^^^^^^^^^ function call
+  4:   return x*10;
+              ^ string. This type is incompatible with
+  4:   return x*10;
+              ^^^^ number
+
+
+Found 1 error</code></pre>
+<p>this is expected of course. Let’s say our goal is to add some extra behavior around string <code>This type is incompatible</code>. First we try to find it.</p>
+<pre class="shell"><code>$ cd src
+$ grep -nIr &quot;This type is incompatible&quot; .</code></pre>
+<p>Of the many hits we get we see that only two end in <code>.ml</code> which is the file extension for <code>OCaml</code> source code.</p>
+<pre><code>./typing/flow_js.ml:3586:      let msg = &quot;This type is incompatible with&quot; in
+./typing/flow_js.ml:3772:    &quot;This type is incompatible with&quot;</code></pre>
+<p>Let’s open the second one on line <code>3772</code>, we see this function</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">and</span> err_msg l u =
+  <span class="kw">if</span> is_use u
+  <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
+  <span class="kw">else</span> <span class="st">&quot;This type is incompatible with&quot;</span></code></pre></div>
+<p>it looks a little bit weird because it starts with an <code>and</code>. That’s okay, the <code>and</code> means that its being used in a function before its defined, otherwise it would have been:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> err_msg l u =
+  <span class="kw">if</span> is_use u
+  <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
+  <span class="kw">else</span> <span class="st">&quot;This type is incompatible with&quot;</span></code></pre></div>
+<p>The function is named <code>err_msg</code>, it takes <code>l</code> and <code>u</code> and produces a <code>string</code>.</p>
+<p>Let’s add a prefix to the string, we’ll change it to:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">and</span> err_msg l u =
+  <span class="kw">if</span> is_use u
+  <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
+  <span class="kw">else</span> <span class="st">&quot;Hello JS World-&gt; This type is incompatible with&quot;</span></code></pre></div>
+<p>for completeness sake I assume you’re still in the <code>src</code> directory.</p>
+<pre class="shell"><code>$ cd ..
+$ make clean
+$ make
+$ bin/flow examples/01_HelloWorld 
+The flow server's version didn't match the client's, so it exited.
+Going to launch a new one.
+
+Launching Flow server for /Users/Edgar/Repos/flow/examples/01_HelloWorld
+Spawned flow server (child pid=40942)
+Logs will go to /private/tmp/flow/zSUserszSEdgarzSReposzSflowzSexampleszS01_HelloWorld.log
+examples/01_HelloWorld/hello.js:7
+  7: foo(&quot;Hello, world!&quot;);
+     ^^^^^^^^^^^^^^^^^^^^ function call
+  4:   return x*10;
+              ^ string. Hello JS World -&gt; This type is incompatible with
+  4:   return x*10;
+              ^^^^ number
+
+
+Found 1 error</code></pre>
+<p>Yay, we found the spot and changed it.</p>
+<h1 id="now-lets-iterate-on-our-success">Now let’s iterate on our success</h1>
+<p>Great, we changed the string, but let’s say we want to have some other stuff happen, let’s try some printing to the screen. We change <code>err_msg</code> to this instead:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">and</span> err_msg l u =
+  <span class="kw">if</span> is_use u
+  <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
+  <span class="kw">else</span> <span class="kw">begin</span>
+    print_endline <span class="st">&quot;Hey Coder Reading hyegar.com&quot;</span>;
+    <span class="st">&quot;Hello JS World -&gt; This type is incompatible with&quot;</span>
+  <span class="kw">end</span></code></pre></div>
+<h2 id="interesting-sidenotes">Interesting Sidenotes</h2>
+<p>The <code>begin</code>, <code>end</code> are just syntax. I could have also written it using <code>( )</code> like so:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">and</span> err_msg l u =
+  <span class="kw">if</span> is_use u
+  <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
+  <span class="kw">else</span> (
+    print_endline <span class="st">&quot;Hey Coder Reading hyegar.com&quot;</span>;
+    <span class="st">&quot;Hello JS World -&gt; This type is incompatible with&quot;</span>)</code></pre></div>
+<p>More interesting is the usage of <code>;</code>. First think to yourself, what is the return value of printing to the screen, nothing really. In OCaml we represent side effect and dummy values with <code>()</code>, said outloud as unit and written in type signatures as <code>unit</code>. When you see <code>unit</code> in a signature then it usually means the function is doing some kind of side effect like printing to screen or talking to a db.</p>
+<p>So I could have also written it as:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">and</span> err_msg l u =
+  <span class="kw">if</span> is_use u
+  <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
+  <span class="kw">else</span> (
+    <span class="kw">let</span> () = print_endline <span class="st">&quot;Hey Coder Reading hyegar.com&quot;</span> <span class="kw">in</span>
+    <span class="st">&quot;Hello JS World -&gt; This type is incompatible with&quot;</span>)</code></pre></div>
+<p>but the <code>;</code> is simplier and shorter.</p>
+<p>Back to our coding:</p>
+<p>…and now we do the same procedure as before including the <code>make clean</code> step. Now we run the code</p>
+<pre class="shell"><code>$ bin/flow examples/01_HelloWorld
+The flow server's version didn't match the client's, so it exited.
+Going to launch a new one.
+
+Launching Flow server for /Users/Edgar/Repos/flow/examples/01_HelloWorld
+Spawned flow server (child pid=43811)
+Logs will go to /private/tmp/flow/zSUserszSEdgarzSReposzSflowzSexampleszS01_HelloWorld.log
+examples/01_HelloWorld/hello.js:7
+  7: foo(&quot;Hello, world!&quot;);
+     ^^^^^^^^^^^^^^^^^^^^ function call
+  4:   return x*10;
+              ^ string. Hello JS World -&gt; This type is incompatible with
+  4:   return x*10;
+              ^^^^ number
+
+
+Found 1 error</code></pre>
+<p>But where is our printed string of <code>Hey Coder Reading hyegar.com</code>?</p>
+<h1 id="put-on-your-thinking-hat">Put on your thinking hat</h1>
+<p>First clue is this: the error message is being created by the flow server. Many servers use logs and will redirect stdout, stderr to those logs, just makes sense to do that. Second clue is that <code>print_endline</code> prints to <code>stdout</code> and the third and final clue is that <code>flow</code> itself said at the beginning of invocation that:</p>
+<pre><code>Logs will go to /private/tmp/flow/zSUserszSEdgarzSReposzSflowzSexampleszS01_HelloWorld.log</code></pre>
+<p>and now we do a simple cat on this log file, yours will be named something unique to your machine, and see our calls to <code>print_endline</code> being made a surprisingly large number of times (Perhaps a question for the <code>flow</code> developers themselves)</p>
+<pre class="shell"><code>cat /private/tmp/flow/zSUserszSEdgarzSReposzSflowzSexampleszS01_HelloWorld.log             ⏎
+[2016-02-25 00:58:54] Initializing Server (This might take some time)
+[2016-02-25 00:58:54] executable=/Users/Edgar/Repos/flow/bin/flow
+[2016-02-25 00:58:54] version=0.22.0
+[2016-02-25 00:58:54] Parsing
+[2016-02-25 00:58:54] Building package heap
+[2016-02-25 00:58:54] Running local inference
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+Hey Coder Reading hyegar.com
+[2016-02-25 00:58:55] Re-resolving directly dependent files
+[2016-02-25 00:58:55] Calculating dependencies
+[2016-02-25 00:58:55] Merging
+[2016-02-25 00:58:55] Done
+[2016-02-25 00:58:55] Server is READY
+[2016-02-25 00:58:55] Took 0.431947 seconds to initialize.
+[2016-02-25 00:58:55] Status: Error</code></pre>
+<p>And there you have it, now you start hacking on <code>OCaml</code> in flow. Be sure to check out my numerous other blog posts about <code>OCaml</code> including the jargon and build situation located <a href="http://hyegar.com/2015/10/20/so-youre-learning-ocaml/">here</a></p>
+</article>
+<article>
+    <header>
+        <h1>
             <a href="./2016/02/24/tyxml-ocaml-example/" title="Permalink">
                 Use OCaml to create statically typed HTML
             </a>
@@ -267,201 +431,6 @@ armv7-apple-darwin11-machocheck         armv7-apple-darwin11-unwinddump</code></
 Hello Word from OCaml
 2016-01-23 22:44:04.889 F[1977:507] Now using objective-c code</code></pre>
 <p>Yay!</p>
-</article>
-<article>
-    <header>
-        <h1>
-            <a href="./2015/12/03/write_ocaml_on_node/" title="Permalink">
-                Write OCaml, run on node
-            </a>
-        </h1>
-        <span class="post-date">December  3, 2015</span> in 
-        <span class="post-tags"><a href="./tags/OCaml/">OCaml</a>, <a href="./tags/nodejs/">nodejs</a>, <a href="./tags/javascript/">javascript</a>, <a href="./tags/js_of_ocaml/">js_of_ocaml</a></span>
-    </header>
-    <p>I’ve been exposed to Node, its an amazing ecosystem with great cross platform support and a great standard library; my only issue is <strong>JavaScript</strong>. So I’ve been writing several libraries, bindings, that compile OCaml to JavaScript which I then run on <code>node</code>.</p>
-<h1 id="sample-code">Sample Code</h1>
-<p>Here are some working examples, many are directly from the README at <a href="https://github.com/fxfactorial/ocaml-nodejs/blob/master/README.md">ocaml-nodejs</a>.</p>
-<p><strong>Multicast DNS over UDP sockets, only for the local network, like a no config p2p chat application.</strong></p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"> <span class="dv">1</span>  <span class="ot">open</span> Nodejs
- <span class="dv">2</span>  
- <span class="dv">3</span>  <span class="ot">module</span> U = Yojson<span class="kw">.</span>Basic<span class="kw">.</span><span class="dt">Util</span>
- <span class="dv">4</span>  
- <span class="dv">5</span>  <span class="kw">let</span> (multicast_addr, bind_addr, port) = <span class="st">&quot;224.1.1.1&quot;</span>, <span class="st">&quot;0.0.0.0&quot;</span>, <span class="dv">6811</span>
- <span class="dv">6</span>  
- <span class="dv">7</span>  <span class="kw">let</span> () =
- <span class="dv">8</span>    Random<span class="kw">.</span>self_init ();
- <span class="dv">9</span>    <span class="kw">let</span> p = <span class="kw">new</span> process <span class="kw">in</span>
-<span class="dv">10</span>    <span class="kw">let</span> user_name = <span class="dt">ref</span> (Printf<span class="kw">.</span>sprintf <span class="st">&quot;User:%d&quot;</span> (Random<span class="kw">.</span><span class="dt">int</span> <span class="dv">10000</span>)) <span class="kw">in</span>
-<span class="dv">11</span>    <span class="kw">let</span> listener = Udp_datagram<span class="kw">.</span>(create_socket ~reuse_address:<span class="kw">true</span> <span class="dt">Udp4</span>) <span class="kw">in</span>
-<span class="dv">12</span>    <span class="kw">let</span> sender = Udp_datagram<span class="kw">.</span>(create_socket ~reuse_address:<span class="kw">true</span> <span class="dt">Udp4</span>) <span class="kw">in</span>
-<span class="dv">13</span>  
-<span class="dv">14</span>    listener#bind ~port ~address:multicast_addr ~f:<span class="kw">begin</span> <span class="kw">fun</span> () -&gt;
-<span class="dv">15</span>      listener#add_membership multicast_addr;
-<span class="dv">16</span>      listener#set_broadcast <span class="kw">true</span>;
-<span class="dv">17</span>      listener#set_multicast_loopback <span class="kw">true</span>
-<span class="dv">18</span>    <span class="kw">end</span> ();
-<span class="dv">19</span>  
-<span class="dv">20</span>  
-<span class="dv">21</span>    listener#on_message <span class="kw">begin</span> <span class="kw">fun</span> b resp -&gt;
-<span class="dv">22</span>  
-<span class="dv">23</span>      <span class="kw">let</span> handle = b#to_string () |&gt; json_of_string <span class="kw">in</span>
-<span class="dv">24</span>      <span class="kw">if</span> (handle &lt;!&gt; <span class="st">&quot;id&quot;</span> |&gt; Js<span class="kw">.</span>to_string) &lt;&gt; !user_name
-<span class="dv">25</span>      <span class="kw">then</span> print_string (handle &lt;!&gt; <span class="st">&quot;message&quot;</span> |&gt; Js<span class="kw">.</span>to_string)
-<span class="dv">26</span>  
-<span class="dv">27</span>    <span class="kw">end</span>;
-<span class="dv">28</span>  
-<span class="dv">29</span>    p#stdin#on_data <span class="kw">begin</span> <span class="kw">function</span>
-<span class="dv">30</span>      | <span class="dt">String</span> _ -&gt; ()
-<span class="dv">31</span>      | <span class="dt">Buffer</span> b -&gt;
-<span class="dv">32</span>        <span class="kw">let</span> msg = b#to_string () <span class="kw">in</span>
-<span class="dv">33</span>        <span class="co">(* This needs to be redone with Re_pcre *)</span>
-<span class="dv">34</span>        <span class="kw">if</span> String<span class="kw">.</span>length msg &gt; <span class="dv">10</span> <span class="kw">then</span> <span class="kw">begin</span>
-<span class="dv">35</span>          <span class="kw">let</span> modify = String<span class="kw">.</span>sub msg <span class="dv">0</span> <span class="dv">9</span> <span class="kw">in</span>
-<span class="dv">36</span>          <span class="kw">if</span> modify = <span class="st">&quot;set name:&quot;</span>
-<span class="dv">37</span>          <span class="kw">then</span> <span class="kw">begin</span>
-<span class="dv">38</span>            <span class="kw">let</span> as_string = Js<span class="kw">.</span><span class="dt">string</span> (String<span class="kw">.</span>trim msg) <span class="kw">in</span>
-<span class="dv">39</span>            <span class="kw">let</span> chopped =
-<span class="dv">40</span>              as_string##split (Js<span class="kw">.</span><span class="dt">string</span> <span class="st">&quot;:&quot;</span>) |&gt; to_string_list |&gt; Array<span class="kw">.</span>of_list
-<span class="dv">41</span>            <span class="kw">in</span>
-<span class="dv">42</span>            user_name := chopped.(<span class="dv">1</span>)
-<span class="dv">43</span>          <span class="kw">end</span>
-<span class="dv">44</span>        <span class="kw">end</span>;
-<span class="dv">45</span>  
-<span class="dv">46</span>        <span class="kw">let</span> msg = Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s&gt;&gt;&gt;%s&quot;</span> !user_name (b#to_string ()) <span class="kw">in</span>
-<span class="dv">47</span>        <span class="kw">let</span> total_message = (<span class="kw">object</span>%js
-<span class="dv">48</span>          <span class="kw">val</span> id = !user_name |&gt; to_js_str
-<span class="dv">49</span>          <span class="kw">val</span> message = msg |&gt; to_js_str
-<span class="dv">50</span>          <span class="kw">end</span>) |&gt; stringify
-<span class="dv">51</span>        <span class="kw">in</span>
-<span class="dv">52</span>        sender#send
-<span class="dv">53</span>          ~offset:<span class="dv">0</span>
-<span class="dv">54</span>          ~length:(String<span class="kw">.</span>length total_message)
-<span class="dv">55</span>          ~port
-<span class="dv">56</span>          ~dest_address:multicast_addr
-<span class="dv">57</span>          (<span class="dt">String</span> total_message)
-<span class="dv">58</span>      <span class="kw">end</span></code></pre></div>
-<p><strong>Create a site and render directly from jade templates</strong></p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">open</span> Nodejs
-
-<span class="kw">let</span> () =
-  <span class="kw">let</span> exp = <span class="kw">new</span> Express<span class="kw">.</span>express <span class="kw">in</span>
-  <span class="kw">let</span> app = <span class="kw">new</span> Express<span class="kw">.</span>app ~existing:<span class="dt">None</span> <span class="kw">in</span>
-
-  app#set_app_value (<span class="dt">`View_engine</span> <span class="st">&quot;jade&quot;</span>);
-  app#use (exp#static <span class="st">&quot;.&quot;</span>);
-  app#get ~path:<span class="st">&quot;/&quot;</span> (<span class="kw">fun</span> _ res -&gt; res#render <span class="st">&quot;index.jade&quot;</span>);
-
-  app#listen ~port:<span class="dv">8080</span></code></pre></div>
-<p><strong>Create a raw server from the Net module</strong></p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> () =
-  <span class="kw">let</span> server = Net<span class="kw">.</span>create_server ~conn_listener:<span class="kw">begin</span> <span class="kw">fun</span> sock -&gt;
-      sock#on_end (<span class="kw">fun</span> () -&gt; print_endline <span class="st">&quot;client disconnected&quot;</span>);
-      sock#write <span class="st">&quot;Hello</span><span class="ch">\r\n</span><span class="st">&quot;</span>;
-      sock &gt;|&gt; sock |&gt; ignore
-    <span class="kw">end</span> ()
-  <span class="kw">in</span>
-  server#listen ~port:<span class="dv">8124</span> <span class="kw">begin</span> <span class="kw">fun</span> () -&gt;
-    <span class="kw">let</span> info = server#address <span class="kw">in</span>
-    print_endline info.Net<span class="kw">.</span>address;
-    print_endline (info.Net<span class="kw">.</span>ip_family |&gt; string_of_ip);
-    print_endline (info.Net<span class="kw">.</span>port |&gt; string_of_int);
-    print_endline <span class="st">&quot;started server&quot;</span>
-  <span class="kw">end</span></code></pre></div>
-<p><strong>Create a file stream, gzip it, write it</strong></p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="dv">1</span>  <span class="ot">open</span> Nodejs
-<span class="dv">2</span>  
-<span class="dv">3</span>  <span class="kw">let</span> _ =
-<span class="dv">4</span>    Fs<span class="kw">.</span>create_read_stream <span class="st">&quot;code.ml&quot;</span> &gt;|&gt;
-<span class="dv">5</span>    Zlib<span class="kw">.</span>create_gzip () &gt;|&gt;
-<span class="dv">6</span>    Fs<span class="kw">.</span>create_write_stream <span class="st">&quot;NEWCODE_TEST.ml&quot;</span></code></pre></div>
-<p><strong>Typed Decoding of Buffers</strong></p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">open</span> Nodejs
-
-<span class="kw">let</span> () =
-  <span class="kw">let</span> string_decoder = <span class="kw">new</span> String_decoder<span class="kw">.</span>decoder <span class="dt">Utf_8</span> <span class="kw">in</span>
-  <span class="kw">let</span> cent = <span class="kw">new</span> Buffer<span class="kw">.</span>buffer (<span class="dt">`Array</span> [|<span class="bn">0xE2</span>; <span class="bn">0x82</span>; <span class="bn">0xAC</span>|]) <span class="kw">in</span>
-  (string_decoder#write cent) |&gt; print_endline</code></pre></div>
-<p>This one is a bit more low level as it its a general idea of how these bindings are implemented.</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"> <span class="dv">1</span>  <span class="co">(* Assume this file is called c.ml *)</span>
- <span class="dv">2</span>  <span class="ot">open</span> Nodejs
- <span class="dv">3</span>  
- <span class="dv">4</span>  <span class="kw">class</span> child_process = <span class="kw">object</span>
- <span class="dv">5</span>  
- <span class="dv">6</span>    <span class="kw">val</span> raw_js = require_module <span class="st">&quot;child_process&quot;</span>
- <span class="dv">7</span>  
- <span class="dv">8</span>    <span class="co">(* Clearly not finished *)</span>
- <span class="dv">9</span>    <span class="kw">method</span> spawn_sync cmd args : (<span class="dt">string</span> * <span class="dt">string</span>) <span class="dt">list</span> =
-<span class="dv">10</span>      <span class="kw">let</span> handle =
-<span class="dv">11</span>        [|i (Js<span class="kw">.</span><span class="dt">string</span> cmd);
-<span class="dv">12</span>          i (List<span class="kw">.</span>map Js<span class="kw">.</span><span class="dt">string</span> args |&gt; Array<span class="kw">.</span>of_list |&gt; Js<span class="kw">.</span><span class="dt">array</span>)|]
-<span class="dv">13</span>        |&gt; m raw_js <span class="st">&quot;spawnSync&quot;</span>
-<span class="dv">14</span>      <span class="kw">in</span>
-<span class="dv">15</span>      (handle &lt;!&gt; <span class="st">&quot;envPairs&quot;</span>)
-<span class="dv">16</span>      |&gt; Js<span class="kw">.</span>to_array |&gt; Array<span class="kw">.</span>map <span class="kw">begin</span> <span class="kw">fun</span> (s : Js<span class="kw">.</span>js_string Js<span class="kw">.</span>t) -&gt;
-<span class="dv">17</span>        <span class="kw">let</span> chop = s##split (Js<span class="kw">.</span><span class="dt">string</span> <span class="st">&quot;=&quot;</span>) |&gt; to_string_list |&gt; Array<span class="kw">.</span>of_list <span class="kw">in</span>
-<span class="dv">18</span>        (chop.(<span class="dv">0</span>), chop.(<span class="dv">1</span>))
-<span class="dv">19</span>      <span class="kw">end</span>
-<span class="dv">20</span>      |&gt; Array<span class="kw">.</span>to_list
-<span class="dv">21</span>  
-<span class="dv">22</span>  <span class="kw">end</span>
-<span class="dv">23</span>  
-<span class="dv">24</span>  <span class="kw">let</span> () =
-<span class="dv">25</span>    <span class="kw">let</span> ls_proc = (<span class="kw">new</span> child_process)#spawn_sync <span class="st">&quot;ls&quot;</span> [] <span class="kw">in</span>
-<span class="dv">26</span>    ls_proc |&gt; List<span class="kw">.</span>iter <span class="kw">begin</span> <span class="kw">fun</span> (key, value) -&gt;
-<span class="dv">27</span>      Printf<span class="kw">.</span>sprintf <span class="st">&quot;Key was: %s and value: %s&quot;</span> key value
-<span class="dv">28</span>      |&gt; print_endline
-<span class="dv">29</span>    <span class="kw">end</span></code></pre></div>
-<p>(Line one comes from my <code>nodejs</code> package, install it with <code>opam install nodejs</code>).</p>
-<p>This example is a subset of my bindings to the builtin node module, <a href="https://nodejs.org/api/child_process.html">child_process</a>. Here we spawn a separate process and create an OCaml <code>alist</code> out of the environment variables of the spawned process. A point of interest is the poverty of OCaml StdLib’s <code>String</code> module, so much so that I get more functionality out of JavaScript’s string methods! (There’s no split in the StdLib).</p>
-<p>To actually run this code you’ll need to do:</p>
-<pre class="shell"><code>$ ocamlfind ocamlc c.ml -linkpkg -package nodejs -o T.out
-$ js_of_ocaml T.out
-$ node T.js</code></pre>
-<h1 id="projects">Projects</h1>
-<p>This approach surprisingly works and I’ve written similar bindings to <a href="https://github.com/fxfactorial/ocaml-npm-socket-io">socket.io</a> for which I have a working chat server:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">open</span> Nodejs
-
-<span class="kw">let</span> () =
-  <span class="kw">let</span> io = Socket_io<span class="kw">.</span>require () <span class="kw">in</span>
-  <span class="kw">let</span> server =
-    Http<span class="kw">.</span>create_server <span class="kw">begin</span> <span class="kw">fun</span> incoming response -&gt;
-
-      Fs<span class="kw">.</span>read_file ~path:<span class="st">&quot;./client.html&quot;</span> <span class="kw">begin</span> <span class="kw">fun</span> err data -&gt;
-        response#write_head ~status_code:<span class="dv">200</span> [(<span class="st">&quot;Content-type&quot;</span>, <span class="st">&quot;text/html&quot;</span>)];
-        response#end_ ~data:(Http<span class="kw">.</span><span class="dt">String</span> data) ()
-
-      <span class="kw">end</span>
-    <span class="kw">end</span>
-  <span class="kw">in</span>
-  <span class="kw">let</span> app = server#listen ~port:<span class="dv">8080</span> <span class="kw">begin</span> <span class="kw">fun</span> () -&gt;
-      Printf<span class="kw">.</span>sprintf
-        <span class="st">&quot;Started Server and Running node: %s&quot;</span> (<span class="kw">new</span> process#version)
-      |&gt; print_endline
-    <span class="kw">end</span>
-  <span class="kw">in</span>
-
-  <span class="kw">let</span> io = io#listen app <span class="kw">in</span>
-  io#sockets#on_connection <span class="kw">begin</span> <span class="kw">fun</span> socket -&gt;
-
-    socket#on <span class="st">&quot;message_to_server&quot;</span> <span class="kw">begin</span> <span class="kw">fun</span> data -&gt;
-
-      io#sockets#emit
-        ~event_name:<span class="st">&quot;message_to_client&quot;</span>
-        !!(<span class="kw">object</span>%js <span class="kw">val</span> message = data &lt;!&gt; <span class="st">&quot;message&quot;</span> <span class="kw">end</span>)
-
-    <span class="kw">end</span>
-  <span class="kw">end</span></code></pre></div>
-<p>Notice the features of OCaml that don’t exist in JavaScript at all, like named parameters.</p>
-<p>Another project in this vein are my bindings to Github’s <code>Electron</code> project, here’s a project I did with a friend using Basecamp’s recently released <code>Trix</code> editor.</p>
-<div class="figure">
-<img src="./electron_working.gif" alt="img" />
-<p class="caption">img</p>
-</div>
-<h1 id="like-what-you-see">Like what you see?</h1>
-<p>Writing out these bindings is a bit of work, Node’s API is pretty big in addition to third party code like socket.io, express, and Electron. Much of these bindings are quite formulaic, although some ideas don’t easily match up between the OCaml and JavaScript boundary, like <code>varargs</code> so that requires some more thought at times.</p>
-<p>To any reader interested in OCaml open-source or for whatever reason, send me a PR, its mostly an issue of translating <a href="https://nodejs.org/api/index.html">the Node API</a> into the equivalent bindings:</p>
-<p><a href="https://github.com/fxfactorial/ocaml-nodejs">nodejs repo</a></p>
-<p><a href="https://github.com/fxfactorial/ocaml-electron">electron repo</a></p>
 </article>
 
 
