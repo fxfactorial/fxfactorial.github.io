@@ -9,7 +9,7 @@
                    type="application/rss+xml" />
         <lastBuildDate>Fri, 26 Feb 2016 00:00:00 UT</lastBuildDate>
         <item>
-    <title>Let's make a webbrowser in Objective-C++</title>
+    <title>Let's make a webkit browser in Objective-C++</title>
     <link>http://hyegar.com/2016/02/26/lets-make-a-browser/index.html</link>
     <description><![CDATA[<p>This is a short post showing you how to write a simple <code>OS X</code> based web browser using <code>Objective-C</code> in just 80 lines of code and with no XCode. Its very valuable because making a Cocoa application without XCode is sometimes kind of hard.</p>
 <p>First let’s start with the <code>Makefile</code></p>
