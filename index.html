@@ -47,6 +47,110 @@
       <article>
     <header>
         <h1>
+            <a href="./2016/02/26/lets-make-a-browser/" title="Permalink">
+                Let's make a webbrowser in Objective-C++
+            </a>
+        </h1>
+        <span class="post-date">February 26, 2016</span> in 
+        <span class="post-tags"><a href="./tags/darwin/">darwin</a>, <a href="./tags/objective-c/">objective-c</a>, <a href="./tags/c%2B%2B/">c++</a>, <a href="./tags/webkit/">webkit</a></span>
+    </header>
+    <p>This is a short post showing you how to write a simple <code>OS X</code> based web browser using <code>Objective-C</code> in just 80 lines of code and with no XCode. Its very valuable because making a Cocoa application without XCode is sometimes kind of hard.</p>
+<p>First let’s start with the <code>Makefile</code></p>
+<div class="sourceCode"><pre class="sourceCode makefile"><code class="sourceCode makefile"><span class="dt">opts </span><span class="ch">:=</span><span class="st"> -std=c++11 -fobjc-arc</span>
+<span class="dt">fws </span><span class="ch">:=</span><span class="st"> -framework Cocoa -framework Webkit</span>
+<span class="dt">libs </span><span class="ch">:=</span><span class="st"> -lc++</span>
+<span class="dt">exec </span><span class="ch">:=</span><span class="st"> Prog</span>
+<span class="dt">wrapper </span><span class="ch">:=</span><span class="st"> xcrun -r</span>
+
+<span class="dv">all:</span>
+	<span class="ch">${</span><span class="dt">wrapper</span><span class="ch">}</span> clang++ <span class="ch">${</span><span class="dt">opts</span><span class="ch">}</span> <span class="ch">${</span><span class="dt">fws</span><span class="ch">}</span> <span class="ch">${</span><span class="dt">libs</span><span class="ch">}</span> main.mm -o <span class="ch">${</span><span class="dt">exec</span><span class="ch">}</span>
+	./<span class="ch">${</span><span class="dt">exec</span><span class="ch">}</span></code></pre></div>
+<p>We’re going to use Webkit, ARC, C++11 and immediately run the program.</p>
+<p>Now the program, I’m going to assume you are familiar with Cocoa development, Objective-C.</p>
+<div class="sourceCode"><pre class="sourceCode objectivec"><code class="sourceCode objectivec"><span class="co">/* -*- objc -*- */</span>
+
+<span class="ot">#import &lt;Foundation/Foundation.h&gt;</span>
+<span class="ot">#import &lt;Webkit/WebKit.h&gt;</span>
+<span class="ot">#import &lt;iostream&gt;</span>
+
+<span class="kw">@interface</span> Window_delegate : NSObject &lt;NSWindowDelegate&gt;
+<span class="kw">@end</span>
+
+<span class="kw">@implementation</span> Window_delegate
+
+-(<span class="dt">void</span>)windowWillClose:(id)a
+{
+  NSLog(<span class="st">@&quot;Exiting&quot;</span>);
+  exit(<span class="dv">0</span>);
+}
+<span class="kw">@end</span>
+
+<span class="kw">@interface</span> App_delegate : NSObject &lt;NSApplicationDelegate&gt;
+@property (weak, nonatomic) NSWindow *_window;
+<span class="kw">@end</span>
+
+<span class="kw">@implementation</span> App_delegate
+
+-(instancetype)init:(NSWindow*)parent_window
+{
+  <span class="kw">if</span> (<span class="kw">self</span> = [<span class="kw">super</span> init]) {
+    <span class="kw">self</span>._window = parent_window;
+    <span class="kw">return</span> <span class="kw">self</span>;
+  }
+  <span class="kw">return</span> nil;
+}
+
+-(<span class="dt">void</span>)applicationDidFinishLaunching:(NSNotification *)a_notification
+{
+  WebView *wb = [[WebView alloc] initWithFrame:<span class="kw">self</span>._window.contentView.frame];
+  [<span class="kw">self</span>._window.contentView addSubview:wb];
+  [[wb mainFrame]
+    loadRequest:[NSURLRequest
+		  requestWithURL:[NSURL URLWithString:<span class="st">@&quot;http://hyegar.com&quot;</span>]]];
+}
+
+<span class="kw">@end</span>
+
+<span class="dt">void</span> start_program(<span class="dt">void</span>)
+{
+  NSApplication *app = [NSApplication sharedApplication];
+  <span class="co">// Critical to have this so that you can add menus</span>
+  [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+
+  NSWindow *window =
+    [[NSWindow alloc]
+      initWithContentRect:NSMakeRect(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">800</span>, <span class="dv">600</span>)
+		styleMask: NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask
+		  backing:NSBackingStoreBuffered
+		    defer:NO];
+
+  [window center];
+  window.title = <span class="st">@&quot;Hello World&quot;</span>;
+  [window makeKeyAndOrderFront:window];
+
+  Window_delegate *d = [Window_delegate new];
+  window.delegate = d;
+
+  App_delegate *application_delegate = [[App_delegate alloc] init:window];
+  app.delegate = application_delegate;
+  [app activateIgnoringOtherApps:YES];
+  [app run];
+}
+
+<span class="dt">int</span> main(<span class="dt">int</span> argc, <span class="dt">char</span> **argv)
+{
+  std::cout &lt;&lt; <span class="st">&quot;Starting Application</span><span class="ch">\n</span><span class="st">&quot;</span>;
+  @autoreleasepool {
+    start_program();
+  }
+}</code></pre></div>
+<p>a simple <code>make</code> invocation at the command line will build and run this program which should open up a page to this blog.</p>
+<p>Notice that <code>C++</code> wasn’t really used, I added it here to make this blog post content rich and code sample very reusable for you as a starter post.</p>
+<p>A post in the future will show you how to add <code>NSMenu</code>(s) to this application.</p>
+</article>
+<article>
+    <header>
+        <h1>
             <a href="./2016/02/25/lets-hack-on-flow/" title="Permalink">
                 Let's hack on Facebook flow
             </a>
@@ -383,54 +487,6 @@ armv7-apple-darwin11-machocheck         armv7-apple-darwin11-unwinddump</code></
 <p>Then we’ll open another shell and change users to mitm_account and run:</p>
 <pre class="shell"><code>$ mitmproxy -T -p 9001</code></pre>
 <p>And this will start the proxy interceptions.</p>
-</article>
-<article>
-    <header>
-        <h1>
-            <a href="./2016/01/23/calling-ocaml-from-objective-c/" title="Permalink">
-                Calling OCaml from Objective-C
-            </a>
-        </h1>
-        <span class="post-date">January 23, 2016</span> in 
-        <span class="post-tags"><a href="./tags/OCaml/">OCaml</a>, <a href="./tags/objective-c/">objective-c</a>, <a href="./tags/cross%20compiler/">cross compiler</a></span>
-    </header>
-    <p>I love iOS and I love OCaml, so I’ve packaged up an OCaml compiler for iOS via opam. Now all you need to build OCaml programs on the iPhone is opam!</p>
-<h1 id="first-steps">First steps</h1>
-<p>You’ll need the cross compiler. Follow the README instructions mentioned <a href="https://github.com/fxfactorial/opam-ios">here</a>. This will provide you with the cross compiler based on OCaml 4.02.0.</p>
-<h1 id="example-code">Example Code</h1>
-<p>Now I’ll show you an example of calling OCaml from Objective-C. Much of this code will have simplifications as its an example for getting you started. Also note that dealing at the C level and the OCaml runtime can be tricky and is not for beginners.</p>
-<p>Here’s the OCaml code first, assume it is named code.ml</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="dv">1</span>  <span class="kw">let</span> make_string () =
-<span class="dv">2</span>    print_endline <span class="st">&quot;Hello Word from OCaml&quot;</span>;
-<span class="dv">3</span>    <span class="st">&quot;Hello World &quot;</span>
-<span class="dv">4</span>  
-<span class="dv">5</span>  <span class="kw">let</span> () =
-<span class="dv">6</span>    Callback<span class="kw">.</span>register <span class="st">&quot;make_string&quot;</span> make_string</code></pre></div>
-<p>We’re essentially telling the runtime to make this function available to grab as a handle, in this case it’s a handle on a closure.</p>
-<p>And now the Objective-C code, assume it is named main.c</p>
-<div class="sourceCode"><pre class="sourceCode objectivec"><code class="sourceCode objectivec"> <span class="dv">1</span>  #define CAML_NAME_SPACE
- <span class="dv">2</span>  
- <span class="dv">3</span>  #import &lt;Foundation/Foundation.h&gt;
- <span class="dv">4</span>  
- <span class="dv">5</span>  #include &lt;caml/callback.h&gt;
- <span class="dv">6</span>  #include &lt;caml/mlvalues.h&gt;
- <span class="dv">7</span>  
- <span class="dv">8</span>  <span class="dt">int</span> main (<span class="dt">int</span> argc, <span class="dt">char</span> **argv)
- <span class="dv">9</span>  {
-<span class="dv">10</span>    caml_startup(argv);
-<span class="dv">11</span>    caml_callback(*caml_named_value(<span class="st">&quot;make_string&quot;</span>), Val_unit);
-<span class="dv">12</span>    NSLog(<span class="st">@&quot;Now using objective-c code&quot;</span>);
-<span class="dv">13</span>    <span class="kw">return</span> <span class="dv">0</span>;
-<span class="dv">14</span>  }</code></pre></div>
-<p>Its important to call <code>caml_startup</code> before any OCaml callbacks. Then we get a handle on the closure and call it with unit.</p>
-<p>To compile this code you’ll need the cross-compiler which was installed by following the directions on my opam-ios repo, the command you use is:</p>
-<pre class="shell"><code>$ ocamloptrev -rev 8.3 -ccopt -ObjC -cclib '-framework Foundation' main.c code.ml -o F</code></pre>
-<p>The 8.3 is the iOS SDK you want to link against, again see the README on the github repo for opam-ios for more details.</p>
-<p>The output we get, <code>F</code> is an arm executable, when we run it on the iPhone we will get an output of:</p>
-<pre class="shell"><code>$ some_iphone :~/  ./F
-Hello Word from OCaml
-2016-01-23 22:44:04.889 F[1977:507] Now using objective-c code</code></pre>
-<p>Yay!</p>
 </article>
 
 

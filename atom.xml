@@ -7,8 +7,108 @@
         <description><![CDATA[Personal blog of Edgar Aroutiounian]]></description>
         <atom:link href="http://hyegar.com/atom.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Thu, 25 Feb 2016 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Fri, 26 Feb 2016 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Let's make a webbrowser in Objective-C++</title>
+    <link>http://hyegar.com/2016/02/26/lets-make-a-browser/index.html</link>
+    <description><![CDATA[<p>This is a short post showing you how to write a simple <code>OS X</code> based web browser using <code>Objective-C</code> in just 80 lines of code and with no XCode. Its very valuable because making a Cocoa application without XCode is sometimes kind of hard.</p>
+<p>First let’s start with the <code>Makefile</code></p>
+<div class="sourceCode"><pre class="sourceCode makefile"><code class="sourceCode makefile"><span class="dt">opts </span><span class="ch">:=</span><span class="st"> -std=c++11 -fobjc-arc</span>
+<span class="dt">fws </span><span class="ch">:=</span><span class="st"> -framework Cocoa -framework Webkit</span>
+<span class="dt">libs </span><span class="ch">:=</span><span class="st"> -lc++</span>
+<span class="dt">exec </span><span class="ch">:=</span><span class="st"> Prog</span>
+<span class="dt">wrapper </span><span class="ch">:=</span><span class="st"> xcrun -r</span>
+
+<span class="dv">all:</span>
+	<span class="ch">${</span><span class="dt">wrapper</span><span class="ch">}</span> clang++ <span class="ch">${</span><span class="dt">opts</span><span class="ch">}</span> <span class="ch">${</span><span class="dt">fws</span><span class="ch">}</span> <span class="ch">${</span><span class="dt">libs</span><span class="ch">}</span> main.mm -o <span class="ch">${</span><span class="dt">exec</span><span class="ch">}</span>
+	./<span class="ch">${</span><span class="dt">exec</span><span class="ch">}</span></code></pre></div>
+<p>We’re going to use Webkit, ARC, C++11 and immediately run the program.</p>
+<p>Now the program, I’m going to assume you are familiar with Cocoa development, Objective-C.</p>
+<div class="sourceCode"><pre class="sourceCode objectivec"><code class="sourceCode objectivec"><span class="co">/* -*- objc -*- */</span>
+
+<span class="ot">#import &lt;Foundation/Foundation.h&gt;</span>
+<span class="ot">#import &lt;Webkit/WebKit.h&gt;</span>
+<span class="ot">#import &lt;iostream&gt;</span>
+
+<span class="kw">@interface</span> Window_delegate : NSObject &lt;NSWindowDelegate&gt;
+<span class="kw">@end</span>
+
+<span class="kw">@implementation</span> Window_delegate
+
+-(<span class="dt">void</span>)windowWillClose:(id)a
+{
+  NSLog(<span class="st">@&quot;Exiting&quot;</span>);
+  exit(<span class="dv">0</span>);
+}
+<span class="kw">@end</span>
+
+<span class="kw">@interface</span> App_delegate : NSObject &lt;NSApplicationDelegate&gt;
+@property (weak, nonatomic) NSWindow *_window;
+<span class="kw">@end</span>
+
+<span class="kw">@implementation</span> App_delegate
+
+-(instancetype)init:(NSWindow*)parent_window
+{
+  <span class="kw">if</span> (<span class="kw">self</span> = [<span class="kw">super</span> init]) {
+    <span class="kw">self</span>._window = parent_window;
+    <span class="kw">return</span> <span class="kw">self</span>;
+  }
+  <span class="kw">return</span> nil;
+}
+
+-(<span class="dt">void</span>)applicationDidFinishLaunching:(NSNotification *)a_notification
+{
+  WebView *wb = [[WebView alloc] initWithFrame:<span class="kw">self</span>._window.contentView.frame];
+  [<span class="kw">self</span>._window.contentView addSubview:wb];
+  [[wb mainFrame]
+    loadRequest:[NSURLRequest
+		  requestWithURL:[NSURL URLWithString:<span class="st">@&quot;http://hyegar.com&quot;</span>]]];
+}
+
+<span class="kw">@end</span>
+
+<span class="dt">void</span> start_program(<span class="dt">void</span>)
+{
+  NSApplication *app = [NSApplication sharedApplication];
+  <span class="co">// Critical to have this so that you can add menus</span>
+  [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+
+  NSWindow *window =
+    [[NSWindow alloc]
+      initWithContentRect:NSMakeRect(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">800</span>, <span class="dv">600</span>)
+		styleMask: NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask
+		  backing:NSBackingStoreBuffered
+		    defer:NO];
+
+  [window center];
+  window.title = <span class="st">@&quot;Hello World&quot;</span>;
+  [window makeKeyAndOrderFront:window];
+
+  Window_delegate *d = [Window_delegate new];
+  window.delegate = d;
+
+  App_delegate *application_delegate = [[App_delegate alloc] init:window];
+  app.delegate = application_delegate;
+  [app activateIgnoringOtherApps:YES];
+  [app run];
+}
+
+<span class="dt">int</span> main(<span class="dt">int</span> argc, <span class="dt">char</span> **argv)
+{
+  std::cout &lt;&lt; <span class="st">&quot;Starting Application</span><span class="ch">\n</span><span class="st">&quot;</span>;
+  @autoreleasepool {
+    start_program();
+  }
+}</code></pre></div>
+<p>a simple <code>make</code> invocation at the command line will build and run this program which should open up a page to this blog.</p>
+<p>Notice that <code>C++</code> wasn’t really used, I added it here to make this blog post content rich and code sample very reusable for you as a starter post.</p>
+<p>A post in the future will show you how to add <code>NSMenu</code>(s) to this application.</p>]]></description>
+    <pubDate>Fri, 26 Feb 2016 00:00:00 UT</pubDate>
+    <guid>http://hyegar.com/2016/02/26/lets-make-a-browser/index.html</guid>
+    <dc:creator>Edgar Aroutiounian</dc:creator>
+</item>
+<item>
     <title>Let's hack on Facebook flow</title>
     <link>http://hyegar.com/2016/02/25/lets-hack-on-flow/index.html</link>
     <description><![CDATA[<p>I’m writing this post for the JavaScript developer that wants to hack on flow but doesn’t know OCaml and is eager enough to learn some OCaml in pursuit of their hacking goals.</p>
@@ -863,43 +963,6 @@ Podge<span class="kw">.</span>Unix<span class="kw">.</span>read_lines <span clas
 <p>Notice how elegant this code is, the whole function body is just one expression and the data just flows from the output of one function as the input of the other, there’s no separation between the function calls.</p>]]></description>
     <pubDate>Wed, 07 Oct 2015 00:00:00 UT</pubDate>
     <guid>http://hyegar.com/2015/10/07/elegant/index.html</guid>
-    <dc:creator>Edgar Aroutiounian</dc:creator>
-</item>
-<item>
-    <title>OCaml love</title>
-    <link>http://hyegar.com/2015/09/21/ocaml-love/index.html</link>
-    <description><![CDATA[<p>Programmers usually have a choice of language to use via what job they decide to seek. Its probably the case that the majority of programmers don’t really care what language they use and really just care about the paycheck and this is pretty much fine I think, at the end of the day it really is just a job. That said there are indeed some programmers that care about what language they use for the majority of their adult waking life, I liken it to a carpenter caring about the brand of hammers they’re using.</p>
-<h1 id="my-choice">My choice</h1>
-<p>For me the best language to use is <a href="http://ocaml.org">OCaml</a>. Its a statically typed functional programming language that has a powerful type system. In addition to being a functional language, OCaml lets me write imperative code with real mutation and this is often very useful, i.e having a local reference variable really makes some code so much cleaner and easier to deal with and that really ought to be our goal, clean and easy to reason about code.</p>
-<h1 id="what-can-you-do-with-it">What can you do with it?</h1>
-<p>I keep getting this question and its a little strange. What can I do with this language? Well anything else you can do in any other programming language. For me I’m working in the day-time as an OCamler and I use it for my <a href="https://github.com/fxfactorial">personal projects</a>. I even write JavaScript in OCaml via <a href="http://ocsigen.org/js_of_ocaml/">js_of_ocaml</a>.</p>
-<p>Here’s an example straight from my bindings to <a href="https://github.com/maxmind/libmaxminddb">libmaxminddb</a>.</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="co">(* File named loc_dump.ml *)</span>
-<span class="ot">#require &quot;maxminddb&quot;</span>
-
-<span class="kw">let</span> () =
-  <span class="kw">let</span> some_ip = <span class="st">&quot;172.56.31.240&quot;</span> <span class="kw">in</span>
-  <span class="kw">let</span> this_mmdb = Maxminddb<span class="kw">.</span>create <span class="st">&quot;etc/GeoLite2-City.mmdb&quot;</span> <span class="kw">in</span>
-  <span class="kw">let</span> loc = Maxminddb<span class="kw">.</span>location some_ip this_mmdb <span class="kw">in</span>
-  <span class="kw">let</span> <span class="ot">open</span> Maxminddb <span class="kw">in</span>
-  Printf<span class="kw">.</span>sprintf <span class="st">&quot;%f %f %d %s&quot;</span> loc.latitude loc.longitude loc.metro_code loc.time_zone
-  |&gt; print_endline;
-  <span class="kw">let</span> geo_borders = borders ~lang:<span class="dt">French</span> ~ip:some_ip this_mmdb <span class="kw">in</span>
-  Printf<span class="kw">.</span>sprintf
-    <span class="st">&quot;%s %s %s %s %s&quot;</span>
-    geo_borders.postal_code
-    geo_borders.city_name
-    geo_borders.country_name
-    geo_borders.continent_name
-    geo_borders.iso_code
-  |&gt; print_endline</code></pre></div>
-<p>And the corresponding result on the shell</p>
-<pre class="shell"><code>$ utop loc_dump.ml
-33.895900 -118.220100 803 America/Los_Angeles
-90221 Compton États-Unis Amérique du Nord US</code></pre>
-<p>In any case if you’re a programmer and reading this post then I recommend that you try OCaml, especially if you have been burned by Haskell’s mental overhead but still want to do functional programming.</p>]]></description>
-    <pubDate>Mon, 21 Sep 2015 00:00:00 UT</pubDate>
-    <guid>http://hyegar.com/2015/09/21/ocaml-love/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 
