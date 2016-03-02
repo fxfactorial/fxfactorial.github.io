@@ -47,6 +47,69 @@
       <article>
     <header>
         <h1>
+            <a href="./2016/03/02/emacs-for-objc/" title="Permalink">
+                Getting objective-c code completion on emacs
+            </a>
+        </h1>
+        <span class="post-date">March  2, 2016</span> in 
+        <span class="post-tags"><a href="./tags/emacs/">emacs</a>, <a href="./tags/objective-c/">objective-c</a>, <a href="./tags/linux/">linux</a>, <a href="./tags/company/">company</a>, <a href="./tags/clang/">clang</a></span>
+    </header>
+    <p>To get full code completion for objective-c in emacs you need to:</p>
+<ol style="list-style-type: decimal">
+<li>Have <code>company-mode</code> installed, its a generic backend for code completion in emacs and the community loves it.</li>
+<li>Add some elisp to your <code>init.el</code>.</li>
+</ol>
+<p>I assume you have <code>company-mode</code> already installed, this will provide <code>company-clang</code> as well which is what will provide completion.</p>
+<h1 id="some-elisp">Some elisp</h1>
+<p>Here is my elisp that I use, you’ll notice that I also get codecompletion on Linux for objective-c, you can too by following my other blog <a href="http://hyegar.com/2016/02/22/ios-cross-compiler/">post</a>.</p>
+<pre class="common-lisp"><code>(defvar osx-base-path
+  &quot;/Applications/Xcode.app/Contents/Developer/Platforms/&quot;)
+
+(if (equal system-type 'darwin)
+    ; Only the then clause needs a progn, else part doesn't need it.
+    (progn
+      ;; Forgot what this was for..think some os x issues. 
+      (setenv &quot;LC_CTYPE&quot; &quot;UTF-8&quot;)
+      (setq mac-option-modifier 'super
+	    flycheck-make-executable &quot;/usr/local/bin/make&quot;
+	    company-clang-executable
+	    (concat &quot;/Applications/Xcode.app/Contents/Developer/&quot;
+		    &quot;Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++&quot;)
+	    company-clang-arguments
+	    `(&quot;-std=c++11&quot;
+	      &quot;-isysroot&quot;
+	      ; If coding for iOS
+	      ;; (concat osx-base-path
+	      ;; &quot;iPhoneOS.platform/Developer/SDKs/iPhoneOS9.2.sdk&quot;)
+	      ; If coding for OS X
+	      ,(concat osx-base-path
+		       &quot;MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk&quot;)
+	      &quot;-I&quot; &quot;/usr/include/c++/4.2.1&quot;
+	      &quot;-I&quot; &quot;/usr/local/lib/ocaml/&quot;)
+	    flycheck-c/c++-clang-executable
+	    (concat &quot;/Applications/Xcode.app/Contents/Developer/&quot;
+		    &quot;Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++&quot;)
+	    mac-command-modifier 'meta))
+  (set-face-attribute 'default nil :height 110)
+  (setq company-clang-executable &quot;armv7-apple-darwin11-clang&quot;
+	company-clang-arguments '(&quot;-std=c++11&quot;
+				  &quot;-isysroot&quot;
+				  &quot;/home/gar/.nix-profile/iPhoneOS9.2.sdk&quot;
+				  &quot;-I/usr/local/lib/ocaml/&quot;)))
+
+(setq company-backends '(company-clang
+			 company-capf
+			 company-c-headers
+			 company-jedi))
+(add-to-list 'auto-mode-alist '(&quot;\\.mm\\'&quot; . objc-mode))
+(global-set-key (kbd &quot;M-/&quot;) 'company-complete)</code></pre>
+<p>Some of that is alittle opinionated and but the <code>company-clang-arguments</code> is the most important part really. Update the SDKs file name ending as this post becomes outdated.</p>
+<p>Here’s what you should expect to see:</p>
+<p><img src="./images/company-objc.png" />)</p>
+</article>
+<article>
+    <header>
+        <h1>
             <a href="./2016/02/26/lets-make-a-browser/" title="Permalink">
                 Let's make a webkit browser in Objective-C++
             </a>
@@ -460,33 +523,6 @@ armv7-apple-darwin11-machocheck         armv7-apple-darwin11-unwinddump</code></
 <li><p>How to get correct code completion for objective-c on Linux in emacs</p></li>
 <li><p>Creating iPhone command line tools, tweaks in C++, Objective-C using theos.</p></li>
 </ol>
-</article>
-<article>
-    <header>
-        <h1>
-            <a href="./2016/01/24/see-http-traffic-with-proxy/" title="Permalink">
-                Proxy yourself
-            </a>
-        </h1>
-        <span class="post-date">January 24, 2016</span> in 
-        <span class="post-tags"><a href="./tags/infosec/">infosec</a>, <a href="./tags/proxy/">proxy</a>, <a href="./tags/mitmproxy/">mitmproxy</a></span>
-    </header>
-    <p>Often times we want to see our network traffic in an organized way, one tool we can use is <code>tcpdump</code> but its a pretty low level tool and often times HTTP is all we actually care about.</p>
-<h1 id="mitmproxy-man-in-the-middle-proxy">mitmproxy (man in the middle proxy)</h1>
-<p>I’ve been using <code>mitmproxy</code>, its an incredible Python tool that is designed for HTTP and I especially love the command line ncurses interface. Its designed for man in the middle attacks but you can also use it as a debugging tool. Its installable with <code>pip</code> but I just settle for the version that is present on the package manager. With <code>mitmproxy</code> we’ll see all the HTTP traffic in a clean and organized way; <code>mitmproxy</code> is MUCH nicer than using squid and the icky configurations that come along with squid.</p>
-<h1 id="example">Example</h1>
-<p>This example was tested and works on Ubuntu 14.04 and also worked on an Ubuntu 14.04 VM running on VMWare on OS X.</p>
-<p>Essentially we will send all IP traffic from our local machine through <code>mitmproxy</code> as a proxy, this is apparently called a local transparent proxy.</p>
-<p>First we set up some rules for the Linux kernel:</p>
-<p>I’m going to assume you have another Unix account named mitm_account, yes two accounts are needed.</p>
-<pre class="shell"><code>$ sudo iptables -t nat -A OUTPUT -p tcp \
-  -m owner ! --uid-owner mitm_account \
-  --dport 443 -j REDIRECT --to-port 9001</code></pre>
-<p>This looks complicated, you can read up on the <code>iptables</code> man page for all the nitty gritty details. I will try to get a <code>OS X</code> equivalent as well. We also do this same command over, but change <code>--dport</code> to 80 for regular HTTP traffic as well.</p>
-<p>Note the <code>mitm_account</code>. This is the name of some other account, you’ll need to have two Unix accounts for this to work and <code>mitm_account</code> is the Unix account we’ll use that will actually run the <code>mitmproxy</code> program.</p>
-<p>Then we’ll open another shell and change users to mitm_account and run:</p>
-<pre class="shell"><code>$ mitmproxy -T -p 9001</code></pre>
-<p>And this will start the proxy interceptions.</p>
 </article>
 
 

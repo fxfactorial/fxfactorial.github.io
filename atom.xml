@@ -7,8 +7,67 @@
         <description><![CDATA[Personal blog of Edgar Aroutiounian]]></description>
         <atom:link href="http://hyegar.com/atom.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Fri, 26 Feb 2016 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Wed, 02 Mar 2016 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Getting objective-c code completion on emacs</title>
+    <link>http://hyegar.com/2016/03/02/emacs-for-objc/index.html</link>
+    <description><![CDATA[<p>To get full code completion for objective-c in emacs you need to:</p>
+<ol style="list-style-type: decimal">
+<li>Have <code>company-mode</code> installed, its a generic backend for code completion in emacs and the community loves it.</li>
+<li>Add some elisp to your <code>init.el</code>.</li>
+</ol>
+<p>I assume you have <code>company-mode</code> already installed, this will provide <code>company-clang</code> as well which is what will provide completion.</p>
+<h1 id="some-elisp">Some elisp</h1>
+<p>Here is my elisp that I use, you’ll notice that I also get codecompletion on Linux for objective-c, you can too by following my other blog <a href="http://hyegar.com/2016/02/22/ios-cross-compiler/">post</a>.</p>
+<pre class="common-lisp"><code>(defvar osx-base-path
+  &quot;/Applications/Xcode.app/Contents/Developer/Platforms/&quot;)
+
+(if (equal system-type &#39;darwin)
+    ; Only the then clause needs a progn, else part doesn&#39;t need it.
+    (progn
+      ;; Forgot what this was for..think some os x issues. 
+      (setenv &quot;LC_CTYPE&quot; &quot;UTF-8&quot;)
+      (setq mac-option-modifier &#39;super
+	    flycheck-make-executable &quot;/usr/local/bin/make&quot;
+	    company-clang-executable
+	    (concat &quot;/Applications/Xcode.app/Contents/Developer/&quot;
+		    &quot;Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++&quot;)
+	    company-clang-arguments
+	    `(&quot;-std=c++11&quot;
+	      &quot;-isysroot&quot;
+	      ; If coding for iOS
+	      ;; (concat osx-base-path
+	      ;; &quot;iPhoneOS.platform/Developer/SDKs/iPhoneOS9.2.sdk&quot;)
+	      ; If coding for OS X
+	      ,(concat osx-base-path
+		       &quot;MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk&quot;)
+	      &quot;-I&quot; &quot;/usr/include/c++/4.2.1&quot;
+	      &quot;-I&quot; &quot;/usr/local/lib/ocaml/&quot;)
+	    flycheck-c/c++-clang-executable
+	    (concat &quot;/Applications/Xcode.app/Contents/Developer/&quot;
+		    &quot;Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++&quot;)
+	    mac-command-modifier &#39;meta))
+  (set-face-attribute &#39;default nil :height 110)
+  (setq company-clang-executable &quot;armv7-apple-darwin11-clang&quot;
+	company-clang-arguments &#39;(&quot;-std=c++11&quot;
+				  &quot;-isysroot&quot;
+				  &quot;/home/gar/.nix-profile/iPhoneOS9.2.sdk&quot;
+				  &quot;-I/usr/local/lib/ocaml/&quot;)))
+
+(setq company-backends &#39;(company-clang
+			 company-capf
+			 company-c-headers
+			 company-jedi))
+(add-to-list &#39;auto-mode-alist &#39;(&quot;\\.mm\\&#39;&quot; . objc-mode))
+(global-set-key (kbd &quot;M-/&quot;) &#39;company-complete)</code></pre>
+<p>Some of that is alittle opinionated and but the <code>company-clang-arguments</code> is the most important part really. Update the SDKs file name ending as this post becomes outdated.</p>
+<p>Here’s what you should expect to see:</p>
+<p><img src="/images/company-objc.png" />)</p>]]></description>
+    <pubDate>Wed, 02 Mar 2016 00:00:00 UT</pubDate>
+    <guid>http://hyegar.com/2016/03/02/emacs-for-objc/index.html</guid>
+    <dc:creator>Edgar Aroutiounian</dc:creator>
+</item>
+<item>
     <title>Let's make a webkit browser in Objective-C++</title>
     <link>http://hyegar.com/2016/02/26/lets-make-a-browser/index.html</link>
     <description><![CDATA[<p>This is a short post showing you how to write a simple <code>OS X</code> based web browser using <code>Objective-C</code> in just 80 lines of code and with no XCode. Its very valuable because making a Cocoa application without XCode is sometimes kind of hard.</p>
@@ -1097,32 +1156,6 @@ BuildDepends: some_package</code></pre>
 <p>So in terms of actually day to day coding, you don’t actually need to know what a monad “is”, you just need to know how to use it and honestly that’s completely fine, in fact just following the type signatures can take you pretty far in a new, unfamiliar library.</p>]]></description>
     <pubDate>Mon, 12 Oct 2015 00:00:00 UT</pubDate>
     <guid>http://hyegar.com/2015/10/12/monads-you-can-understand/index.html</guid>
-    <dc:creator>Edgar Aroutiounian</dc:creator>
-</item>
-<item>
-    <title>2015-10-07-elegant</title>
-    <link>http://hyegar.com/2015/10/07/elegant/index.html</link>
-    <description><![CDATA[<p>I love elegant code, code that just flows and lets you “see” how the data moves through execution. As part of my <a href="https://github.com/fxfactorial/brozip">brozip</a> application, I wanted to give the feature of recursively compressing or decompressing a directory. So I just wrote exactly what came to mind and came up with this</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> <span class="kw">rec</span> walk_and_action action node =
-  <span class="kw">if</span> Sys<span class="kw">.</span>is_directory node
-  <span class="kw">then</span> (Sys<span class="kw">.</span>readdir node
-        |&gt; Array<span class="kw">.</span>to_list
-        |&gt; List<span class="kw">.</span>map (Filename<span class="kw">.</span>concat node)
-        |&gt; Lwt_list<span class="kw">.</span>iter_p (walk_and_action action))
-  <span class="kw">else</span> action node</code></pre></div>
-<p>Where <code>action</code> has type: <code>string -&gt; unit Lwt.t</code> (a function that takes a <code>string</code> and returns <code>unit Lwt.t</code>) and <code>node</code> is just a <code>string</code> for the file name. Translating the code into English, we first check if the file name represents a directory, if its a directory then we</p>
-<blockquote>
-<ol style="list-style-type: decimal">
-<li>Read the directory’s contents</li>
-<li>Convert the returned array into a list</li>
-<li>Use a partially evaluated function, <code>Filename.concat node</code> and finish that computation for each of the file names in the list</li>
-<li>Use correct concatenated strings to feed to <code>Lwt_list.iter_p</code> which will call the partially evaluated function <code>walk_and_action action</code> on each of the files. The <code>iter_p</code> function tells us that it will call its given function concurrently, which is very nice.</li>
-</ol>
-</blockquote>
-<p>If its not a directory then we just call the function for the given file.</p>
-<p>Notice how elegant this code is, the whole function body is just one expression and the data just flows from the output of one function as the input of the other, there’s no separation between the function calls.</p>]]></description>
-    <pubDate>Wed, 07 Oct 2015 00:00:00 UT</pubDate>
-    <guid>http://hyegar.com/2015/10/07/elegant/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 
