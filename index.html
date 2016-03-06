@@ -43,6 +43,67 @@
       <article>
     <header>
         <h1>
+            <a href="./2016/03/06/get-date-string-in-ocaml/" title="Permalink">
+                Date formating + hash digest example in OCaml
+            </a>
+        </h1>
+        <span class="post-date">March  6, 2016</span> in 
+        <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/datetime/">datetime</a>, <a href="./tags/date/">date</a>, <a href="./tags/crypto/">crypto</a>, <a href="./tags/nocrypto/">nocrypto</a></span>
+    </header>
+    <p>This is another blog post in my quest to improve the state of OCaml coding for the average programmer. Today’s blog post is getting a date string in OCaml, a seemingly trivial thing to do in many other programming languages, and using it in a real world hashing example.</p>
+<h1 id="low-level-way">Low level way</h1>
+<p>You do could it like this:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="co">(* Assume this is code.ml *)</span>
+<span class="kw">let</span> time_now () =
+  Unix<span class="kw">.</span>(
+    <span class="kw">let</span> localtime = localtime (time ()) <span class="kw">in</span>
+    Printf<span class="kw">.</span>sprintf <span class="st">&quot;[%02u:%02u:%02u]&quot;</span>
+      localtime.tm_hour localtime.tm_min localtime.tm_sec)
+	  
+<span class="kw">let</span> () = time_now () |&gt; print_endline</code></pre></div>
+<p>This will require you to link the <code>unix</code> package against your program, for example:</p>
+<pre class="shell"><code>$ ocamlfind ocamlopt -package unix -linkpkg code.ml -o Time_now</code></pre>
+<h1 id="higher-level-way-crypto-example">Higher level way + Crypto example</h1>
+<p>At some point this low level interface might not be appropriate and you’ll want higher abstracts. <code>Calendar</code> is an package on opam that provides such abstractions; install with:</p>
+<pre class="shell"><code>$ opam install calendar</code></pre>
+<p>The API of <code>calendar</code>, which you’ll find under the module <code>CalendarLib</code>, is rather large. Here’s some real world code that you can reuse, built upon. The example also uses a cryptographic package which you can get with</p>
+<pre class="shell"><code>$ opam install nocrypto</code></pre>
+<p>and the code:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="co">(* Assume this is code.ml *)</span>
+<span class="ot">module</span> D = CalendarLib<span class="kw">.</span><span class="dt">Date</span>
+
+<span class="kw">let</span> nr_domains = <span class="dv">24</span>
+
+<span class="kw">let</span> seed_string ~date i =
+  Printf<span class="kw">.</span>sprintf
+    <span class="st">&quot;%d-%d-%d:%d&quot;</span>
+    (D<span class="kw">.</span>day_of_month date)
+    (D<span class="kw">.</span>month date |&gt; D<span class="kw">.</span>int_of_month)
+    (D<span class="kw">.</span>year date)
+    i
+
+<span class="kw">let</span> domain_generate date =
+  <span class="kw">let</span> <span class="kw">rec</span> helper count accum =
+    <span class="kw">if</span> count = nr_domains <span class="kw">then</span> accum
+    <span class="kw">else</span> seed_string ~date count :: helper (count + <span class="dv">1</span>) accum
+  <span class="kw">in</span>
+  helper <span class="dv">0</span> []
+
+<span class="kw">let</span> () =
+  Nocrypto_entropy_unix<span class="kw">.</span>initialize ();
+  CalendarLib<span class="kw">.</span>Date<span class="kw">.</span>today ()
+  |&gt; domain_generate
+  |&gt; List<span class="kw">.</span>iter <span class="kw">begin</span> <span class="kw">fun</span> date_stamp -&gt;
+    Nocrypto<span class="kw">.</span>Hash<span class="kw">.</span>digest <span class="dt">`SHA256</span> (Cstruct<span class="kw">.</span>of_string date_stamp)
+    |&gt; Cstruct<span class="kw">.</span>to_string |&gt; print_endline
+  <span class="kw">end</span></code></pre></div>
+<p>and compiling with:</p>
+<pre class="shell"><code>$ ocamlfind ocamlopt -package calendar,nocrypto.unix -linkpkg code.ml -o Ex</code></pre>
+<p>Yay. Be sure to check my archives for many more quick and useful posts on OCaml.</p>
+</article>
+<article>
+    <header>
+        <h1>
             <a href="./2016/03/02/emacs-for-objc/" title="Permalink">
                 Getting objective-c code completion on emacs
             </a>
@@ -481,44 +542,6 @@ Hey Coder Reading hyegar.com
 <span class="dv">clean:</span>
 	rm -f *.cmo *.cmt *.cmi <span class="ch">${</span><span class="dt">site_gen</span><span class="ch">}</span> index.html</code></pre></div>
 <p>This all creates an <code>index.html</code> file that you can open in your browser. This example is also included in the <code>tyxml</code> source code under <code>examples</code>. I hope this helps you get started with OCaml easier.</p>
-</article>
-<article>
-    <header>
-        <h1>
-            <a href="./2016/02/22/ios-cross-compiler/" title="Permalink">
-                Getting an iOS compiler on Linux, full Objective-C support
-            </a>
-        </h1>
-        <span class="post-date">February 22, 2016</span> in 
-        <span class="post-tags"><a href="./tags/ios/">ios</a>, <a href="./tags/linux/">linux</a>, <a href="./tags/cross%20compiler/">cross compiler</a>, <a href="./tags/nixos/">nixos</a>, <a href="./tags/nixpkgs/">nixpkgs</a>, <a href="./tags/objective-c/">objective-c</a></span>
-    </header>
-    <h1 id="the-problem">The problem</h1>
-<p>Lately I’ve been doing iPhone low level debugging, forensics, and reverse engineering. For that I need an <code>iOS</code> compiler and that has usually only been available on <code>OS X</code>. However my day time development environment is Linux which clearly doesn’t have an <code>objective-c</code> runtime or libraries…how to solve this?</p>
-<h1 id="the-solution">The solution</h1>
-<p>I found this <a href="https://github.com/tpoechtrager/osxcross">project</a> but it was very hands on and difficult to reproduce on multiple machines. How could I reliably build this code? My solution was <code>NixOS</code>, specifically the <code>nixpkgs</code> package manager (I won’t go into the benefits of <code>Nix</code> in this post). Now you can also benefit from this work by getting an <code>armv7</code> iOS cross compiler for up to <code>iOS 9.2</code> by simply doing:</p>
-<pre class="shell"><code>$ nix-env -i clang ios-cross-compile</code></pre>
-<p>This will crap out initially because I cannot redistribute iOS SDKs, but it does give you instructions on how to manually add something to the <code>nix-store</code>. After you follow the instructions run the command again and then you’ll have all these tools</p>
-<pre><code>armv7-apple-darwin11-ar                 armv7-apple-darwin11-nm
-armv7-apple-darwin11-as                 armv7-apple-darwin11-nmedit
-armv7-apple-darwin11-bitcode_strip      armv7-apple-darwin11-ObjectDump
-armv7-apple-darwin11-checksyms          armv7-apple-darwin11-otool
-armv7-apple-darwin11-clang              armv7-apple-darwin11-pagestuff
-armv7-apple-darwin11-clang++            armv7-apple-darwin11-ranlib
-armv7-apple-darwin11-codesign_allocate  armv7-apple-darwin11-redo_prebinding
-armv7-apple-darwin11-dyldinfo           armv7-apple-darwin11-seg_addr_table
-armv7-apple-darwin11-indr               armv7-apple-darwin11-segedit
-armv7-apple-darwin11-install_name_tool  armv7-apple-darwin11-seg_hack
-armv7-apple-darwin11-ld                 armv7-apple-darwin11-size
-armv7-apple-darwin11-libtool            armv7-apple-darwin11-strings
-armv7-apple-darwin11-lipo               armv7-apple-darwin11-strip
-armv7-apple-darwin11-machocheck         armv7-apple-darwin11-unwinddump</code></pre>
-<p>…installed and they will work for SDK <code>7.0-9.2</code>!</p>
-<h1 id="stay-tuned">Stay tuned</h1>
-<p>I’ll have more blog posts lined up including:</p>
-<ol style="list-style-type: decimal">
-<li><p>How to get correct code completion for objective-c on Linux in emacs</p></li>
-<li><p>Creating iPhone command line tools, tweaks in C++, Objective-C using theos.</p></li>
-</ol>
 </article>
 
 
