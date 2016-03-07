@@ -43,6 +43,89 @@
       <article>
     <header>
         <h1>
+            <a href="./2016/03/07/dga-padcrypt-ocaml/" title="Permalink">
+                A Domain Generating Algorithm in OCaml
+            </a>
+        </h1>
+        <span class="post-date">March  7, 2016</span> in 
+        <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/dga/">dga</a>, <a href="./tags/padcrypt/">padcrypt</a></span>
+    </header>
+    <p>Scrolling through twitter I saw someone mention something about the padcrypt <a href="https://en.wikipedia.org/wiki/Domain_generation_algorithm">dga</a>. Basically it generates random ish domain names.</p>
+<p>Here’s an <code>OCaml</code> reimplementation of the Python code written <a href="http://johannesbader.ch/2016/03/the-dga-of-padcrypt/">here</a>.</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">module</span> D = CalendarLib<span class="kw">.</span><span class="dt">Date</span>
+
+<span class="kw">let</span> tlds = [|<span class="st">&quot;com&quot;</span>;<span class="st">&quot;co.uk&quot;</span>; <span class="st">&quot;de&quot;</span>;<span class="st">&quot;org&quot;</span>;<span class="st">&quot;net&quot;</span>;<span class="st">&quot;eu&quot;</span>;<span class="st">&quot;info&quot;</span>;<span class="st">&quot;online&quot;</span>;
+            <span class="st">&quot;co&quot;</span>; <span class="st">&quot;cc&quot;</span>; <span class="st">&quot;website&quot;</span>|]
+
+<span class="kw">let</span> tlds_count = Array<span class="kw">.</span>length tlds
+<span class="kw">let</span> nr_domains = <span class="dv">24</span> * <span class="dv">3</span>
+<span class="kw">let</span> digit_mapping = <span class="st">&quot;abcdnfolmk&quot;</span>
+
+<span class="kw">let</span> seed_string ~date i =
+  Printf<span class="kw">.</span>sprintf <span class="st">&quot;%d-%d-%d|%d&quot;</span>
+    (D<span class="kw">.</span>day_of_month date)
+    (D<span class="kw">.</span>month date |&gt; D<span class="kw">.</span>int_of_month)
+    (D<span class="kw">.</span>year date)
+    i
+
+<span class="kw">let</span> domain_generate date =
+  <span class="kw">let</span> <span class="kw">rec</span> helper count accum =
+    <span class="kw">if</span> count = nr_domains <span class="kw">then</span> accum
+    <span class="kw">else</span> seed_string ~date count :: helper (count + <span class="dv">1</span>) accum
+  <span class="kw">in</span>
+  helper <span class="dv">0</span> []
+
+<span class="kw">let</span> () =
+  Nocrypto_entropy_unix<span class="kw">.</span>initialize ();
+  CalendarLib<span class="kw">.</span>Date<span class="kw">.</span>today ()
+  |&gt; domain_generate
+  |&gt; List<span class="kw">.</span>iter <span class="kw">begin</span> <span class="kw">fun</span> date_stamp -&gt;
+    <span class="kw">let</span> hashed =
+      (Cstruct<span class="kw">.</span>of_string date_stamp)
+      |&gt; Nocrypto<span class="kw">.</span>Hash<span class="kw">.</span>digest <span class="dt">`SHA256</span>
+      |&gt; Hex<span class="kw">.</span>of_cstruct |&gt; <span class="kw">function</span> <span class="dt">`Hex</span> s -&gt; s
+    <span class="kw">in</span>
+    <span class="kw">let</span> domain =
+      String<span class="kw">.</span>sub hashed <span class="dv">3</span> <span class="dv">16</span>
+      |&gt; Stringext<span class="kw">.</span>to_list
+      |&gt; List<span class="kw">.</span>map
+        (<span class="kw">function</span> <span class="ch">'0'</span>..<span class="ch">'9'</span> <span class="kw">as</span> hh -&gt;
+          Char<span class="kw">.</span>code hh - <span class="dv">48</span> |&gt; String<span class="kw">.</span>get digit_mapping
+                | o -&gt; o)
+      |&gt; Stringext<span class="kw">.</span>of_list
+    <span class="kw">in</span>
+    <span class="kw">let</span> tld_index =
+      String<span class="kw">.</span>get hashed (String<span class="kw">.</span>length hashed - <span class="dv">1</span>)
+      |&gt; Printf<span class="kw">.</span>sprintf <span class="st">&quot;0x%c&quot;</span>
+      |&gt; int_of_string
+      |&gt; <span class="kw">fun</span> tld -&gt; <span class="kw">if</span> tld &gt;= tlds_count <span class="kw">then</span> <span class="dv">0</span> <span class="kw">else</span> tld
+    <span class="kw">in</span>
+    Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s.%s&quot;</span> domain (Array<span class="kw">.</span>get tlds tld_index)
+    |&gt; print_endline
+  <span class="kw">end</span></code></pre></div>
+<p>You can build it with a simple <code>Makefile</code> like this:</p>
+<div class="sourceCode"><pre class="sourceCode makefile"><code class="sourceCode makefile"><span class="dv">all:</span>
+	ocamlfind ocamlopt main.ml <span class="ch">\</span>
+	<span class="ch">-</span><span class="fu">package nocrypto.unix,calendar,hex,stringext </span><span class="ch">\</span>
+<span class="fu">	-linkpkg -o Dga</span></code></pre></div>
+<p>and here’s a sample output:</p>
+<pre class="text"><code>&gt; ./Dga 
+...
+abbdddmfllkbamco.com
+fbfknncbfcbbmlde.website
+flcfcbaocdmbfbmb.website
+mkaakfkaoocealda.com
+doabakblkbaffmnd.cc
+llacffaobdcodbca.com
+fcdebfefakffamco.co
+dbbbenbaalcbkbnl.com
+dkomadcbodnamfbb.com
+aanamlbblmaefofc.org</code></pre>
+<p>For reference the github repo is <a href="https://github.com/fxfactorial/dga-padcrypt-ocaml">here</a>.</p>
+</article>
+<article>
+    <header>
+        <h1>
             <a href="./2016/03/06/get-date-string-in-ocaml/" title="Permalink">
                 Date formating + hash digest example in OCaml
             </a>
@@ -431,117 +514,6 @@ Hey Coder Reading hyegar.com
 [2016-02-25 00:58:55] Took 0.431947 seconds to initialize.
 [2016-02-25 00:58:55] Status: Error</code></pre>
 <p>And there you have it, now you start hacking on <code>OCaml</code> in flow. Be sure to check out my numerous other blog posts about <code>OCaml</code> including the jargon and build situation located <a href="http://hyegar.com/2015/10/20/so-youre-learning-ocaml/">here</a></p>
-</article>
-<article>
-    <header>
-        <h1>
-            <a href="./2016/02/24/tyxml-ocaml-example/" title="Permalink">
-                Use OCaml to create statically typed HTML
-            </a>
-        </h1>
-        <span class="post-date">February 24, 2016</span> in 
-        <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/tyxml/">tyxml</a>, <a href="./tags/html/">html</a>, <a href="./tags/web/">web</a>, <a href="./tags/example/">example</a></span>
-    </header>
-    <h1 id="motivation">Motivation</h1>
-<p>This blog post is part of my effort to make OCaml libraries, and therefore OCaml itself, more accessible and documented. We’ll focus on generating statically typed HTML using the <code>tyxml</code> package.</p>
-<h1 id="simple-starter-code">Simple Starter code</h1>
-<p>Let’s start by installing <code>tyxml</code> itself, we can do that with:</p>
-<pre class="shell"><code>$ opam install tyxml</code></pre>
-<p>And here’s the OCaml code:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">open</span> Html5<span class="kw">.</span>M
-
-<span class="kw">let</span> this_title = title (pcdata <span class="st">&quot;Your Cool Web Page&quot;</span>)
-
-<span class="kw">let</span> image_box =
-  div ~a:[a_id <span class="st">&quot;image_box&quot;</span>]
-    []
-
-<span class="kw">let</span> links_box =
-  ul ~a:[a_class [<span class="st">&quot;links_bar&quot;</span>]; a_id <span class="st">&quot;links_bar&quot;</span>]
-    [li ~a:[a_id <span class="st">&quot;home_click&quot;</span>]
-       [pcdata <span class="st">&quot;My Musings&quot;</span>];
-     li ~a:[a_id <span class="st">&quot;about_click&quot;</span>]
-       [pcdata <span class="st">&quot;About Me&quot;</span>];
-     li ~a:[a_id <span class="st">&quot;blog_posts_click&quot;</span>]
-       [pcdata <span class="st">&quot;Blog&quot;</span>];
-     li ~a:[a_id <span class="st">&quot;hackathons_click&quot;</span>]
-       [pcdata <span class="st">&quot;Hackathons&quot;</span>]]
-
-<span class="kw">let</span> common_footer =
-  footer ~a:[a_id <span class="st">&quot;footer_box&quot;</span>]
-    [p [pcdata <span class="st">&quot;This site was made with &quot;</span>;
-        a ~a:[a_href <span class="st">&quot;http://ocaml.org&quot;</span>] [pcdata <span class="st">&quot;OCaml&quot;</span>];
-        pcdata <span class="st">&quot; and &quot;</span>;
-        a ~a:[a_href <span class="st">&quot;https://www.gnu.org/software/emacs/&quot;</span>] [pcdata <span class="st">&quot;emacs&quot;</span>]]]
-
-<span class="kw">let</span> home_content =
-  div
-    [h2
-       [pcdata <span class="st">&quot;Hello Coder&quot;</span>]]
-
-<span class="kw">let</span> main_payload =
-  div ~a:[a_id <span class="st">&quot;payload&quot;</span>]
-    [home_content]
-
-<span class="kw">let</span> common_nav =
-  nav [links_box]
-
-<span class="kw">let</span> content_box =
-  div ~a:[a_id <span class="st">&quot;content_box&quot;</span>]
-    [common_nav;
-     main_payload;
-     common_footer]
-
-<span class="kw">let</span> main_script =
-  script ~a:[a_src (Xml<span class="kw">.</span>uri_of_string <span class="st">&quot;main.js&quot;</span>)] (pcdata <span class="st">&quot;&quot;</span>)
-
-<span class="kw">let</span> home_page_doc =
-  html (head this_title
-          [link ~rel:[<span class="dt">`Stylesheet</span>] ~href:<span class="st">&quot;home.css&quot;</span> ();])
-    (body [image_box; content_box; main_script])
-
-<span class="kw">let</span> pages = [(<span class="st">&quot;index.html&quot;</span>, home_page_doc)]
-
-<span class="kw">let</span> () =
-  List<span class="kw">.</span>iter <span class="kw">begin</span> <span class="kw">fun</span> (page_name, a_page) -&gt;
-    Printf<span class="kw">.</span>sprintf <span class="st">&quot;Generating: %s&quot;</span> page_name |&gt; print_endline;
-    <span class="kw">let</span> file_handle = open_out page_name <span class="kw">in</span>
-    Html5<span class="kw">.</span>P<span class="kw">.</span>print (output_string file_handle) a_page;
-    close_out file_handle;
-    <span class="kw">match</span> Sys<span class="kw">.</span>command (Printf<span class="kw">.</span>sprintf <span class="st">&quot;tidy -im -ashtml %s&quot;</span> page_name) <span class="kw">with</span>
-    | <span class="dv">0</span> -&gt; ()
-    | c -&gt;
-      print_endline <span class="st">&quot;You don't have tidy, no pretty printing of html&quot;</span>
-  <span class="kw">end</span>
-    pages</code></pre></div>
-<p>Notice the example include a script tag usage and CSS usage. This is using just <code>tyxml</code> and the <code>stdlib</code>.</p>
-<p>For completeness, here’s the CSS followed by the JavaScript and finally the Makefile to build it all</p>
-<div class="sourceCode"><pre class="sourceCode css"><code class="sourceCode css"><span class="fl">#links_bar</span> li <span class="kw">{</span>
-    <span class="kw">margin:</span><span class="dt">1em</span><span class="kw">;</span>
-    <span class="kw">padding:</span><span class="dt">0.4em</span><span class="kw">;</span>
-    <span class="kw">font-size:</span><span class="dt">large</span><span class="kw">;</span>
-    <span class="kw">display:</span><span class="dt">inline</span><span class="kw">;</span>
-    <span class="kw">cursor:</span><span class="dt">pointer</span><span class="kw">;</span>
-    <span class="kw">border:</span><span class="dt">none</span><span class="kw">;</span>
-    <span class="kw">border-radius:</span><span class="dt">0px</span><span class="kw">;</span>
-    <span class="kw">transition:</span><span class="dt">.2s</span> linear<span class="kw">;</span>
-    <span class="kw">text-align:</span><span class="dt">center</span><span class="kw">;</span>
-<span class="kw">}</span></code></pre></div>
-<div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="st">&quot;use strict&quot;</span><span class="op">;</span>
-
-<span class="kw">var</span> handle <span class="op">=</span> <span class="va">document</span>.<span class="at">getElementById</span>(<span class="st">&quot;payload&quot;</span>)<span class="op">;</span>
-
-<span class="va">console</span>.<span class="at">log</span>(<span class="st">&quot;Hello World&quot;</span>)<span class="op">;</span>
-<span class="va">console</span>.<span class="at">log</span>(handle)<span class="op">;</span></code></pre></div>
-<div class="sourceCode"><pre class="sourceCode makefile"><code class="sourceCode makefile"><span class="dt">site_gen </span><span class="ch">:=</span><span class="st"> make_site</span>
-
-<span class="dv">all:</span>
-	ocamlfind ocamlc site_html.ml -package tyxml -linkpkg -o <span class="ch">${</span><span class="dt">site_gen</span><span class="ch">}</span>
-	./<span class="ch">${</span><span class="dt">site_gen</span><span class="ch">}</span>
-
-<span class="dv">clean:</span>
-	rm -f *.cmo *.cmt *.cmi <span class="ch">${</span><span class="dt">site_gen</span><span class="ch">}</span> index.html</code></pre></div>
-<p>This all creates an <code>index.html</code> file that you can open in your browser. This example is also included in the <code>tyxml</code> source code under <code>examples</code>. I hope this helps you get started with OCaml easier.</p>
 </article>
 
 
