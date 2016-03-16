@@ -43,12 +43,59 @@
       <article>
     <header>
         <h1>
+            <a href="./2016/03/15/building-xen-arm-from-source/" title="Permalink">
+                Building xen-arm-builder from source
+            </a>
+        </h1>
+        <span class="post-date">March 15, 2016</span> in 
+        <span class="post-tags"><a href="./tags/mirageos/">mirageos</a>, <a href="./tags/sdcard/">sdcard</a>, <a href="./tags/xen/">xen</a>, <a href="./tags/ocaml/">ocaml</a></span>
+    </header>
+    <p>I’m in Morocco for the first <a href="http://marrakech2016.mirage.io/">mirageos</a> hackathon. One of the things I’ve done here is build <a href="https://github.com/mirage/xen-arm-builder">xen-arm-builder</a> from source and it was a big challenge. Here’s my general notes and pointers to help you get over this hump. I assume you know what mirageos/xen are.</p>
+<h1 id="machine-setup">Machine Setup</h1>
+<p>I did this on Ubuntu 15 and was deploying to a <a href="http://cubieboard.org/2013/06/19/cubieboard2-is-here/">cubieboard2</a>.</p>
+<h1 id="example-workflow">Example Workflow</h1>
+<p>Assuming that you are connecting the cubieboard2 to your laptop over a serial connection then you can get a shell on the machine with</p>
+<pre class="shell"><code>$ screen -h 10000 /dev/ttyUSB0 115200</code></pre>
+<p>Then say you are using <a href="https://github.com/mirage/mirage-skeleton">mirage-skeleton</a>, here’s an example flow.</p>
+<pre class="shell"><code>$ git clone https://github.com/mirage/mirage-skeleton
+$ cd mirage-skeleton
+$ make configure MODE=xen
+$ cd console
+$ make
+$ sudo xl create console.xe</code></pre>
+<p>Yay Unikernel on Cubieboard2!</p>
+<h1 id="troublesome-issues">Troublesome issues</h1>
+<p>I had many, many issues in building the code from source, here are some troubleshooting steps that might help you as well.</p>
+<ol start="0" style="list-style-type: decimal">
+<li>Be sure to have fast internet because building from source including making a clone of the Linux source, ouch.</li>
+<li><code>OPAMVERBOSE=1 opam &lt;anything&gt;</code> is incredibly useful.</li>
+<li>Ubuntu 15 will install a <code>gcc-5.0</code> version of the cross-compiler, be sure to do <code>make build CC=arm-linux-gnueabihf-gcc-4.8</code> instead of a plain <code>make build</code>.</li>
+<li>Be sure to <strong>not</strong> use the <code>4.02.0</code> compiler, the cubieboard2 is super slow and that OCaml compiler had a performance bug, use the <code>4.02.3</code> compiler instead.</li>
+<li>Check <code>top</code> to see some kind of xp binary, it eats the CPU and that really slows down compilation, best to kill them.</li>
+<li>Do make sure that the time on the machine is correct, otherwise you’ll have weird hanging by opam which will seem like its building but actually its just stuck on a timing issue, aka be sure to do: <code>sudo ntpdate uk.pool.ntp.org</code> before doing anything with mirage/opam/aptitude.</li>
+<li>If you get odd errors like:</li>
+</ol>
+<pre class="shell"><code>Parsing config from console.xl
+xc: error: panic: xc_dom_core.c:185: failed to open file: No such file or directory: Internal error
+libxl: error: libxl_dom.c:377:libxl__build_pv: xc_dom_kernel_file failed: No such file or directory
+libxl: error: libxl_create.c:1022:domcreate_rebuild_done: cannot
+(re-)build domain: -3</code></pre>
+<p>Then check that the libraries are correctly set in <code>/usr/lib</code>, check with</p>
+<pre class="shell"><code>$ sudo strace -e open xl create console.xl</code></pre>
+<p>and either <code>cp</code> or <code>ln</code> them correctly.</p>
+<ol start="7" style="list-style-type: decimal">
+<li>I recommend just installing all the <code>depopts</code> of all the mirage projects, there are some bugs in mirage opam files that don’t install other needed packages.</li>
+</ol>
+</article>
+<article>
+    <header>
+        <h1>
             <a href="./2016/03/07/dga-padcrypt-ocaml/" title="Permalink">
                 A Domain Generating Algorithm in OCaml
             </a>
         </h1>
         <span class="post-date">March  7, 2016</span> in 
-        <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/ocaml/">dga</a>, <a href="./tags/ocaml/">padcrypt</a></span>
+        <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/dga/">dga</a>, <a href="./tags/padcrypt/">padcrypt</a></span>
     </header>
     <p>Scrolling through twitter I saw someone mention something about the padcrypt <a href="https://en.wikipedia.org/wiki/Domain_generation_algorithm">dga</a>. Basically it generates random ish domain names.</p>
 <p>Here’s an <code>OCaml</code> reimplementation of the Python code written <a href="http://johannesbader.ch/2016/03/the-dga-of-padcrypt/">here</a>.</p>
@@ -131,7 +178,7 @@ aanamlbblmaefofc.org</code></pre>
             </a>
         </h1>
         <span class="post-date">March  6, 2016</span> in 
-        <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/ocaml/">datetime</a>, <a href="./tags/ocaml/">date</a>, <a href="./tags/ocaml/">crypto</a>, <a href="./tags/ocaml/">nocrypto</a></span>
+        <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/datetime/">datetime</a>, <a href="./tags/date/">date</a>, <a href="./tags/crypto/">crypto</a>, <a href="./tags/nocrypto/">nocrypto</a></span>
     </header>
     <p>This is another blog post in my quest to improve the state of OCaml coding for the average programmer. Today’s blog post is getting a date string in OCaml, a seemingly trivial thing to do in many other programming languages, and using it in a real world hashing example.</p>
 <h1 id="low-level-way">Low level way</h1>
@@ -192,7 +239,7 @@ aanamlbblmaefofc.org</code></pre>
             </a>
         </h1>
         <span class="post-date">March  2, 2016</span> in 
-        <span class="post-tags"><a href="./tags/ocaml/">emacs</a>, <a href="./tags/ocaml/">objective-c</a>, <a href="./tags/ocaml/">linux</a>, <a href="./tags/ocaml/">company</a>, <a href="./tags/ocaml/">clang</a></span>
+        <span class="post-tags"><a href="./tags/emacs/">emacs</a>, <a href="./tags/objective-c/">objective-c</a>, <a href="./tags/linux/">linux</a>, <a href="./tags/company/">company</a>, <a href="./tags/clang/">clang</a></span>
     </header>
     <p>To get full code completion for objective-c in emacs you need to:</p>
 <ol style="list-style-type: decimal">
@@ -255,7 +302,7 @@ aanamlbblmaefofc.org</code></pre>
             </a>
         </h1>
         <span class="post-date">February 26, 2016</span> in 
-        <span class="post-tags"><a href="./tags/ocaml/">darwin</a>, <a href="./tags/ocaml/">objective-c</a>, <a href="./tags/ocaml/">c++</a>, <a href="./tags/ocaml/">webkit</a></span>
+        <span class="post-tags"><a href="./tags/darwin/">darwin</a>, <a href="./tags/objective-c/">objective-c</a>, <a href="./tags/c%2B%2B/">c++</a>, <a href="./tags/webkit/">webkit</a></span>
     </header>
     <p>This is a short post showing you how to write a simple <code>OS X</code> based web browser using <code>Objective-C</code> in just 80 lines of code and with no XCode. Its very valuable because making a Cocoa application without XCode is sometimes kind of hard.</p>
 <p>First let’s start with the <code>Makefile</code></p>
@@ -350,170 +397,6 @@ aanamlbblmaefofc.org</code></pre>
 <p>a simple <code>make</code> invocation at the command line will build and run this program which should open up a page to this blog.</p>
 <p>Notice that <code>C++</code> wasn’t really used, I added it here to make this blog post content rich and code sample very reusable for you as a starter post.</p>
 <p>A post in the future will show you how to add <code>NSMenu</code>(s) to this application.</p>
-</article>
-<article>
-    <header>
-        <h1>
-            <a href="./2016/02/25/lets-hack-on-flow/" title="Permalink">
-                Let's hack on Facebook flow
-            </a>
-        </h1>
-        <span class="post-date">February 25, 2016</span> in 
-        <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/ocaml/">facebook</a>, <a href="./tags/ocaml/">flow</a>, <a href="./tags/ocaml/">javascript</a></span>
-    </header>
-    <p>I’m writing this post for the JavaScript developer that wants to hack on flow but doesn’t know OCaml and is eager enough to learn some OCaml in pursuit of their hacking goals.</p>
-<h1 id="getting-started.">Getting started.</h1>
-<p>You’ll need to have <code>opam</code> installed, it is OCaml’s package manager. On <code>OS X</code> you can get it with <code>brew install opam</code>, on <code>debian</code> just use apt-get’s version and if on <code>Ubuntu</code> use this <a href="https://launchpad.net/~avsm/+archive/ubuntu/ppa">ppa</a></p>
-<p>The very act of installing <code>opam</code> should have also installed a compiler, which we’ll need for building <code>flow</code>.</p>
-<p>For completeness’s sake, we’ll do:</p>
-<pre class="shell"><code>$ opam install ocamlfind ocamlbuild</code></pre>
-<p>This should provide us with all the tools we need to build flow.</p>
-<h1 id="building-flow-and-setting-goals">Building Flow and setting goals</h1>
-<p>Now let’s build flow</p>
-<pre class="shell"><code>$ git clone https://github.com/facebook/flow
-$ cd flow
-$ make</code></pre>
-<p>and a sanity check:</p>
-<pre class="shell"><code>$ bin/flow examples/01_HelloWorld
-The flow server's version didn't match the client's, so it exited.
-Going to launch a new one.
-
-Launching Flow server for /Users/Edgar/Repos/flow/examples/01_HelloWorld
-Spawned flow server (child pid=37837)
-Logs will go to /private/tmp/flow/zSUserszSEdgarzSReposzSflowzSexampleszS01_HelloWorld.log
-examples/01_HelloWorld/hello.js:7
-  7: foo(&quot;Hello, world!&quot;);
-     ^^^^^^^^^^^^^^^^^^^^ function call
-  4:   return x*10;
-              ^ string. This type is incompatible with
-  4:   return x*10;
-              ^^^^ number
-
-
-Found 1 error</code></pre>
-<p>this is expected of course. Let’s say our goal is to add some extra behavior around string <code>This type is incompatible</code>. First we try to find it.</p>
-<pre class="shell"><code>$ cd src
-$ grep -nIr &quot;This type is incompatible&quot; .</code></pre>
-<p>Of the many hits we get we see that only two end in <code>.ml</code> which is the file extension for <code>OCaml</code> source code.</p>
-<pre><code>./typing/flow_js.ml:3586:      let msg = &quot;This type is incompatible with&quot; in
-./typing/flow_js.ml:3772:    &quot;This type is incompatible with&quot;</code></pre>
-<p>Let’s open the second one on line <code>3772</code>, we see this function</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">and</span> err_msg l u =
-  <span class="kw">if</span> is_use u
-  <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
-  <span class="kw">else</span> <span class="st">&quot;This type is incompatible with&quot;</span></code></pre></div>
-<p>it looks a little bit weird because it starts with an <code>and</code>. That’s okay, the <code>and</code> means that its being used in a function before its defined, otherwise it would have been:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> err_msg l u =
-  <span class="kw">if</span> is_use u
-  <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
-  <span class="kw">else</span> <span class="st">&quot;This type is incompatible with&quot;</span></code></pre></div>
-<p>The function is named <code>err_msg</code>, it takes <code>l</code> and <code>u</code> and produces a <code>string</code>.</p>
-<p>Let’s add a prefix to the string, we’ll change it to:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">and</span> err_msg l u =
-  <span class="kw">if</span> is_use u
-  <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
-  <span class="kw">else</span> <span class="st">&quot;Hello JS World-&gt; This type is incompatible with&quot;</span></code></pre></div>
-<p>for completeness sake I assume you’re still in the <code>src</code> directory.</p>
-<pre class="shell"><code>$ cd ..
-$ make clean
-$ make
-$ bin/flow examples/01_HelloWorld 
-The flow server's version didn't match the client's, so it exited.
-Going to launch a new one.
-
-Launching Flow server for /Users/Edgar/Repos/flow/examples/01_HelloWorld
-Spawned flow server (child pid=40942)
-Logs will go to /private/tmp/flow/zSUserszSEdgarzSReposzSflowzSexampleszS01_HelloWorld.log
-examples/01_HelloWorld/hello.js:7
-  7: foo(&quot;Hello, world!&quot;);
-     ^^^^^^^^^^^^^^^^^^^^ function call
-  4:   return x*10;
-              ^ string. Hello JS World -&gt; This type is incompatible with
-  4:   return x*10;
-              ^^^^ number
-
-
-Found 1 error</code></pre>
-<p>Yay, we found the spot and changed it.</p>
-<h1 id="now-lets-iterate-on-our-success">Now let’s iterate on our success</h1>
-<p>Great, we changed the string, but let’s say we want to have some other stuff happen, let’s try some printing to the screen. We change <code>err_msg</code> to this instead:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">and</span> err_msg l u =
-  <span class="kw">if</span> is_use u
-  <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
-  <span class="kw">else</span> <span class="kw">begin</span>
-    print_endline <span class="st">&quot;Hey Coder Reading hyegar.com&quot;</span>;
-    <span class="st">&quot;Hello JS World -&gt; This type is incompatible with&quot;</span>
-  <span class="kw">end</span></code></pre></div>
-<h2 id="interesting-sidenotes">Interesting Sidenotes</h2>
-<p>The <code>begin</code>, <code>end</code> are just syntax. I could have also written it using <code>( )</code> like so:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">and</span> err_msg l u =
-  <span class="kw">if</span> is_use u
-  <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
-  <span class="kw">else</span> (
-    print_endline <span class="st">&quot;Hey Coder Reading hyegar.com&quot;</span>;
-    <span class="st">&quot;Hello JS World -&gt; This type is incompatible with&quot;</span>)</code></pre></div>
-<p>More interesting is the usage of <code>;</code>. First think to yourself, what is the return value of printing to the screen, nothing really. In OCaml we represent side effect and dummy values with <code>()</code>, said outloud as unit and written in type signatures as <code>unit</code>. When you see <code>unit</code> in a signature then it usually means the function is doing some kind of side effect like printing to screen or talking to a db.</p>
-<p>So I could have also written it as:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">and</span> err_msg l u =
-  <span class="kw">if</span> is_use u
-  <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
-  <span class="kw">else</span> (
-    <span class="kw">let</span> () = print_endline <span class="st">&quot;Hey Coder Reading hyegar.com&quot;</span> <span class="kw">in</span>
-    <span class="st">&quot;Hello JS World -&gt; This type is incompatible with&quot;</span>)</code></pre></div>
-<p>but the <code>;</code> is simplier and shorter.</p>
-<p>Back to our coding:</p>
-<p>…and now we do the same procedure as before including the <code>make clean</code> step. Now we run the code</p>
-<pre class="shell"><code>$ bin/flow examples/01_HelloWorld
-The flow server's version didn't match the client's, so it exited.
-Going to launch a new one.
-
-Launching Flow server for /Users/Edgar/Repos/flow/examples/01_HelloWorld
-Spawned flow server (child pid=43811)
-Logs will go to /private/tmp/flow/zSUserszSEdgarzSReposzSflowzSexampleszS01_HelloWorld.log
-examples/01_HelloWorld/hello.js:7
-  7: foo(&quot;Hello, world!&quot;);
-     ^^^^^^^^^^^^^^^^^^^^ function call
-  4:   return x*10;
-              ^ string. Hello JS World -&gt; This type is incompatible with
-  4:   return x*10;
-              ^^^^ number
-
-
-Found 1 error</code></pre>
-<p>But where is our printed string of <code>Hey Coder Reading hyegar.com</code>?</p>
-<h1 id="put-on-your-thinking-hat">Put on your thinking hat</h1>
-<p>First clue is this: the error message is being created by the flow server. Many servers use logs and will redirect stdout, stderr to those logs, just makes sense to do that. Second clue is that <code>print_endline</code> prints to <code>stdout</code> and the third and final clue is that <code>flow</code> itself said at the beginning of invocation that:</p>
-<pre><code>Logs will go to /private/tmp/flow/zSUserszSEdgarzSReposzSflowzSexampleszS01_HelloWorld.log</code></pre>
-<p>and now we do a simple cat on this log file, yours will be named something unique to your machine, and see our calls to <code>print_endline</code> being made a surprisingly large number of times (Perhaps a question for the <code>flow</code> developers themselves)</p>
-<pre class="shell"><code>cat /private/tmp/flow/zSUserszSEdgarzSReposzSflowzSexampleszS01_HelloWorld.log             ⏎
-[2016-02-25 00:58:54] Initializing Server (This might take some time)
-[2016-02-25 00:58:54] executable=/Users/Edgar/Repos/flow/bin/flow
-[2016-02-25 00:58:54] version=0.22.0
-[2016-02-25 00:58:54] Parsing
-[2016-02-25 00:58:54] Building package heap
-[2016-02-25 00:58:54] Running local inference
-Hey Coder Reading hyegar.com
-Hey Coder Reading hyegar.com
-Hey Coder Reading hyegar.com
-Hey Coder Reading hyegar.com
-Hey Coder Reading hyegar.com
-Hey Coder Reading hyegar.com
-Hey Coder Reading hyegar.com
-Hey Coder Reading hyegar.com
-Hey Coder Reading hyegar.com
-Hey Coder Reading hyegar.com
-Hey Coder Reading hyegar.com
-Hey Coder Reading hyegar.com
-Hey Coder Reading hyegar.com
-Hey Coder Reading hyegar.com
-[2016-02-25 00:58:55] Re-resolving directly dependent files
-[2016-02-25 00:58:55] Calculating dependencies
-[2016-02-25 00:58:55] Merging
-[2016-02-25 00:58:55] Done
-[2016-02-25 00:58:55] Server is READY
-[2016-02-25 00:58:55] Took 0.431947 seconds to initialize.
-[2016-02-25 00:58:55] Status: Error</code></pre>
-<p>And there you have it, now you start hacking on <code>OCaml</code> in flow. Be sure to check out my numerous other blog posts about <code>OCaml</code> including the jargon and build situation located <a href="http://hyegar.com/2015/10/20/so-youre-learning-ocaml/">here</a></p>
 </article>
 
 
