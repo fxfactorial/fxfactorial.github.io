@@ -51,7 +51,7 @@
         <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/ocaml/">unix</a>, <a href="./tags/ocaml/">timeout</a></span>
     </header>
     <p>I wanted to use a timeout in OCaml for some shell coding but I didn’t want to introduce a big dependency on <code>Lwt</code>. After some googling I found <a href="https://www.reddit.com/r/ocaml/comments/3qapbv/question_about_writing_a_timeout_function_and_the/">this</a></p>
-<p>Here’s my take on the timeout function, basically its the same but I push everything into the timeout function itself.</p>
+<p>Here’s my take on the timeout function, basically its the same but I push everything into the timeout function itself and use labeled args along a callback for when the timeout goes off.</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> timeout ?(on_timeout = <span class="kw">fun</span> () -&gt; ()) ~arg ~timeout ~default_value f =
   <span class="kw">let</span> <span class="ot">module</span> Wrapper = <span class="kw">struct</span> <span class="kw">exception</span> <span class="dt">Timeout</span> <span class="kw">end</span> <span class="kw">in</span>
   <span class="kw">let</span> sigalrm_handler = Sys<span class="kw">.</span><span class="dt">Signal_handle</span> (<span class="kw">fun</span> _ -&gt; raise Wrapper<span class="kw">.</span><span class="dt">Timeout</span>) <span class="kw">in</span>
