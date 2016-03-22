@@ -43,12 +43,54 @@
       <article>
     <header>
         <h1>
+            <a href="./2016/03/22/simple-timeouts/" title="Permalink">
+                Simple timeout usage
+            </a>
+        </h1>
+        <span class="post-date">March 22, 2016</span> in 
+        <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/ocaml/">unix</a>, <a href="./tags/ocaml/">timeout</a></span>
+    </header>
+    <p>I wanted to use a timeout in OCaml for some shell coding but I didn’t want to introduce a big dependency on <code>Lwt</code>. After some googling I found <a href="https://www.reddit.com/r/ocaml/comments/3qapbv/question_about_writing_a_timeout_function_and_the/">this</a></p>
+<p>Here’s my take on the timeout function, basically its the same but I push everything into the timeout function itself.</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> timeout ?(on_timeout = <span class="kw">fun</span> () -&gt; ()) ~arg ~timeout ~default_value f =
+  <span class="kw">let</span> <span class="ot">module</span> Wrapper = <span class="kw">struct</span> <span class="kw">exception</span> <span class="dt">Timeout</span> <span class="kw">end</span> <span class="kw">in</span>
+  <span class="kw">let</span> sigalrm_handler = Sys<span class="kw">.</span><span class="dt">Signal_handle</span> (<span class="kw">fun</span> _ -&gt; raise Wrapper<span class="kw">.</span><span class="dt">Timeout</span>) <span class="kw">in</span>
+  <span class="kw">let</span> old_behavior = Sys<span class="kw">.</span>signal Sys<span class="kw">.</span>sigalrm sigalrm_handler <span class="kw">in</span>
+  <span class="kw">let</span> reset_sigalrm () = Sys<span class="kw">.</span>set_signal Sys<span class="kw">.</span>sigalrm old_behavior <span class="kw">in</span>
+  ignore (Unix<span class="kw">.</span>alarm timeout);
+  <span class="kw">try</span>
+    <span class="kw">let</span> res = f arg <span class="kw">in</span>
+    reset_sigalrm ();
+    res
+  <span class="kw">with</span> exc -&gt;
+    reset_sigalrm ();
+    <span class="kw">if</span> exc = Wrapper<span class="kw">.</span><span class="dt">Timeout</span>
+    <span class="kw">then</span> (on_timeout (); default_value)
+    <span class="kw">else</span> raise exc</code></pre></div>
+<p>and you can can use it like so:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">Sys<span class="kw">.</span>command
+|&gt; timeout 
+   ~arg:<span class="st">&quot;sleep 3&quot;</span> 
+   ~timeout:<span class="dv">2</span> 
+   ~default_value:(<span class="dv">-1</span>) 
+   ~on_timeout:(<span class="kw">fun</span> () -&gt; print_endline <span class="st">&quot;func timed out&quot;</span>)</code></pre></div>
+<p>You might notice that your wrapped function only gets one arg, so how can we use this timeout wrapper on functions that take more than one argument? By currying and using a dummy arg of unit.</p>
+<p>Example:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> () =
+  <span class="kw">let</span> partialed first second third () = first + second + third <span class="kw">in</span>
+  timeout ~arg:() ~timeout:<span class="dv">4</span> ~default_value:(<span class="dv">-1</span>) (partialed <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>)
+  |&gt; ignore</code></pre></div>
+<p>I’ve added this to my <code>podge</code> library found <a href="http://github.com/fxfactorial/podge">here</a>, a collection of useful utility functions.</p>
+</article>
+<article>
+    <header>
+        <h1>
             <a href="./2016/03/15/building-xen-arm-from-source/" title="Permalink">
                 Building xen-arm-builder from source
             </a>
         </h1>
         <span class="post-date">March 15, 2016</span> in 
-        <span class="post-tags"><a href="./tags/mirageos/">mirageos</a>, <a href="./tags/sdcard/">sdcard</a>, <a href="./tags/xen/">xen</a>, <a href="./tags/ocaml/">ocaml</a></span>
+        <span class="post-tags"><a href="./tags/ocaml/">mirageos</a>, <a href="./tags/ocaml/">sdcard</a>, <a href="./tags/ocaml/">xen</a>, <a href="./tags/ocaml/">ocaml</a></span>
     </header>
     <p>I’m in Morocco for the first <a href="http://marrakech2016.mirage.io/">mirageos</a> hackathon. One of the things I’ve done here is build <a href="https://github.com/mirage/xen-arm-builder">xen-arm-builder</a> from source and it was a big challenge. Here’s my general notes and pointers to help you get over this hump. I assume you know what mirageos/xen are.</p>
 <p>Much MUCH thanks to <a href="http://roscidus.com/blog/">Thomas Leonard</a> and <a href="http://somerandomidiot.com/">Mindy Preston</a> for lending me a cubieboard2 and helping me with all the debugging, compiling issues; wouldn’t have been able to do it without them.</p>
@@ -96,7 +138,7 @@ libxl: error: libxl_create.c:1022:domcreate_rebuild_done: cannot
             </a>
         </h1>
         <span class="post-date">March  7, 2016</span> in 
-        <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/dga/">dga</a>, <a href="./tags/padcrypt/">padcrypt</a></span>
+        <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/ocaml/">dga</a>, <a href="./tags/ocaml/">padcrypt</a></span>
     </header>
     <p>Scrolling through twitter I saw someone mention something about the padcrypt <a href="https://en.wikipedia.org/wiki/Domain_generation_algorithm">dga</a>. Basically it generates random ish domain names.</p>
 <p>Here’s an <code>OCaml</code> reimplementation of the Python code written <a href="http://johannesbader.ch/2016/03/the-dga-of-padcrypt/">here</a>.</p>
@@ -179,7 +221,7 @@ aanamlbblmaefofc.org</code></pre>
             </a>
         </h1>
         <span class="post-date">March  6, 2016</span> in 
-        <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/datetime/">datetime</a>, <a href="./tags/date/">date</a>, <a href="./tags/crypto/">crypto</a>, <a href="./tags/nocrypto/">nocrypto</a></span>
+        <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/ocaml/">datetime</a>, <a href="./tags/ocaml/">date</a>, <a href="./tags/ocaml/">crypto</a>, <a href="./tags/ocaml/">nocrypto</a></span>
     </header>
     <p>This is another blog post in my quest to improve the state of OCaml coding for the average programmer. Today’s blog post is getting a date string in OCaml, a seemingly trivial thing to do in many other programming languages, and using it in a real world hashing example.</p>
 <h1 id="low-level-way">Low level way</h1>
@@ -240,7 +282,7 @@ aanamlbblmaefofc.org</code></pre>
             </a>
         </h1>
         <span class="post-date">March  2, 2016</span> in 
-        <span class="post-tags"><a href="./tags/emacs/">emacs</a>, <a href="./tags/objective-c/">objective-c</a>, <a href="./tags/linux/">linux</a>, <a href="./tags/company/">company</a>, <a href="./tags/clang/">clang</a></span>
+        <span class="post-tags"><a href="./tags/ocaml/">emacs</a>, <a href="./tags/ocaml/">objective-c</a>, <a href="./tags/ocaml/">linux</a>, <a href="./tags/ocaml/">company</a>, <a href="./tags/ocaml/">clang</a></span>
     </header>
     <p>To get full code completion for objective-c in emacs you need to:</p>
 <ol style="list-style-type: decimal">
@@ -294,110 +336,6 @@ aanamlbblmaefofc.org</code></pre>
 <p>Some of that is alittle opinionated and but the <code>company-clang-arguments</code> is the most important part really. Update the SDKs file name ending as this post becomes outdated.</p>
 <p>Here’s what you should expect to see:</p>
 <p><img src="./images/company-objc.png" />)</p>
-</article>
-<article>
-    <header>
-        <h1>
-            <a href="./2016/02/26/lets-make-a-browser/" title="Permalink">
-                Let's make a webkit browser in Objective-C++
-            </a>
-        </h1>
-        <span class="post-date">February 26, 2016</span> in 
-        <span class="post-tags"><a href="./tags/darwin/">darwin</a>, <a href="./tags/objective-c/">objective-c</a>, <a href="./tags/c%2B%2B/">c++</a>, <a href="./tags/webkit/">webkit</a></span>
-    </header>
-    <p>This is a short post showing you how to write a simple <code>OS X</code> based web browser using <code>Objective-C</code> in just 80 lines of code and with no XCode. Its very valuable because making a Cocoa application without XCode is sometimes kind of hard.</p>
-<p>First let’s start with the <code>Makefile</code></p>
-<div class="sourceCode"><pre class="sourceCode makefile"><code class="sourceCode makefile"><span class="dt">opts </span><span class="ch">:=</span><span class="st"> -std=c++11 -fobjc-arc</span>
-<span class="dt">fws </span><span class="ch">:=</span><span class="st"> -framework Cocoa -framework Webkit</span>
-<span class="dt">libs </span><span class="ch">:=</span><span class="st"> -lc++</span>
-<span class="dt">exec </span><span class="ch">:=</span><span class="st"> Prog</span>
-<span class="dt">wrapper </span><span class="ch">:=</span><span class="st"> xcrun -r</span>
-
-<span class="dv">all:</span>
-	<span class="ch">${</span><span class="dt">wrapper</span><span class="ch">}</span> clang++ <span class="ch">${</span><span class="dt">opts</span><span class="ch">}</span> <span class="ch">${</span><span class="dt">fws</span><span class="ch">}</span> <span class="ch">${</span><span class="dt">libs</span><span class="ch">}</span> main.mm -o <span class="ch">${</span><span class="dt">exec</span><span class="ch">}</span>
-	./<span class="ch">${</span><span class="dt">exec</span><span class="ch">}</span></code></pre></div>
-<p>We’re going to use Webkit, ARC, C++11 and immediately run the program.</p>
-<p>Now the program, I’m going to assume you are familiar with Cocoa development, Objective-C.</p>
-<div class="sourceCode"><pre class="sourceCode objectivec"><code class="sourceCode objectivec"><span class="co">/* -*- objc -*- */</span>
-
-<span class="ot">#import &lt;Foundation/Foundation.h&gt;</span>
-<span class="ot">#import &lt;Webkit/WebKit.h&gt;</span>
-<span class="ot">#import &lt;iostream&gt;</span>
-
-<span class="kw">@interface</span> Window_delegate : NSObject &lt;NSWindowDelegate&gt;
-<span class="kw">@end</span>
-
-<span class="kw">@implementation</span> Window_delegate
-
--(<span class="dt">void</span>)windowWillClose:(id)a
-{
-  NSLog(<span class="st">@&quot;Exiting&quot;</span>);
-  exit(<span class="dv">0</span>);
-}
-<span class="kw">@end</span>
-
-<span class="kw">@interface</span> App_delegate : NSObject &lt;NSApplicationDelegate&gt;
-@property (weak, nonatomic) NSWindow *_window;
-<span class="kw">@end</span>
-
-<span class="kw">@implementation</span> App_delegate
-
--(instancetype)init:(NSWindow*)parent_window
-{
-  <span class="kw">if</span> (<span class="kw">self</span> = [<span class="kw">super</span> init]) {
-    <span class="kw">self</span>._window = parent_window;
-    <span class="kw">return</span> <span class="kw">self</span>;
-  }
-  <span class="kw">return</span> nil;
-}
-
--(<span class="dt">void</span>)applicationDidFinishLaunching:(NSNotification *)a_notification
-{
-  WebView *wb = [[WebView alloc] initWithFrame:<span class="kw">self</span>._window.contentView.frame];
-  [<span class="kw">self</span>._window.contentView addSubview:wb];
-  [[wb mainFrame]
-    loadRequest:[NSURLRequest
-		  requestWithURL:[NSURL URLWithString:<span class="st">@&quot;http://hyegar.com&quot;</span>]]];
-}
-
-<span class="kw">@end</span>
-
-<span class="dt">void</span> start_program(<span class="dt">void</span>)
-{
-  NSApplication *app = [NSApplication sharedApplication];
-  <span class="co">// Critical to have this so that you can add menus</span>
-  [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-
-  NSWindow *window =
-    [[NSWindow alloc]
-      initWithContentRect:NSMakeRect(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">800</span>, <span class="dv">600</span>)
-		styleMask: NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask
-		  backing:NSBackingStoreBuffered
-		    defer:NO];
-
-  [window center];
-  window.title = <span class="st">@&quot;Hello World&quot;</span>;
-  [window makeKeyAndOrderFront:window];
-
-  Window_delegate *d = [Window_delegate new];
-  window.delegate = d;
-
-  App_delegate *application_delegate = [[App_delegate alloc] init:window];
-  app.delegate = application_delegate;
-  [app activateIgnoringOtherApps:YES];
-  [app run];
-}
-
-<span class="dt">int</span> main(<span class="dt">int</span> argc, <span class="dt">char</span> **argv)
-{
-  std::cout &lt;&lt; <span class="st">&quot;Starting Application</span><span class="ch">\n</span><span class="st">&quot;</span>;
-  @autoreleasepool {
-    start_program();
-  }
-}</code></pre></div>
-<p>a simple <code>make</code> invocation at the command line will build and run this program which should open up a page to this blog.</p>
-<p>Notice that <code>C++</code> wasn’t really used, I added it here to make this blog post content rich and code sample very reusable for you as a starter post.</p>
-<p>A post in the future will show you how to add <code>NSMenu</code>(s) to this application.</p>
 </article>
 
 

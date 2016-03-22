@@ -7,8 +7,46 @@
         <description><![CDATA[Personal blog of Edgar Aroutiounian]]></description>
         <atom:link href="http://hyegar.com/atom.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Tue, 15 Mar 2016 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Tue, 22 Mar 2016 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Simple timeout usage</title>
+    <link>http://hyegar.com/2016/03/22/simple-timeouts/index.html</link>
+    <description><![CDATA[<p>I wanted to use a timeout in OCaml for some shell coding but I didn’t want to introduce a big dependency on <code>Lwt</code>. After some googling I found <a href="https://www.reddit.com/r/ocaml/comments/3qapbv/question_about_writing_a_timeout_function_and_the/">this</a></p>
+<p>Here’s my take on the timeout function, basically its the same but I push everything into the timeout function itself.</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> timeout ?(on_timeout = <span class="kw">fun</span> () -&gt; ()) ~arg ~timeout ~default_value f =
+  <span class="kw">let</span> <span class="ot">module</span> Wrapper = <span class="kw">struct</span> <span class="kw">exception</span> <span class="dt">Timeout</span> <span class="kw">end</span> <span class="kw">in</span>
+  <span class="kw">let</span> sigalrm_handler = Sys<span class="kw">.</span><span class="dt">Signal_handle</span> (<span class="kw">fun</span> _ -&gt; raise Wrapper<span class="kw">.</span><span class="dt">Timeout</span>) <span class="kw">in</span>
+  <span class="kw">let</span> old_behavior = Sys<span class="kw">.</span>signal Sys<span class="kw">.</span>sigalrm sigalrm_handler <span class="kw">in</span>
+  <span class="kw">let</span> reset_sigalrm () = Sys<span class="kw">.</span>set_signal Sys<span class="kw">.</span>sigalrm old_behavior <span class="kw">in</span>
+  ignore (Unix<span class="kw">.</span>alarm timeout);
+  <span class="kw">try</span>
+    <span class="kw">let</span> res = f arg <span class="kw">in</span>
+    reset_sigalrm ();
+    res
+  <span class="kw">with</span> exc -&gt;
+    reset_sigalrm ();
+    <span class="kw">if</span> exc = Wrapper<span class="kw">.</span><span class="dt">Timeout</span>
+    <span class="kw">then</span> (on_timeout (); default_value)
+    <span class="kw">else</span> raise exc</code></pre></div>
+<p>and you can can use it like so:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">Sys<span class="kw">.</span>command
+|&gt; timeout 
+   ~arg:<span class="st">&quot;sleep 3&quot;</span> 
+   ~timeout:<span class="dv">2</span> 
+   ~default_value:(<span class="dv">-1</span>) 
+   ~on_timeout:(<span class="kw">fun</span> () -&gt; print_endline <span class="st">&quot;func timed out&quot;</span>)</code></pre></div>
+<p>You might notice that your wrapped function only gets one arg, so how can we use this timeout wrapper on functions that take more than one argument? By currying and using a dummy arg of unit.</p>
+<p>Example:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> () =
+  <span class="kw">let</span> partialed first second third () = first + second + third <span class="kw">in</span>
+  timeout ~arg:() ~timeout:<span class="dv">4</span> ~default_value:(<span class="dv">-1</span>) (partialed <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>)
+  |&gt; ignore</code></pre></div>
+<p>I’ve added this to my <code>podge</code> library found <a href="http://github.com/fxfactorial/podge">here</a>, a collection of useful utility functions.</p>]]></description>
+    <pubDate>Tue, 22 Mar 2016 00:00:00 UT</pubDate>
+    <guid>http://hyegar.com/2016/03/22/simple-timeouts/index.html</guid>
+    <dc:creator>Edgar Aroutiounian</dc:creator>
+</item>
+<item>
     <title>Building xen-arm-builder from source</title>
     <link>http://hyegar.com/2016/03/15/building-xen-arm-from-source/index.html</link>
     <description><![CDATA[<p>I’m in Morocco for the first <a href="http://marrakech2016.mirage.io/">mirageos</a> hackathon. One of the things I’ve done here is build <a href="https://github.com/mirage/xen-arm-builder">xen-arm-builder</a> from source and it was a big challenge. Here’s my general notes and pointers to help you get over this hump. I assume you know what mirageos/xen are.</p>
@@ -669,50 +707,6 @@ armv7-apple-darwin11-machocheck         armv7-apple-darwin11-unwinddump</code></
 <p>And this will start the proxy interceptions.</p>]]></description>
     <pubDate>Sun, 24 Jan 2016 00:00:00 UT</pubDate>
     <guid>http://hyegar.com/2016/01/24/see-http-traffic-with-proxy/index.html</guid>
-    <dc:creator>Edgar Aroutiounian</dc:creator>
-</item>
-<item>
-    <title>Calling OCaml from Objective-C</title>
-    <link>http://hyegar.com/2016/01/23/calling-ocaml-from-objective-c/index.html</link>
-    <description><![CDATA[<p>I love iOS and I love OCaml, so I’ve packaged up an OCaml compiler for iOS via opam. Now all you need to build OCaml programs on the iPhone is opam!</p>
-<h1 id="first-steps">First steps</h1>
-<p>You’ll need the cross compiler. Follow the README instructions mentioned <a href="https://github.com/fxfactorial/opam-ios">here</a>. This will provide you with the cross compiler based on OCaml 4.02.0.</p>
-<h1 id="example-code">Example Code</h1>
-<p>Now I’ll show you an example of calling OCaml from Objective-C. Much of this code will have simplifications as its an example for getting you started. Also note that dealing at the C level and the OCaml runtime can be tricky and is not for beginners.</p>
-<p>Here’s the OCaml code first, assume it is named code.ml</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="dv">1</span>  <span class="kw">let</span> make_string () =
-<span class="dv">2</span>    print_endline <span class="st">&quot;Hello Word from OCaml&quot;</span>;
-<span class="dv">3</span>    <span class="st">&quot;Hello World &quot;</span>
-<span class="dv">4</span>  
-<span class="dv">5</span>  <span class="kw">let</span> () =
-<span class="dv">6</span>    Callback<span class="kw">.</span>register <span class="st">&quot;make_string&quot;</span> make_string</code></pre></div>
-<p>We’re essentially telling the runtime to make this function available to grab as a handle, in this case it’s a handle on a closure.</p>
-<p>And now the Objective-C code, assume it is named main.c</p>
-<div class="sourceCode"><pre class="sourceCode objectivec"><code class="sourceCode objectivec"> <span class="dv">1</span>  #define CAML_NAME_SPACE
- <span class="dv">2</span>  
- <span class="dv">3</span>  #import &lt;Foundation/Foundation.h&gt;
- <span class="dv">4</span>  
- <span class="dv">5</span>  #include &lt;caml/callback.h&gt;
- <span class="dv">6</span>  #include &lt;caml/mlvalues.h&gt;
- <span class="dv">7</span>  
- <span class="dv">8</span>  <span class="dt">int</span> main (<span class="dt">int</span> argc, <span class="dt">char</span> **argv)
- <span class="dv">9</span>  {
-<span class="dv">10</span>    caml_startup(argv);
-<span class="dv">11</span>    caml_callback(*caml_named_value(<span class="st">&quot;make_string&quot;</span>), Val_unit);
-<span class="dv">12</span>    NSLog(<span class="st">@&quot;Now using objective-c code&quot;</span>);
-<span class="dv">13</span>    <span class="kw">return</span> <span class="dv">0</span>;
-<span class="dv">14</span>  }</code></pre></div>
-<p>Its important to call <code>caml_startup</code> before any OCaml callbacks. Then we get a handle on the closure and call it with unit.</p>
-<p>To compile this code you’ll need the cross-compiler which was installed by following the directions on my opam-ios repo, the command you use is:</p>
-<pre class="shell"><code>$ ocamloptrev -rev 8.3 -ccopt -ObjC -cclib &#39;-framework Foundation&#39; main.c code.ml -o F</code></pre>
-<p>The 8.3 is the iOS SDK you want to link against, again see the README on the github repo for opam-ios for more details.</p>
-<p>The output we get, <code>F</code> is an arm executable, when we run it on the iPhone we will get an output of:</p>
-<pre class="shell"><code>$ some_iphone :~/  ./F
-Hello Word from OCaml
-2016-01-23 22:44:04.889 F[1977:507] Now using objective-c code</code></pre>
-<p>Yay!</p>]]></description>
-    <pubDate>Sat, 23 Jan 2016 00:00:00 UT</pubDate>
-    <guid>http://hyegar.com/2016/01/23/calling-ocaml-from-objective-c/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 
