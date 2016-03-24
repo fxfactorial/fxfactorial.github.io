@@ -44,7 +44,7 @@
     <header>
         <h1>Simple timeout usage</h1>
         <span class="post-date">March 22, 2016</span> in 
-        <span class="post-tags"><a href="../../../../tags/ocaml/">ocaml</a>, <a href="../../../../tags/ocaml/">unix</a>, <a href="../../../../tags/ocaml/">timeout</a></span>
+        <span class="post-tags"><a href="../../../../tags/ocaml/">ocaml</a>, <a href="../../../../tags/unix/">unix</a>, <a href="../../../../tags/timeout/">timeout</a></span>
     </header>
     <p>I wanted to use a timeout in OCaml for some shell coding but I didn’t want to introduce a big dependency on <code>Lwt</code>. After some googling I found <a href="https://www.reddit.com/r/ocaml/comments/3qapbv/question_about_writing_a_timeout_function_and_the/">this</a></p>
 <p>Here’s my take on the timeout function, basically its the same but I push everything into the timeout function itself and use labeled args along a callback for when the timeout goes off.</p>
