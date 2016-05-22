@@ -43,6 +43,87 @@
       <article>
     <header>
         <h1>
+            <a href="./2016/05/21/using-lwt-preemptive/" title="Permalink">
+                Using system threads with Lwt.
+            </a>
+        </h1>
+        <span class="post-date">May 21, 2016</span> in 
+        <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/lwt/">lwt</a>, <a href="./tags/threading/">threading</a></span>
+    </header>
+    <p>This blog post shows you how to use real system threads in OCaml by using <code>Lwt</code>, <code>Lwt_preemptive</code>.</p>
+<h1 id="common-complaint-about-multicore">Common complaint about multicore</h1>
+<p>A common complaint about OCaml is the lack of multicore, about the single threadedness of the runtime. This is true but its not like <code>OCaml</code> programmers don’t have solutions! Here’s an easy example that you can instantly use in your coding.</p>
+<h1 id="setup">Setup</h1>
+<p>First we will need some way to verify that our system threads are actually working, we’ll use some math equation to purposefully cause CPU load. Here’s the <code>Sieve Of Eratosthenes</code> Algorithm that I copied from <a href="http://www.scriptol.com/programming/sieve.php#ocaml">here</a>.</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">open</span> List
+
+<span class="kw">type</span> integer = <span class="dt">Int</span> <span class="kw">of</span> <span class="dt">int</span>
+<span class="kw">let</span> number_two = <span class="dt">Int</span>(<span class="dv">2</span>)
+<span class="kw">let</span> number_zero = <span class="dt">Int</span>(<span class="dv">0</span>)
+<span class="kw">let</span> is_less_than_two (<span class="dt">Int</span> n) = n &lt; <span class="dv">2</span>
+<span class="kw">let</span> incr (<span class="dt">Int</span> n) = <span class="dt">Int</span>(n + <span class="dv">1</span>)
+<span class="kw">let</span> decr (<span class="dt">Int</span> n) = <span class="dt">Int</span>(n - <span class="dv">1</span>)
+<span class="kw">let</span> is_number_zero (<span class="dt">Int</span> n) = n = <span class="dv">0</span>
+
+<span class="kw">let</span> iota n =
+  <span class="kw">let</span> <span class="kw">rec</span> loop curr counter =
+    <span class="kw">if</span> is_less_than_two counter <span class="kw">then</span> []
+    <span class="kw">else</span> curr::(loop (incr curr) (decr counter))
+  <span class="kw">in</span>
+  loop number_two n
+
+<span class="kw">let</span> sieve lst =
+  <span class="kw">let</span> <span class="kw">rec</span> choose_pivot = <span class="kw">function</span>
+    | [] -&gt; []
+    | car::cdr <span class="kw">when</span> is_number_zero car -&gt;
+      car::(choose_pivot cdr)
+    | car::cdr -&gt;
+      car::(choose_pivot (do_sieve car (decr car) cdr))
+
+  <span class="kw">and</span> do_sieve step current lst =
+    <span class="kw">match</span> lst <span class="kw">with</span>
+    | [] -&gt; []
+    | car::cdr -&gt;
+      <span class="kw">if</span> is_number_zero current
+      <span class="kw">then</span> number_zero::(do_sieve step (decr step) cdr)
+      <span class="kw">else</span> car::(do_sieve step (decr current) cdr)
+  <span class="kw">in</span>
+  choose_pivot lst
+
+<span class="kw">let</span> is_prime n =
+  <span class="kw">match</span> rev (sieve (iota n)) <span class="kw">with</span>
+    x::_ -&gt; not (is_number_zero x)</code></pre></div>
+<p>Now our <code>Lwt</code>, <code>Lwt_preemptive</code> code:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">open</span> Lwt<span class="kw">.</span>Infix
+
+<span class="kw">let</span> do_example port =
+  <span class="kw">let</span> address = Unix<span class="kw">.</span>(<span class="dt">ADDR_INET</span> (inet_addr_loopback, port)) <span class="kw">in</span>
+  Lwt_io<span class="kw">.</span>establish_server address (<span class="kw">fun</span> (tcp_in, tcp_out) -&gt;
+      () |&gt; Lwt_preemptive<span class="kw">.</span>detach (<span class="kw">fun</span> () -&gt;
+          <span class="kw">while</span> <span class="kw">true</span> <span class="kw">do</span>
+            ignore (is_prime (<span class="dt">Int</span> port))
+          <span class="kw">done</span>
+        )
+      |&gt; Lwt<span class="kw">.</span>ignore_result
+    )
+  |&gt; ignore |&gt; Lwt<span class="kw">.</span>return
+
+<span class="kw">let</span> () =
+  <span class="kw">let</span> <span class="kw">rec</span> forever () = fst (Lwt<span class="kw">.</span>wait ()) &gt;&gt;= forever <span class="kw">in</span>
+  Lwt_preemptive<span class="kw">.</span>init <span class="dv">5</span> <span class="dv">10</span> ignore;
+  ([<span class="dv">2000</span>; <span class="dv">2001</span>; <span class="dv">2002</span>; <span class="dv">2003</span>; <span class="dv">2004</span>]
+   |&gt; Lwt_list<span class="kw">.</span>iter_p do_example &gt;&gt;= forever)
+  |&gt; Lwt_main<span class="kw">.</span>run</code></pre></div>
+<p>The code that runs inside the callback to <code>Lwt_io.establish_server</code> uses <code>Lwt_preemptive.detach</code>, this creates a new system thread whenever there is something that connects on ports <code>[2000; 2001; 2002; 2003; 2004]</code>. You don’t have to call <code>Lwt_preemptive.init</code> since detach will do it anyway, but I am doing it to ensure that at least 5 threads are made with 10 being the max.</p>
+<p>We compile it with:</p>
+<pre class="shell"><code>$ ocamlfind ocamlopt -thread -package lwt.unix,lwt.preemptive test_case.ml -linkpkg -o TEST_CASE</code></pre>
+<p>And we test it by starting up <code>./TEST_CASE</code>, opening <code>htop</code> and finding <code>TEST_CASE</code> (hit <code>t</code> in htop to see a tree based process view) and running <code>socat STDIN TCP:localhost:&lt;some_port&gt;</code>, where <code>&lt;some_port&gt;</code> is a number in our list of ports (remember <code>[2000; 2001; 2002; 2003; 2004]</code>).</p>
+<p>Thus we see in <code>htop</code> the CPU % utilization move for each of the threads of <code>TEST_CASE</code>.</p>
+<p>Success! Real system threads.</p>
+</article>
+<article>
+    <header>
+        <h1>
             <a href="./2016/03/22/simple-timeouts/" title="Permalink">
                 Simple timeout usage
             </a>
@@ -273,69 +354,6 @@ aanamlbblmaefofc.org</code></pre>
 <p>and compiling with:</p>
 <pre class="shell"><code>$ ocamlfind ocamlopt -package calendar,nocrypto.unix -linkpkg code.ml -o Ex</code></pre>
 <p>Yay. Be sure to check my archives for many more quick and useful posts on OCaml.</p>
-</article>
-<article>
-    <header>
-        <h1>
-            <a href="./2016/03/02/emacs-for-objc/" title="Permalink">
-                Getting objective-c code completion on emacs
-            </a>
-        </h1>
-        <span class="post-date">March  2, 2016</span> in 
-        <span class="post-tags"><a href="./tags/emacs/">emacs</a>, <a href="./tags/objective-c/">objective-c</a>, <a href="./tags/linux/">linux</a>, <a href="./tags/company/">company</a>, <a href="./tags/clang/">clang</a></span>
-    </header>
-    <p>To get full code completion for objective-c in emacs you need to:</p>
-<ol style="list-style-type: decimal">
-<li>Have <code>company-mode</code> installed, its a generic backend for code completion in emacs and the community loves it.</li>
-<li>Add some elisp to your <code>init.el</code>.</li>
-</ol>
-<p>I assume you have <code>company-mode</code> already installed, this will provide <code>company-clang</code> as well which is what will provide completion.</p>
-<h1 id="some-elisp">Some elisp</h1>
-<p>Here is my elisp that I use, you’ll notice that I also get codecompletion on Linux for objective-c, you can too by following my other blog <a href="http://hyegar.com/2016/02/22/ios-cross-compiler/">post</a>.</p>
-<pre class="common-lisp"><code>(defvar osx-base-path
-  &quot;/Applications/Xcode.app/Contents/Developer/Platforms/&quot;)
-
-(if (equal system-type 'darwin)
-    ; Only the then clause needs a progn, else part doesn't need it.
-    (progn
-      ;; Forgot what this was for..think some os x issues. 
-      (setenv &quot;LC_CTYPE&quot; &quot;UTF-8&quot;)
-      (setq mac-option-modifier 'super
-	    flycheck-make-executable &quot;/usr/local/bin/make&quot;
-	    company-clang-executable
-	    (concat &quot;/Applications/Xcode.app/Contents/Developer/&quot;
-		    &quot;Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++&quot;)
-	    company-clang-arguments
-	    `(&quot;-std=c++11&quot;
-	      &quot;-isysroot&quot;
-	      ; If coding for iOS
-	      ;; (concat osx-base-path
-	      ;; &quot;iPhoneOS.platform/Developer/SDKs/iPhoneOS9.2.sdk&quot;)
-	      ; If coding for OS X
-	      ,(concat osx-base-path
-		       &quot;MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk&quot;)
-	      &quot;-I&quot; &quot;/usr/include/c++/4.2.1&quot;
-	      &quot;-I&quot; &quot;/usr/local/lib/ocaml/&quot;)
-	    flycheck-c/c++-clang-executable
-	    (concat &quot;/Applications/Xcode.app/Contents/Developer/&quot;
-		    &quot;Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++&quot;)
-	    mac-command-modifier 'meta))
-  (set-face-attribute 'default nil :height 110)
-  (setq company-clang-executable &quot;armv7-apple-darwin11-clang&quot;
-	company-clang-arguments '(&quot;-std=c++11&quot;
-				  &quot;-isysroot&quot;
-				  &quot;/home/gar/.nix-profile/iPhoneOS9.2.sdk&quot;
-				  &quot;-I/usr/local/lib/ocaml/&quot;)))
-
-(setq company-backends '(company-clang
-			 company-capf
-			 company-c-headers
-			 company-jedi))
-(add-to-list 'auto-mode-alist '(&quot;\\.mm\\'&quot; . objc-mode))
-(global-set-key (kbd &quot;M-/&quot;) 'company-complete)</code></pre>
-<p>Some of that is alittle opinionated and but the <code>company-clang-arguments</code> is the most important part really. Update the SDKs file name ending as this post becomes outdated.</p>
-<p>Here’s what you should expect to see:</p>
-<p><img src="./images/company-objc.png" />)</p>
 </article>
 
 

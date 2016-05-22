@@ -7,8 +7,85 @@
         <description><![CDATA[Personal blog of Edgar Aroutiounian]]></description>
         <atom:link href="http://hyegar.com/atom.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Tue, 22 Mar 2016 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Sat, 21 May 2016 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Using system threads with Lwt.</title>
+    <link>http://hyegar.com/2016/05/21/using-lwt-preemptive/index.html</link>
+    <description><![CDATA[<p>This blog post shows you how to use real system threads in OCaml by using <code>Lwt</code>, <code>Lwt_preemptive</code>.</p>
+<h1 id="common-complaint-about-multicore">Common complaint about multicore</h1>
+<p>A common complaint about OCaml is the lack of multicore, about the single threadedness of the runtime. This is true but its not like <code>OCaml</code> programmers don’t have solutions! Here’s an easy example that you can instantly use in your coding.</p>
+<h1 id="setup">Setup</h1>
+<p>First we will need some way to verify that our system threads are actually working, we’ll use some math equation to purposefully cause CPU load. Here’s the <code>Sieve Of Eratosthenes</code> Algorithm that I copied from <a href="http://www.scriptol.com/programming/sieve.php#ocaml">here</a>.</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">open</span> List
+
+<span class="kw">type</span> integer = <span class="dt">Int</span> <span class="kw">of</span> <span class="dt">int</span>
+<span class="kw">let</span> number_two = <span class="dt">Int</span>(<span class="dv">2</span>)
+<span class="kw">let</span> number_zero = <span class="dt">Int</span>(<span class="dv">0</span>)
+<span class="kw">let</span> is_less_than_two (<span class="dt">Int</span> n) = n &lt; <span class="dv">2</span>
+<span class="kw">let</span> incr (<span class="dt">Int</span> n) = <span class="dt">Int</span>(n + <span class="dv">1</span>)
+<span class="kw">let</span> decr (<span class="dt">Int</span> n) = <span class="dt">Int</span>(n - <span class="dv">1</span>)
+<span class="kw">let</span> is_number_zero (<span class="dt">Int</span> n) = n = <span class="dv">0</span>
+
+<span class="kw">let</span> iota n =
+  <span class="kw">let</span> <span class="kw">rec</span> loop curr counter =
+    <span class="kw">if</span> is_less_than_two counter <span class="kw">then</span> []
+    <span class="kw">else</span> curr::(loop (incr curr) (decr counter))
+  <span class="kw">in</span>
+  loop number_two n
+
+<span class="kw">let</span> sieve lst =
+  <span class="kw">let</span> <span class="kw">rec</span> choose_pivot = <span class="kw">function</span>
+    | [] -&gt; []
+    | car::cdr <span class="kw">when</span> is_number_zero car -&gt;
+      car::(choose_pivot cdr)
+    | car::cdr -&gt;
+      car::(choose_pivot (do_sieve car (decr car) cdr))
+
+  <span class="kw">and</span> do_sieve step current lst =
+    <span class="kw">match</span> lst <span class="kw">with</span>
+    | [] -&gt; []
+    | car::cdr -&gt;
+      <span class="kw">if</span> is_number_zero current
+      <span class="kw">then</span> number_zero::(do_sieve step (decr step) cdr)
+      <span class="kw">else</span> car::(do_sieve step (decr current) cdr)
+  <span class="kw">in</span>
+  choose_pivot lst
+
+<span class="kw">let</span> is_prime n =
+  <span class="kw">match</span> rev (sieve (iota n)) <span class="kw">with</span>
+    x::_ -&gt; not (is_number_zero x)</code></pre></div>
+<p>Now our <code>Lwt</code>, <code>Lwt_preemptive</code> code:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">open</span> Lwt<span class="kw">.</span>Infix
+
+<span class="kw">let</span> do_example port =
+  <span class="kw">let</span> address = Unix<span class="kw">.</span>(<span class="dt">ADDR_INET</span> (inet_addr_loopback, port)) <span class="kw">in</span>
+  Lwt_io<span class="kw">.</span>establish_server address (<span class="kw">fun</span> (tcp_in, tcp_out) -&gt;
+      () |&gt; Lwt_preemptive<span class="kw">.</span>detach (<span class="kw">fun</span> () -&gt;
+          <span class="kw">while</span> <span class="kw">true</span> <span class="kw">do</span>
+            ignore (is_prime (<span class="dt">Int</span> port))
+          <span class="kw">done</span>
+        )
+      |&gt; Lwt<span class="kw">.</span>ignore_result
+    )
+  |&gt; ignore |&gt; Lwt<span class="kw">.</span>return
+
+<span class="kw">let</span> () =
+  <span class="kw">let</span> <span class="kw">rec</span> forever () = fst (Lwt<span class="kw">.</span>wait ()) &gt;&gt;= forever <span class="kw">in</span>
+  Lwt_preemptive<span class="kw">.</span>init <span class="dv">5</span> <span class="dv">10</span> ignore;
+  ([<span class="dv">2000</span>; <span class="dv">2001</span>; <span class="dv">2002</span>; <span class="dv">2003</span>; <span class="dv">2004</span>]
+   |&gt; Lwt_list<span class="kw">.</span>iter_p do_example &gt;&gt;= forever)
+  |&gt; Lwt_main<span class="kw">.</span>run</code></pre></div>
+<p>The code that runs inside the callback to <code>Lwt_io.establish_server</code> uses <code>Lwt_preemptive.detach</code>, this creates a new system thread whenever there is something that connects on ports <code>[2000; 2001; 2002; 2003; 2004]</code>. You don’t have to call <code>Lwt_preemptive.init</code> since detach will do it anyway, but I am doing it to ensure that at least 5 threads are made with 10 being the max.</p>
+<p>We compile it with:</p>
+<pre class="shell"><code>$ ocamlfind ocamlopt -thread -package lwt.unix,lwt.preemptive test_case.ml -linkpkg -o TEST_CASE</code></pre>
+<p>And we test it by starting up <code>./TEST_CASE</code>, opening <code>htop</code> and finding <code>TEST_CASE</code> (hit <code>t</code> in htop to see a tree based process view) and running <code>socat STDIN TCP:localhost:&lt;some_port&gt;</code>, where <code>&lt;some_port&gt;</code> is a number in our list of ports (remember <code>[2000; 2001; 2002; 2003; 2004]</code>).</p>
+<p>Thus we see in <code>htop</code> the CPU % utilization move for each of the threads of <code>TEST_CASE</code>.</p>
+<p>Success! Real system threads.</p>]]></description>
+    <pubDate>Sat, 21 May 2016 00:00:00 UT</pubDate>
+    <guid>http://hyegar.com/2016/05/21/using-lwt-preemptive/index.html</guid>
+    <dc:creator>Edgar Aroutiounian</dc:creator>
+</item>
+<item>
     <title>Simple timeout usage</title>
     <link>http://hyegar.com/2016/03/22/simple-timeouts/index.html</link>
     <description><![CDATA[<p>I wanted to use a timeout in OCaml for some shell coding but I didn’t want to introduce a big dependency on <code>Lwt</code>. After some googling I found <a href="https://www.reddit.com/r/ocaml/comments/3qapbv/question_about_writing_a_timeout_function_and_the/">this</a></p>
@@ -684,29 +761,6 @@ armv7-apple-darwin11-machocheck         armv7-apple-darwin11-unwinddump</code></
 </ol>]]></description>
     <pubDate>Mon, 22 Feb 2016 00:00:00 UT</pubDate>
     <guid>http://hyegar.com/2016/02/22/ios-cross-compiler/index.html</guid>
-    <dc:creator>Edgar Aroutiounian</dc:creator>
-</item>
-<item>
-    <title>Proxy yourself</title>
-    <link>http://hyegar.com/2016/01/24/see-http-traffic-with-proxy/index.html</link>
-    <description><![CDATA[<p>Often times we want to see our network traffic in an organized way, one tool we can use is <code>tcpdump</code> but its a pretty low level tool and often times HTTP is all we actually care about.</p>
-<h1 id="mitmproxy-man-in-the-middle-proxy">mitmproxy (man in the middle proxy)</h1>
-<p>I’ve been using <code>mitmproxy</code>, its an incredible Python tool that is designed for HTTP and I especially love the command line ncurses interface. Its designed for man in the middle attacks but you can also use it as a debugging tool. Its installable with <code>pip</code> but I just settle for the version that is present on the package manager. With <code>mitmproxy</code> we’ll see all the HTTP traffic in a clean and organized way; <code>mitmproxy</code> is MUCH nicer than using squid and the icky configurations that come along with squid.</p>
-<h1 id="example">Example</h1>
-<p>This example was tested and works on Ubuntu 14.04 and also worked on an Ubuntu 14.04 VM running on VMWare on OS X.</p>
-<p>Essentially we will send all IP traffic from our local machine through <code>mitmproxy</code> as a proxy, this is apparently called a local transparent proxy.</p>
-<p>First we set up some rules for the Linux kernel:</p>
-<p>I’m going to assume you have another Unix account named mitm_account, yes two accounts are needed.</p>
-<pre class="shell"><code>$ sudo iptables -t nat -A OUTPUT -p tcp \
-  -m owner ! --uid-owner mitm_account \
-  --dport 443 -j REDIRECT --to-port 9001</code></pre>
-<p>This looks complicated, you can read up on the <code>iptables</code> man page for all the nitty gritty details. I will try to get a <code>OS X</code> equivalent as well. We also do this same command over, but change <code>--dport</code> to 80 for regular HTTP traffic as well.</p>
-<p>Note the <code>mitm_account</code>. This is the name of some other account, you’ll need to have two Unix accounts for this to work and <code>mitm_account</code> is the Unix account we’ll use that will actually run the <code>mitmproxy</code> program.</p>
-<p>Then we’ll open another shell and change users to mitm_account and run:</p>
-<pre class="shell"><code>$ mitmproxy -T -p 9001</code></pre>
-<p>And this will start the proxy interceptions.</p>]]></description>
-    <pubDate>Sun, 24 Jan 2016 00:00:00 UT</pubDate>
-    <guid>http://hyegar.com/2016/01/24/see-http-traffic-with-proxy/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 
