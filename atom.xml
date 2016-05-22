@@ -9,7 +9,7 @@
                    type="application/rss+xml" />
         <lastBuildDate>Sat, 21 May 2016 00:00:00 UT</lastBuildDate>
         <item>
-    <title>Using system threads with Lwt.</title>
+    <title>Using system threads with Lwt</title>
     <link>http://hyegar.com/2016/05/21/using-lwt-preemptive/index.html</link>
     <description><![CDATA[<p>This blog post shows you how to use real system threads in OCaml by using <code>Lwt</code>, <code>Lwt_preemptive</code>.</p>
 <h1 id="common-complaint-about-multicore">Common complaint about multicore</h1>
