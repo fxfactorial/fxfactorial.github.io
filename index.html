@@ -140,7 +140,12 @@ Grand Kid</code></pre>
   root##.right##.right##.left := <span class="kw">new</span>%js node <span class="st">&quot;H&quot;</span>;
 
   depth_first_search root |&gt; print_newline</code></pre></div>
-<p>and compile it just like given earlier in the blog post. Yay, we used the resources of two programming languages standard libaries in one program.</p>
+<p>and compile it just like given earlier in the blog post. Shameless plug, you can also turn it into an executable with a feature I added to the <code>js_of_ocaml</code> compiler,</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">$ ocamlfind ocamlc -package js_of_ocaml.ppx -linkpkg trees_in_js.ml
+$ js_of_ocaml --custom-header='#!/usr/bin/env node' a.out -o T<span class="kw">.</span>js
+$ chmod +x T<span class="kw">.</span>js
+$ /T<span class="kw">.</span>js</code></pre></div>
+<p>Yay, we used the resources of two programming languages standard libaries in one program!</p>
 <p>Now we can return to why the typing of the <code>class type</code> matters. The fully correct typing of <code>tree_node</code> is:</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">class</span> <span class="kw">type</span> ['data] tree_node = <span class="kw">object</span>
   <span class="kw">method</span> value : 'data Js<span class="kw">.</span>prop
