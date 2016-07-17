@@ -47,8 +47,10 @@
         <span class="post-tags"><a href="../../../../tags/ocaml/">ocaml</a>, <a href="../../../../tags/lwt/">lwt</a>, <a href="../../../../tags/threading/">threading</a></span>
     </header>
     <p>This blog post shows you how to use real system threads in OCaml by using <code>Lwt</code>, <code>Lwt_preemptive</code>.</p>
+<h1 id="note">!!Note!!</h1>
+<p>While this shows system threads being used, only one is will actually be running at any given point in time (Think this akin to Python’s single threadedness, still useful to use threads if bottleneck are IO)</p>
 <h1 id="common-complaint-about-multicore">Common complaint about multicore</h1>
-<p>A common complaint about OCaml is the lack of multicore, about the single threadedness of the runtime. This is true but its not like <code>OCaml</code> programmers don’t have solutions! Here’s an easy example that you can instantly use in your coding.</p>
+<p>A common complaint about OCaml is the lack of true parallelism, about the single threadedness of the runtime. This is true but its not like <code>OCaml</code> programmers don’t have solutions some solutions. Here’s an easy example that you can instantly use in your coding.</p>
 <h1 id="setup">Setup</h1>
 <p>First we will need some way to verify that our system threads are actually working, we’ll use some math equation to purposefully cause CPU load. Here’s the <code>Sieve Of Eratosthenes</code> Algorithm that I copied from <a href="http://www.scriptol.com/programming/sieve.php#ocaml">here</a>.</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">open</span> List

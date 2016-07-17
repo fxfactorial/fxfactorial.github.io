@@ -43,6 +43,121 @@
       <article>
     <header>
         <h1>
+            <a href="./2016/07/17/js-of-ocaml-usage/" title="Permalink">
+                Intermediate js_of_ocaml
+            </a>
+        </h1>
+        <span class="post-date">July 17, 2016</span> in 
+        <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/js_of_ocaml/">js_of_ocaml</a>, <a href="./tags/javascript/">javascript</a>, <a href="./tags/ppx/">ppx</a>, <a href="./tags/depth_first_search/">depth_first_search</a></span>
+    </header>
+    <p>This post is mainly aimed at intermediate level users of <code>js_of_ocaml</code>, the <code>OCaml</code> to <code>JavaScript</code> compiler and at improving the sad state of documentation for <code>js_of_ocaml</code>. (Plus I’m interviewing for jobs, hire me!, and wanted to use both OCaml, JavaScript while preparing for interviews)</p>
+<h1 id="ocaml-typing-of-javascript-uses-ppx">OCaml typing of JavaScript (Uses PPX)</h1>
+<p>Say we want to express some algorithms in OCaml but using JavaScript as the runtime execution language/environment. Let’s start with our main data structure, a tree node.</p>
+<div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">function</span> <span class="at">TreeNode</span>(value) <span class="op">{</span>
+  <span class="kw">this</span>.<span class="at">value</span> <span class="op">=</span> value<span class="op">;</span>
+  <span class="kw">this</span>.<span class="at">left</span> <span class="op">=</span> <span class="kw">this</span>.<span class="at">right</span> <span class="op">=</span> <span class="kw">null</span><span class="op">;</span>
+<span class="op">}</span></code></pre></div>
+<p>Our OCaml version will be:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">class</span> <span class="kw">type</span> ['data] tree_node = <span class="kw">object</span>
+  <span class="kw">method</span> value : 'data Js<span class="kw">.</span>prop
+  <span class="kw">method</span> left : 'data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>prop
+  <span class="kw">method</span> right : 'data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>prop
+<span class="kw">end</span></code></pre></div>
+<p>Note that there is a small thing about typing the nullability of the left, right fields, I will return to this at the end of the blog post and it was done for convenience.</p>
+<p>So explanations:</p>
+<ol start="0" style="list-style-type: decimal">
+<li>We are creating a <code>class type</code>, this just describes the object, how we describe it is key.</li>
+<li>The <code>'data</code> is a type variable and lets us use any kind of type for the value in this node.</li>
+<li>OCaml objects only expose methods to the outside world, so properties need <code>Js.prop</code>, this lets us read and write to this field. We can control it to be read only by instead using <code>Js.readonly_prop</code> or even write only with <code>Js.writeonly_prop</code>.</li>
+<li>Methods <code>left</code>, <code>right</code> are also properties. Read the signature from right to left, aka <code>left</code> is a JavaScript read or write property which has a JavaScript object typed as <code>tree_node</code> and parameterized with the <code>'data</code> type variable. Aka tree_nodes of <code>string</code> or <code>int</code> or whatever the type of <code>'data</code> is.</li>
+</ol>
+<p>Now we need to provide a way to make this object.</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> __hidden__ =
+  Js<span class="kw">.</span>Unsafe<span class="kw">.</span>pure_js_expr <span class="st">&quot;function TreeNode(value) {</span><span class="ch">\</span>
+<span class="st">                          this.value = value; </span><span class="ch">\</span>
+<span class="st">                          this.left = this.right = null;}&quot;</span></code></pre></div>
+<p>This is the JavaScript we’ll be using, essentially. Do note that the field names match up, this is important. Now we provide a constructor function:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> node : ('data -&gt; 'data tree_node Js<span class="kw">.</span>t) Js<span class="kw">.</span>constr = __hidden__</code></pre></div>
+<p>This <code>node</code> constructor says that its a special JavaScript constructor that will invoke <code>__hidden__</code> with <code>new</code> and such that it expects one argument. An example is:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> root = <span class="kw">new</span>%js node <span class="st">&quot;Hello&quot;</span></code></pre></div>
+<p>We can also make specialized constructors,</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> node_from_int : (<span class="dt">int</span> -&gt; <span class="dt">int</span> tree_node Js<span class="kw">.</span>t) Js<span class="kw">.</span>constr = __hidden__</code></pre></div>
+<p>and a simple usage:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> () =
+  <span class="kw">let</span> root = <span class="kw">new</span>%js node <span class="st">&quot;Hello&quot;</span> <span class="kw">in</span>
+  root##.left := <span class="kw">new</span>%js node <span class="st">&quot;Left side&quot;</span>;
+  root##.left##.left := <span class="kw">new</span>%js node <span class="st">&quot;Grand Kid&quot;</span>;
+
+  <span class="co">(* Note that this just prints the raw object representation of the</span>
+<span class="co">  field value *)</span>
+  Firebug<span class="kw">.</span>console##log root##.left##.left##.value;
+
+  <span class="co">(* This shows the value as expected *)</span>
+  print_endline root##.left##.left##.value</code></pre></div>
+<p>You can compile and run it on node with: (Assuming file name is <code>trees_in_js.ml</code>)</p>
+<pre class="shell"><code>$ ocamlfind ocamlc -package js_of_ocaml.ppx -linkpkg trees_in_js.ml
+$ js_of_ocaml a.out -o T.js
+$ node T.js</code></pre>
+<p>And you should get something like the following printed out:</p>
+<pre class="shell"><code>h { t: 0, c: 'Grand Kid', l: 9 }
+Grand Kid</code></pre>
+<h1 id="depth-first-search-complete-example">Depth First Search, complete example</h1>
+<p>Now here’s an example of a preorder depth first search.</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">class</span> <span class="kw">type</span> ['data] tree_node = <span class="kw">object</span>
+  <span class="kw">method</span> value : 'data Js<span class="kw">.</span>prop
+  <span class="kw">method</span> left : 'data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>prop
+  <span class="kw">method</span> right : 'data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>prop
+<span class="kw">end</span>
+
+<span class="kw">let</span> node : ('data -&gt; 'data tree_node Js<span class="kw">.</span>t) Js<span class="kw">.</span>constr = __hidden__
+
+<span class="kw">let</span> depth_first_search starting_node =
+  <span class="kw">let</span> stack = Stack<span class="kw">.</span>create () <span class="kw">in</span>
+  Stack<span class="kw">.</span>push starting_node stack;
+  <span class="kw">while</span> not (Stack<span class="kw">.</span>is_empty stack) <span class="kw">do</span>
+    <span class="kw">let</span> iter_node = Stack<span class="kw">.</span>pop stack <span class="kw">in</span>
+
+    Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s &quot;</span> iter_node##.value
+    |&gt; print_string;
+
+    <span class="kw">if</span> Js<span class="kw">.</span>Opt<span class="kw">.</span>return iter_node##.right |&gt; Js<span class="kw">.</span>Opt<span class="kw">.</span>test
+    <span class="kw">then</span> Stack<span class="kw">.</span>push iter_node##.right stack;
+
+    <span class="kw">if</span> Js<span class="kw">.</span>Opt<span class="kw">.</span>return iter_node##.left |&gt; Js<span class="kw">.</span>Opt<span class="kw">.</span>test
+    <span class="kw">then</span> Stack<span class="kw">.</span>push iter_node##.left stack
+
+  <span class="kw">done</span>
+
+<span class="kw">let</span> () =
+  <span class="kw">let</span> root = <span class="kw">new</span>%js node <span class="st">&quot;F&quot;</span> <span class="kw">in</span>
+  root##.left := <span class="kw">new</span>%js node <span class="st">&quot;B&quot;</span>;
+  root##.right := <span class="kw">new</span>%js node <span class="st">&quot;G&quot;</span>;
+  root##.right##.right := <span class="kw">new</span>%js node <span class="st">&quot;I&quot;</span>;
+  root##.left##.left := <span class="kw">new</span>%js node <span class="st">&quot;A&quot;</span>;
+  root##.left##.right := <span class="kw">new</span>%js node <span class="st">&quot;D&quot;</span>;
+  root##.left##.right##.left := <span class="kw">new</span>%js node <span class="st">&quot;C&quot;</span>;
+  root##.left##.right##.right := <span class="kw">new</span>%js node <span class="st">&quot;E&quot;</span>;
+  root##.right##.right##.left := <span class="kw">new</span>%js node <span class="st">&quot;H&quot;</span>;
+
+  depth_first_search root |&gt; print_newline</code></pre></div>
+<p>and compile it just like given earlier in the blog post. Yay, we used the resources of two programming languages standard libaries in one program.</p>
+<p>Now we can return to why the typing of the <code>class type</code> matters. The fully correct typing of <code>tree_node</code> is:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">class</span> <span class="kw">type</span> ['data] tree_node = <span class="kw">object</span>
+  <span class="kw">method</span> value : 'data Js<span class="kw">.</span>prop
+  <span class="kw">method</span> left : 'data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>Opt<span class="kw">.</span>t Js<span class="kw">.</span>prop
+  <span class="kw">method</span> right : 'data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>Opt<span class="kw">.</span>t Js<span class="kw">.</span>prop
+<span class="kw">end</span></code></pre></div>
+<p>Notice the addition of <code>Js.Opt.t</code>. Since the <code>left</code>, <code>right</code> are nullable, we should capture that in the OCaml API, this however does force us to use <code>Js.Opt</code> and so we’d have to do things like:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">root##.left := <span class="kw">new</span>%js node <span class="st">&quot;Left side&quot;</span> |&gt; Js<span class="kw">.</span>Opt<span class="kw">.</span>return;</code></pre></div>
+<p>When trying to set the field, etc. But since we didn’t expose that nullability of the field in the type signature, the <code>depth_first_search</code> code needs to check if the field is indeed <code>null</code>, which would have been otherwise forced by the type system had we used <code>Js.Opt</code>, aka:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">if</span> Js<span class="kw">.</span>Opt<span class="kw">.</span>return iter_node##.right |&gt; Js<span class="kw">.</span>Opt<span class="kw">.</span>test
+<span class="kw">then</span> Stack<span class="kw">.</span>push iter_node##.right stack;</code></pre></div>
+<p>These are tradeoffs that you can make in your own usage.</p>
+<p>I hope this makes it easier for you to use OCaml, JavaScript together.</p>
+</article>
+<article>
+    <header>
+        <h1>
             <a href="./2016/05/21/using-lwt-preemptive/" title="Permalink">
                 Using system threads with Lwt
             </a>
@@ -51,8 +166,10 @@
         <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/lwt/">lwt</a>, <a href="./tags/threading/">threading</a></span>
     </header>
     <p>This blog post shows you how to use real system threads in OCaml by using <code>Lwt</code>, <code>Lwt_preemptive</code>.</p>
+<h1 id="note">!!Note!!</h1>
+<p>While this shows system threads being used, only one is will actually be running at any given point in time (Think this akin to Python’s single threadedness, still useful to use threads if bottleneck are IO)</p>
 <h1 id="common-complaint-about-multicore">Common complaint about multicore</h1>
-<p>A common complaint about OCaml is the lack of multicore, about the single threadedness of the runtime. This is true but its not like <code>OCaml</code> programmers don’t have solutions! Here’s an easy example that you can instantly use in your coding.</p>
+<p>A common complaint about OCaml is the lack of true parallelism, about the single threadedness of the runtime. This is true but its not like <code>OCaml</code> programmers don’t have solutions some solutions. Here’s an easy example that you can instantly use in your coding.</p>
 <h1 id="setup">Setup</h1>
 <p>First we will need some way to verify that our system threads are actually working, we’ll use some math equation to purposefully cause CPU load. Here’s the <code>Sieve Of Eratosthenes</code> Algorithm that I copied from <a href="http://www.scriptol.com/programming/sieve.php#ocaml">here</a>.</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">open</span> List
@@ -293,67 +410,6 @@ dbbbenbaalcbkbnl.com
 dkomadcbodnamfbb.com
 aanamlbblmaefofc.org</code></pre>
 <p>For reference the github repo is <a href="https://github.com/fxfactorial/dga-padcrypt-ocaml">here</a>.</p>
-</article>
-<article>
-    <header>
-        <h1>
-            <a href="./2016/03/06/get-date-string-in-ocaml/" title="Permalink">
-                Date formating + hash digest example in OCaml
-            </a>
-        </h1>
-        <span class="post-date">March  6, 2016</span> in 
-        <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/datetime/">datetime</a>, <a href="./tags/date/">date</a>, <a href="./tags/crypto/">crypto</a>, <a href="./tags/nocrypto/">nocrypto</a></span>
-    </header>
-    <p>This is another blog post in my quest to improve the state of OCaml coding for the average programmer. Today’s blog post is getting a date string in OCaml, a seemingly trivial thing to do in many other programming languages, and using it in a real world hashing example.</p>
-<h1 id="low-level-way">Low level way</h1>
-<p>You do could it like this:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="co">(* Assume this is code.ml *)</span>
-<span class="kw">let</span> time_now () =
-  Unix<span class="kw">.</span>(
-    <span class="kw">let</span> localtime = localtime (time ()) <span class="kw">in</span>
-    Printf<span class="kw">.</span>sprintf <span class="st">&quot;[%02u:%02u:%02u]&quot;</span>
-      localtime.tm_hour localtime.tm_min localtime.tm_sec)
-	  
-<span class="kw">let</span> () = time_now () |&gt; print_endline</code></pre></div>
-<p>This will require you to link the <code>unix</code> package against your program, for example:</p>
-<pre class="shell"><code>$ ocamlfind ocamlopt -package unix -linkpkg code.ml -o Time_now</code></pre>
-<h1 id="higher-level-way-crypto-example">Higher level way + Crypto example</h1>
-<p>At some point this low level interface might not be appropriate and you’ll want higher abstracts. <code>Calendar</code> is an package on opam that provides such abstractions; install with:</p>
-<pre class="shell"><code>$ opam install calendar</code></pre>
-<p>The API of <code>calendar</code>, which you’ll find under the module <code>CalendarLib</code>, is rather large. Here’s some real world code that you can reuse, built upon. The example also uses a cryptographic package which you can get with</p>
-<pre class="shell"><code>$ opam install nocrypto</code></pre>
-<p>and the code:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="co">(* Assume this is code.ml *)</span>
-<span class="ot">module</span> D = CalendarLib<span class="kw">.</span><span class="dt">Date</span>
-
-<span class="kw">let</span> nr_domains = <span class="dv">24</span>
-
-<span class="kw">let</span> seed_string ~date i =
-  Printf<span class="kw">.</span>sprintf
-    <span class="st">&quot;%d-%d-%d:%d&quot;</span>
-    (D<span class="kw">.</span>day_of_month date)
-    (D<span class="kw">.</span>month date |&gt; D<span class="kw">.</span>int_of_month)
-    (D<span class="kw">.</span>year date)
-    i
-
-<span class="kw">let</span> domain_generate date =
-  <span class="kw">let</span> <span class="kw">rec</span> helper count accum =
-    <span class="kw">if</span> count = nr_domains <span class="kw">then</span> accum
-    <span class="kw">else</span> seed_string ~date count :: helper (count + <span class="dv">1</span>) accum
-  <span class="kw">in</span>
-  helper <span class="dv">0</span> []
-
-<span class="kw">let</span> () =
-  Nocrypto_entropy_unix<span class="kw">.</span>initialize ();
-  CalendarLib<span class="kw">.</span>Date<span class="kw">.</span>today ()
-  |&gt; domain_generate
-  |&gt; List<span class="kw">.</span>iter <span class="kw">begin</span> <span class="kw">fun</span> date_stamp -&gt;
-    Nocrypto<span class="kw">.</span>Hash<span class="kw">.</span>digest <span class="dt">`SHA256</span> (Cstruct<span class="kw">.</span>of_string date_stamp)
-    |&gt; Cstruct<span class="kw">.</span>to_string |&gt; print_endline
-  <span class="kw">end</span></code></pre></div>
-<p>and compiling with:</p>
-<pre class="shell"><code>$ ocamlfind ocamlopt -package calendar,nocrypto.unix -linkpkg code.ml -o Ex</code></pre>
-<p>Yay. Be sure to check my archives for many more quick and useful posts on OCaml.</p>
 </article>
 
 

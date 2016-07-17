@@ -7,13 +7,126 @@
         <description><![CDATA[Personal blog of Edgar Aroutiounian]]></description>
         <atom:link href="http://hyegar.com/atom.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Sat, 21 May 2016 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Sun, 17 Jul 2016 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Intermediate js_of_ocaml</title>
+    <link>http://hyegar.com/2016/07/17/js-of-ocaml-usage/index.html</link>
+    <description><![CDATA[<p>This post is mainly aimed at intermediate level users of <code>js_of_ocaml</code>, the <code>OCaml</code> to <code>JavaScript</code> compiler and at improving the sad state of documentation for <code>js_of_ocaml</code>. (Plus I’m interviewing for jobs, hire me!, and wanted to use both OCaml, JavaScript while preparing for interviews)</p>
+<h1 id="ocaml-typing-of-javascript-uses-ppx">OCaml typing of JavaScript (Uses PPX)</h1>
+<p>Say we want to express some algorithms in OCaml but using JavaScript as the runtime execution language/environment. Let’s start with our main data structure, a tree node.</p>
+<div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">function</span> <span class="at">TreeNode</span>(value) <span class="op">{</span>
+  <span class="kw">this</span>.<span class="at">value</span> <span class="op">=</span> value<span class="op">;</span>
+  <span class="kw">this</span>.<span class="at">left</span> <span class="op">=</span> <span class="kw">this</span>.<span class="at">right</span> <span class="op">=</span> <span class="kw">null</span><span class="op">;</span>
+<span class="op">}</span></code></pre></div>
+<p>Our OCaml version will be:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">class</span> <span class="kw">type</span> [&#39;data] tree_node = <span class="kw">object</span>
+  <span class="kw">method</span> value : &#39;data Js<span class="kw">.</span>prop
+  <span class="kw">method</span> left : &#39;data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>prop
+  <span class="kw">method</span> right : &#39;data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>prop
+<span class="kw">end</span></code></pre></div>
+<p>Note that there is a small thing about typing the nullability of the left, right fields, I will return to this at the end of the blog post and it was done for convenience.</p>
+<p>So explanations:</p>
+<ol start="0" style="list-style-type: decimal">
+<li>We are creating a <code>class type</code>, this just describes the object, how we describe it is key.</li>
+<li>The <code>'data</code> is a type variable and lets us use any kind of type for the value in this node.</li>
+<li>OCaml objects only expose methods to the outside world, so properties need <code>Js.prop</code>, this lets us read and write to this field. We can control it to be read only by instead using <code>Js.readonly_prop</code> or even write only with <code>Js.writeonly_prop</code>.</li>
+<li>Methods <code>left</code>, <code>right</code> are also properties. Read the signature from right to left, aka <code>left</code> is a JavaScript read or write property which has a JavaScript object typed as <code>tree_node</code> and parameterized with the <code>'data</code> type variable. Aka tree_nodes of <code>string</code> or <code>int</code> or whatever the type of <code>'data</code> is.</li>
+</ol>
+<p>Now we need to provide a way to make this object.</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> __hidden__ =
+  Js<span class="kw">.</span>Unsafe<span class="kw">.</span>pure_js_expr <span class="st">&quot;function TreeNode(value) {</span><span class="ch">\</span>
+<span class="st">                          this.value = value; </span><span class="ch">\</span>
+<span class="st">                          this.left = this.right = null;}&quot;</span></code></pre></div>
+<p>This is the JavaScript we’ll be using, essentially. Do note that the field names match up, this is important. Now we provide a constructor function:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> node : (&#39;data -&gt; &#39;data tree_node Js<span class="kw">.</span>t) Js<span class="kw">.</span>constr = __hidden__</code></pre></div>
+<p>This <code>node</code> constructor says that its a special JavaScript constructor that will invoke <code>__hidden__</code> with <code>new</code> and such that it expects one argument. An example is:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> root = <span class="kw">new</span>%js node <span class="st">&quot;Hello&quot;</span></code></pre></div>
+<p>We can also make specialized constructors,</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> node_from_int : (<span class="dt">int</span> -&gt; <span class="dt">int</span> tree_node Js<span class="kw">.</span>t) Js<span class="kw">.</span>constr = __hidden__</code></pre></div>
+<p>and a simple usage:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> () =
+  <span class="kw">let</span> root = <span class="kw">new</span>%js node <span class="st">&quot;Hello&quot;</span> <span class="kw">in</span>
+  root##.left := <span class="kw">new</span>%js node <span class="st">&quot;Left side&quot;</span>;
+  root##.left##.left := <span class="kw">new</span>%js node <span class="st">&quot;Grand Kid&quot;</span>;
+
+  <span class="co">(* Note that this just prints the raw object representation of the</span>
+<span class="co">  field value *)</span>
+  Firebug<span class="kw">.</span>console##log root##.left##.left##.value;
+
+  <span class="co">(* This shows the value as expected *)</span>
+  print_endline root##.left##.left##.value</code></pre></div>
+<p>You can compile and run it on node with: (Assuming file name is <code>trees_in_js.ml</code>)</p>
+<pre class="shell"><code>$ ocamlfind ocamlc -package js_of_ocaml.ppx -linkpkg trees_in_js.ml
+$ js_of_ocaml a.out -o T.js
+$ node T.js</code></pre>
+<p>And you should get something like the following printed out:</p>
+<pre class="shell"><code>h { t: 0, c: &#39;Grand Kid&#39;, l: 9 }
+Grand Kid</code></pre>
+<h1 id="depth-first-search-complete-example">Depth First Search, complete example</h1>
+<p>Now here’s an example of a preorder depth first search.</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">class</span> <span class="kw">type</span> [&#39;data] tree_node = <span class="kw">object</span>
+  <span class="kw">method</span> value : &#39;data Js<span class="kw">.</span>prop
+  <span class="kw">method</span> left : &#39;data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>prop
+  <span class="kw">method</span> right : &#39;data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>prop
+<span class="kw">end</span>
+
+<span class="kw">let</span> node : (&#39;data -&gt; &#39;data tree_node Js<span class="kw">.</span>t) Js<span class="kw">.</span>constr = __hidden__
+
+<span class="kw">let</span> depth_first_search starting_node =
+  <span class="kw">let</span> stack = Stack<span class="kw">.</span>create () <span class="kw">in</span>
+  Stack<span class="kw">.</span>push starting_node stack;
+  <span class="kw">while</span> not (Stack<span class="kw">.</span>is_empty stack) <span class="kw">do</span>
+    <span class="kw">let</span> iter_node = Stack<span class="kw">.</span>pop stack <span class="kw">in</span>
+
+    Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s &quot;</span> iter_node##.value
+    |&gt; print_string;
+
+    <span class="kw">if</span> Js<span class="kw">.</span>Opt<span class="kw">.</span>return iter_node##.right |&gt; Js<span class="kw">.</span>Opt<span class="kw">.</span>test
+    <span class="kw">then</span> Stack<span class="kw">.</span>push iter_node##.right stack;
+
+    <span class="kw">if</span> Js<span class="kw">.</span>Opt<span class="kw">.</span>return iter_node##.left |&gt; Js<span class="kw">.</span>Opt<span class="kw">.</span>test
+    <span class="kw">then</span> Stack<span class="kw">.</span>push iter_node##.left stack
+
+  <span class="kw">done</span>
+
+<span class="kw">let</span> () =
+  <span class="kw">let</span> root = <span class="kw">new</span>%js node <span class="st">&quot;F&quot;</span> <span class="kw">in</span>
+  root##.left := <span class="kw">new</span>%js node <span class="st">&quot;B&quot;</span>;
+  root##.right := <span class="kw">new</span>%js node <span class="st">&quot;G&quot;</span>;
+  root##.right##.right := <span class="kw">new</span>%js node <span class="st">&quot;I&quot;</span>;
+  root##.left##.left := <span class="kw">new</span>%js node <span class="st">&quot;A&quot;</span>;
+  root##.left##.right := <span class="kw">new</span>%js node <span class="st">&quot;D&quot;</span>;
+  root##.left##.right##.left := <span class="kw">new</span>%js node <span class="st">&quot;C&quot;</span>;
+  root##.left##.right##.right := <span class="kw">new</span>%js node <span class="st">&quot;E&quot;</span>;
+  root##.right##.right##.left := <span class="kw">new</span>%js node <span class="st">&quot;H&quot;</span>;
+
+  depth_first_search root |&gt; print_newline</code></pre></div>
+<p>and compile it just like given earlier in the blog post. Yay, we used the resources of two programming languages standard libaries in one program.</p>
+<p>Now we can return to why the typing of the <code>class type</code> matters. The fully correct typing of <code>tree_node</code> is:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">class</span> <span class="kw">type</span> [&#39;data] tree_node = <span class="kw">object</span>
+  <span class="kw">method</span> value : &#39;data Js<span class="kw">.</span>prop
+  <span class="kw">method</span> left : &#39;data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>Opt<span class="kw">.</span>t Js<span class="kw">.</span>prop
+  <span class="kw">method</span> right : &#39;data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>Opt<span class="kw">.</span>t Js<span class="kw">.</span>prop
+<span class="kw">end</span></code></pre></div>
+<p>Notice the addition of <code>Js.Opt.t</code>. Since the <code>left</code>, <code>right</code> are nullable, we should capture that in the OCaml API, this however does force us to use <code>Js.Opt</code> and so we’d have to do things like:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">root##.left := <span class="kw">new</span>%js node <span class="st">&quot;Left side&quot;</span> |&gt; Js<span class="kw">.</span>Opt<span class="kw">.</span>return;</code></pre></div>
+<p>When trying to set the field, etc. But since we didn’t expose that nullability of the field in the type signature, the <code>depth_first_search</code> code needs to check if the field is indeed <code>null</code>, which would have been otherwise forced by the type system had we used <code>Js.Opt</code>, aka:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">if</span> Js<span class="kw">.</span>Opt<span class="kw">.</span>return iter_node##.right |&gt; Js<span class="kw">.</span>Opt<span class="kw">.</span>test
+<span class="kw">then</span> Stack<span class="kw">.</span>push iter_node##.right stack;</code></pre></div>
+<p>These are tradeoffs that you can make in your own usage.</p>
+<p>I hope this makes it easier for you to use OCaml, JavaScript together.</p>]]></description>
+    <pubDate>Sun, 17 Jul 2016 00:00:00 UT</pubDate>
+    <guid>http://hyegar.com/2016/07/17/js-of-ocaml-usage/index.html</guid>
+    <dc:creator>Edgar Aroutiounian</dc:creator>
+</item>
+<item>
     <title>Using system threads with Lwt</title>
     <link>http://hyegar.com/2016/05/21/using-lwt-preemptive/index.html</link>
     <description><![CDATA[<p>This blog post shows you how to use real system threads in OCaml by using <code>Lwt</code>, <code>Lwt_preemptive</code>.</p>
+<h1 id="note">!!Note!!</h1>
+<p>While this shows system threads being used, only one is will actually be running at any given point in time (Think this akin to Python’s single threadedness, still useful to use threads if bottleneck are IO)</p>
 <h1 id="common-complaint-about-multicore">Common complaint about multicore</h1>
-<p>A common complaint about OCaml is the lack of multicore, about the single threadedness of the runtime. This is true but its not like <code>OCaml</code> programmers don’t have solutions! Here’s an easy example that you can instantly use in your coding.</p>
+<p>A common complaint about OCaml is the lack of true parallelism, about the single threadedness of the runtime. This is true but its not like <code>OCaml</code> programmers don’t have solutions some solutions. Here’s an easy example that you can instantly use in your coding.</p>
 <h1 id="setup">Setup</h1>
 <p>First we will need some way to verify that our system threads are actually working, we’ll use some math equation to purposefully cause CPU load. Here’s the <code>Sieve Of Eratosthenes</code> Algorithm that I copied from <a href="http://www.scriptol.com/programming/sieve.php#ocaml">here</a>.</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">open</span> List
@@ -727,40 +840,6 @@ Hey Coder Reading hyegar.com
 <p>This all creates an <code>index.html</code> file that you can open in your browser. This example is also included in the <code>tyxml</code> source code under <code>examples</code>. I hope this helps you get started with OCaml easier.</p>]]></description>
     <pubDate>Wed, 24 Feb 2016 00:00:00 UT</pubDate>
     <guid>http://hyegar.com/2016/02/24/tyxml-ocaml-example/index.html</guid>
-    <dc:creator>Edgar Aroutiounian</dc:creator>
-</item>
-<item>
-    <title>Getting an iOS compiler on Linux, full Objective-C support</title>
-    <link>http://hyegar.com/2016/02/22/ios-cross-compiler/index.html</link>
-    <description><![CDATA[<h1 id="the-problem">The problem</h1>
-<p>Lately I’ve been doing iPhone low level debugging, forensics, and reverse engineering. For that I need an <code>iOS</code> compiler and that has usually only been available on <code>OS X</code>. However my day time development environment is Linux which clearly doesn’t have an <code>objective-c</code> runtime or libraries…how to solve this?</p>
-<h1 id="the-solution">The solution</h1>
-<p>I found this <a href="https://github.com/tpoechtrager/osxcross">project</a> but it was very hands on and difficult to reproduce on multiple machines. How could I reliably build this code? My solution was <code>NixOS</code>, specifically the <code>nixpkgs</code> package manager (I won’t go into the benefits of <code>Nix</code> in this post). Now you can also benefit from this work by getting an <code>armv7</code> iOS cross compiler for up to <code>iOS 9.2</code> by simply doing:</p>
-<pre class="shell"><code>$ nix-env -i clang ios-cross-compile</code></pre>
-<p>This will crap out initially because I cannot redistribute iOS SDKs, but it does give you instructions on how to manually add something to the <code>nix-store</code>. After you follow the instructions run the command again and then you’ll have all these tools</p>
-<pre><code>armv7-apple-darwin11-ar                 armv7-apple-darwin11-nm
-armv7-apple-darwin11-as                 armv7-apple-darwin11-nmedit
-armv7-apple-darwin11-bitcode_strip      armv7-apple-darwin11-ObjectDump
-armv7-apple-darwin11-checksyms          armv7-apple-darwin11-otool
-armv7-apple-darwin11-clang              armv7-apple-darwin11-pagestuff
-armv7-apple-darwin11-clang++            armv7-apple-darwin11-ranlib
-armv7-apple-darwin11-codesign_allocate  armv7-apple-darwin11-redo_prebinding
-armv7-apple-darwin11-dyldinfo           armv7-apple-darwin11-seg_addr_table
-armv7-apple-darwin11-indr               armv7-apple-darwin11-segedit
-armv7-apple-darwin11-install_name_tool  armv7-apple-darwin11-seg_hack
-armv7-apple-darwin11-ld                 armv7-apple-darwin11-size
-armv7-apple-darwin11-libtool            armv7-apple-darwin11-strings
-armv7-apple-darwin11-lipo               armv7-apple-darwin11-strip
-armv7-apple-darwin11-machocheck         armv7-apple-darwin11-unwinddump</code></pre>
-<p>…installed and they will work for SDK <code>7.0-9.2</code>!</p>
-<h1 id="stay-tuned">Stay tuned</h1>
-<p>I’ll have more blog posts lined up including:</p>
-<ol style="list-style-type: decimal">
-<li><p>How to get correct code completion for objective-c on Linux in emacs</p></li>
-<li><p>Creating iPhone command line tools, tweaks in C++, Objective-C using theos.</p></li>
-</ol>]]></description>
-    <pubDate>Mon, 22 Feb 2016 00:00:00 UT</pubDate>
-    <guid>http://hyegar.com/2016/02/22/ios-cross-compiler/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 
