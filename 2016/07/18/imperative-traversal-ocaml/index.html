@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Personal blog of Edgar Aroutiounian">
     <meta name="author" content="Edgar Aroutiounian">
-    <title>hyegar.com - Imperatively traverse binary trees in OCaml</title>
+    <title>hyegar.com - Imperatively traverse binary trees in OCaml, print zigzag</title>
     <link rel="canonical" href="http://hyegar.com">
     <link rel="icon" href="../../../../favicon.ico" type="image/x-icon">
     <link rel="stylesheet" type="text/css" href="../../../../css/main.css">
@@ -42,11 +42,12 @@
     <section id="content">
       <article>
     <header>
-        <h1>Imperatively traverse binary trees in OCaml</h1>
+        <h1>Imperatively traverse binary trees in OCaml, print zigzag</h1>
         <span class="post-date">July 18, 2016</span> in 
-        <span class="post-tags"><a href="../../../../tags/ocaml/">ocaml</a>, <a href="../../../../tags/trees/">trees</a>, <a href="../../../../tags/traversal/">traversal</a>, <a href="../../../../tags/in_order/">in_order</a>, <a href="../../../../tags/post_order/">post_order</a></span>
+        <span class="post-tags"><a href="../../../../tags/ocaml/">ocaml</a>, <a href="../../../../tags/trees/">trees</a>, <a href="../../../../tags/traversal/">traversal</a>, <a href="../../../../tags/in_order/">in_order</a>, <a href="../../../../tags/post_order/">post_order</a>, <a href="../../../../tags/zigzag/">zigzag</a></span>
     </header>
     <p>OCaml tree examples tend to be defined with algebraic data types and tend to be functional examples. Here are two imperative tree traversals, a pre-order and in-order. I’m still trying to work out a nice post-order imperative solution in OCaml so if you have one then please tweet it at me: <span class="citation">@edgararout</span></p>
+<p>EDIT: I’ve added a zigzag function procedure as well. This question came up recently at an interview and I messed it up. The point is to print the tree in a zigzag pattern.</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">type</span> 'a node = {<span class="kw">mutable</span> data: 'a;
                 <span class="kw">mutable</span> left : 'a node <span class="dt">option</span>;
                 <span class="kw">mutable</span> right: 'a node <span class="dt">option</span>; }
@@ -118,6 +119,33 @@
     <span class="kw">done</span>
   <span class="kw">with</span> W<span class="kw">.</span><span class="dt">Stop_loop</span> -&gt; ()
 
+<span class="kw">let</span> print_spiral root =
+  <span class="kw">let</span> (current, next) = Stack<span class="kw">.</span>(<span class="dt">ref</span> (create ()), <span class="dt">ref</span> (create ())) <span class="kw">in</span>
+  <span class="kw">let</span> left_to_right = <span class="dt">ref</span> <span class="kw">true</span> <span class="kw">in</span>
+
+  <span class="kw">let</span> swap a b = <span class="kw">let</span> (a_, b_) = !a, !b <span class="kw">in</span> a := b_; b := a_ <span class="kw">in</span>
+
+  Stack<span class="kw">.</span>push root !current;
+
+  <span class="kw">while</span> not (Stack<span class="kw">.</span>is_empty !current) <span class="kw">do</span>
+    <span class="kw">let</span> r = Stack<span class="kw">.</span>top !current <span class="kw">in</span>
+    Stack<span class="kw">.</span>pop !current |&gt; ignore;
+    Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s &quot;</span> r.data |&gt; print_string;
+    <span class="kw">if</span> !left_to_right <span class="kw">then</span>
+      <span class="kw">begin</span>
+        (<span class="kw">match</span> r.left <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> l -&gt; Stack<span class="kw">.</span>push l !next);
+        (<span class="kw">match</span> r.right <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> r -&gt; Stack<span class="kw">.</span>push r !next)
+      <span class="kw">end</span>
+    <span class="kw">else</span> <span class="kw">begin</span>
+      (<span class="kw">match</span> r.right <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> r -&gt; Stack<span class="kw">.</span>push r !next);
+      (<span class="kw">match</span> r.left <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> l -&gt; Stack<span class="kw">.</span>push l !next)
+    <span class="kw">end</span>;
+
+    <span class="kw">if</span> Stack<span class="kw">.</span>length !current = <span class="dv">0</span>
+    <span class="kw">then</span> (left_to_right := not !left_to_right; swap current next)
+
+  <span class="kw">done</span>
+
 <span class="kw">let</span> () =
   <span class="kw">let</span> root = new_node <span class="st">&quot;F&quot;</span> <span class="kw">in</span>
 
@@ -125,7 +153,9 @@
 
   pre_order_traversal root;
   print_newline ();
-  in_order_traversal root</code></pre></div>
+  in_order_traversal root
+  print_newline ();
+  print_spiral root</code></pre></div>
 </article>
 
     </section>
