@@ -7,8 +7,95 @@
         <description><![CDATA[Personal blog of Edgar Aroutiounian]]></description>
         <atom:link href="http://hyegar.com/atom.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Sun, 17 Jul 2016 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Mon, 18 Jul 2016 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Imperatively traverse binary trees in OCaml</title>
+    <link>http://hyegar.com/2016/07/18/imperative-traversal-ocaml/index.html</link>
+    <description><![CDATA[<p>OCaml tree examples tend to be defined with algebraic data types and tend to be functional examples. Here are two imperative tree traversals, a pre-order and in-order. I’m still trying to work out a nice post-order imperative solution in OCaml so if you have one then please tweet it at me: <span class="citation">@edgararout</span></p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">type</span> &#39;a node = {<span class="kw">mutable</span> data: &#39;a;
+                <span class="kw">mutable</span> left : &#39;a node <span class="dt">option</span>;
+                <span class="kw">mutable</span> right: &#39;a node <span class="dt">option</span>; }
+
+<span class="kw">let</span> new_node data = {data; left = <span class="dt">None</span>; right = <span class="dt">None</span>;}
+
+<span class="kw">let</span> insert tree new_data =
+  <span class="kw">let</span> <span class="ot">module</span> Wrapper = <span class="kw">struct</span> <span class="kw">exception</span> <span class="dt">Stop_loop</span> <span class="kw">end</span> <span class="kw">in</span>
+  <span class="kw">let</span> iter = <span class="dt">ref</span> tree <span class="kw">in</span>
+  <span class="kw">try</span>
+    <span class="kw">while</span> <span class="kw">true</span> <span class="kw">do</span>
+      <span class="kw">if</span> new_data &lt; !iter.data
+      <span class="kw">then</span> <span class="kw">match</span> !iter.left <span class="kw">with</span>
+        | <span class="dt">None</span> -&gt;
+          !iter.left &lt;- <span class="dt">Some</span> (new_node new_data);
+          raise Wrapper<span class="kw">.</span><span class="dt">Stop_loop</span>
+        | <span class="dt">Some</span> left_tree -&gt; iter := left_tree
+      <span class="kw">else</span> <span class="kw">if</span> new_data &gt; !iter.data
+      <span class="kw">then</span> <span class="kw">match</span> !iter.right <span class="kw">with</span>
+        | <span class="dt">None</span> -&gt;
+          !iter.right &lt;- <span class="dt">Some</span> (new_node new_data);
+          raise Wrapper<span class="kw">.</span><span class="dt">Stop_loop</span>
+        | <span class="dt">Some</span> right_tree -&gt; iter := right_tree
+    <span class="kw">done</span>
+  <span class="kw">with</span> Wrapper<span class="kw">.</span><span class="dt">Stop_loop</span> -&gt; ()
+
+<span class="kw">let</span> pre_order_traversal tree =
+  <span class="kw">let</span> s = Stack<span class="kw">.</span>create () <span class="kw">in</span>
+  Stack<span class="kw">.</span>push tree s;
+  <span class="kw">while</span> not (Stack<span class="kw">.</span>is_empty s) <span class="kw">do</span>
+    <span class="kw">let</span> iter_node = Stack<span class="kw">.</span>pop s <span class="kw">in</span>
+
+    Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s &quot;</span> iter_node.data
+    |&gt; print_string;
+
+    (<span class="kw">match</span> iter_node.right <span class="kw">with</span>
+       <span class="dt">None</span> -&gt; ()
+     | <span class="dt">Some</span> right -&gt; Stack<span class="kw">.</span>push right s);
+
+    (<span class="kw">match</span> iter_node.left <span class="kw">with</span>
+       <span class="dt">None</span> -&gt; ()
+     | <span class="dt">Some</span> left -&gt; Stack<span class="kw">.</span>push left s)
+  <span class="kw">done</span>
+
+<span class="kw">let</span> in_order_traversal tree =
+  <span class="kw">let</span> <span class="ot">module</span> W = <span class="kw">struct</span> <span class="kw">exception</span> <span class="dt">Stop_loop</span> <span class="kw">end</span> <span class="kw">in</span>
+  <span class="kw">let</span> visited_stack = Stack<span class="kw">.</span>create () <span class="kw">in</span>
+  <span class="kw">let</span> iter_node = <span class="dt">ref</span> (<span class="dt">Some</span> tree) <span class="kw">in</span>
+  <span class="kw">try</span> <span class="kw">while</span> <span class="kw">true</span> <span class="kw">do</span>
+      <span class="co">(* Inner loop, we keep trying to go left *)</span>
+      (<span class="kw">try</span> <span class="kw">while</span> <span class="kw">true</span> <span class="kw">do</span>
+           <span class="kw">match</span> !iter_node <span class="kw">with</span>
+           | <span class="dt">None</span> -&gt; raise W<span class="kw">.</span><span class="dt">Stop_loop</span>
+           | <span class="dt">Some</span> left -&gt;
+             Stack<span class="kw">.</span>push left visited_stack;
+             iter_node := left.left
+         <span class="kw">done</span>;
+       <span class="kw">with</span> W<span class="kw">.</span><span class="dt">Stop_loop</span> -&gt; ());
+
+      <span class="co">(* If we have no more to process in the stack, then we&#39;re</span>
+<span class="co">         done *)</span>
+      <span class="kw">if</span> Stack<span class="kw">.</span>length visited_stack = <span class="dv">0</span>
+      <span class="kw">then</span> raise W<span class="kw">.</span><span class="dt">Stop_loop</span>
+      <span class="kw">else</span>
+        <span class="co">(* Here we&#39;re forced to start moving rightward *)</span>
+        <span class="kw">let</span> temp = Stack<span class="kw">.</span>pop visited_stack <span class="kw">in</span>
+        Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s &quot;</span> temp.data |&gt; print_string;
+        iter_node := temp.right
+    <span class="kw">done</span>
+  <span class="kw">with</span> W<span class="kw">.</span><span class="dt">Stop_loop</span> -&gt; ()
+
+<span class="kw">let</span> () =
+  <span class="kw">let</span> root = new_node <span class="st">&quot;F&quot;</span> <span class="kw">in</span>
+
+  [<span class="st">&quot;B&quot;</span>;<span class="st">&quot;G&quot;</span>;<span class="st">&quot;A&quot;</span>;<span class="st">&quot;D&quot;</span>;<span class="st">&quot;I&quot;</span>;<span class="st">&quot;C&quot;</span>;<span class="st">&quot;E&quot;</span>;<span class="st">&quot;H&quot;</span>] |&gt; List<span class="kw">.</span>iter (insert root);
+
+  pre_order_traversal root;
+  print_newline ();
+  in_order_traversal root</code></pre></div>]]></description>
+    <pubDate>Mon, 18 Jul 2016 00:00:00 UT</pubDate>
+    <guid>http://hyegar.com/2016/07/18/imperative-traversal-ocaml/index.html</guid>
+    <dc:creator>Edgar Aroutiounian</dc:creator>
+</item>
+<item>
     <title>Intermediate js_of_ocaml</title>
     <link>http://hyegar.com/2016/07/17/js-of-ocaml-usage/index.html</link>
     <description><![CDATA[<p>This post is mainly aimed at intermediate level users of <code>js_of_ocaml</code>, the <code>OCaml</code> to <code>JavaScript</code> compiler and at improving the sad state of documentation for <code>js_of_ocaml</code>. (Plus I’m interviewing for jobs, hire me!, and wanted to use both OCaml, JavaScript while preparing for interviews)</p>
@@ -756,113 +843,6 @@ Hey Coder Reading hyegar.com
 <p>And there you have it, now you start hacking on <code>OCaml</code> in flow. Be sure to check out my numerous other blog posts about <code>OCaml</code> including the jargon and build situation located <a href="http://hyegar.com/2015/10/20/so-youre-learning-ocaml/">here</a></p>]]></description>
     <pubDate>Thu, 25 Feb 2016 00:00:00 UT</pubDate>
     <guid>http://hyegar.com/2016/02/25/lets-hack-on-flow/index.html</guid>
-    <dc:creator>Edgar Aroutiounian</dc:creator>
-</item>
-<item>
-    <title>Use OCaml to create statically typed HTML</title>
-    <link>http://hyegar.com/2016/02/24/tyxml-ocaml-example/index.html</link>
-    <description><![CDATA[<h1 id="motivation">Motivation</h1>
-<p>This blog post is part of my effort to make OCaml libraries, and therefore OCaml itself, more accessible and documented. We’ll focus on generating statically typed HTML using the <code>tyxml</code> package.</p>
-<h1 id="simple-starter-code">Simple Starter code</h1>
-<p>Let’s start by installing <code>tyxml</code> itself, we can do that with:</p>
-<pre class="shell"><code>$ opam install tyxml</code></pre>
-<p>And here’s the OCaml code:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">open</span> Html5<span class="kw">.</span>M
-
-<span class="kw">let</span> this_title = title (pcdata <span class="st">&quot;Your Cool Web Page&quot;</span>)
-
-<span class="kw">let</span> image_box =
-  div ~a:[a_id <span class="st">&quot;image_box&quot;</span>]
-    []
-
-<span class="kw">let</span> links_box =
-  ul ~a:[a_class [<span class="st">&quot;links_bar&quot;</span>]; a_id <span class="st">&quot;links_bar&quot;</span>]
-    [li ~a:[a_id <span class="st">&quot;home_click&quot;</span>]
-       [pcdata <span class="st">&quot;My Musings&quot;</span>];
-     li ~a:[a_id <span class="st">&quot;about_click&quot;</span>]
-       [pcdata <span class="st">&quot;About Me&quot;</span>];
-     li ~a:[a_id <span class="st">&quot;blog_posts_click&quot;</span>]
-       [pcdata <span class="st">&quot;Blog&quot;</span>];
-     li ~a:[a_id <span class="st">&quot;hackathons_click&quot;</span>]
-       [pcdata <span class="st">&quot;Hackathons&quot;</span>]]
-
-<span class="kw">let</span> common_footer =
-  footer ~a:[a_id <span class="st">&quot;footer_box&quot;</span>]
-    [p [pcdata <span class="st">&quot;This site was made with &quot;</span>;
-        a ~a:[a_href <span class="st">&quot;http://ocaml.org&quot;</span>] [pcdata <span class="st">&quot;OCaml&quot;</span>];
-        pcdata <span class="st">&quot; and &quot;</span>;
-        a ~a:[a_href <span class="st">&quot;https://www.gnu.org/software/emacs/&quot;</span>] [pcdata <span class="st">&quot;emacs&quot;</span>]]]
-
-<span class="kw">let</span> home_content =
-  div
-    [h2
-       [pcdata <span class="st">&quot;Hello Coder&quot;</span>]]
-
-<span class="kw">let</span> main_payload =
-  div ~a:[a_id <span class="st">&quot;payload&quot;</span>]
-    [home_content]
-
-<span class="kw">let</span> common_nav =
-  nav [links_box]
-
-<span class="kw">let</span> content_box =
-  div ~a:[a_id <span class="st">&quot;content_box&quot;</span>]
-    [common_nav;
-     main_payload;
-     common_footer]
-
-<span class="kw">let</span> main_script =
-  script ~a:[a_src (Xml<span class="kw">.</span>uri_of_string <span class="st">&quot;main.js&quot;</span>)] (pcdata <span class="st">&quot;&quot;</span>)
-
-<span class="kw">let</span> home_page_doc =
-  html (head this_title
-          [link ~rel:[<span class="dt">`Stylesheet</span>] ~href:<span class="st">&quot;home.css&quot;</span> ();])
-    (body [image_box; content_box; main_script])
-
-<span class="kw">let</span> pages = [(<span class="st">&quot;index.html&quot;</span>, home_page_doc)]
-
-<span class="kw">let</span> () =
-  List<span class="kw">.</span>iter <span class="kw">begin</span> <span class="kw">fun</span> (page_name, a_page) -&gt;
-    Printf<span class="kw">.</span>sprintf <span class="st">&quot;Generating: %s&quot;</span> page_name |&gt; print_endline;
-    <span class="kw">let</span> file_handle = open_out page_name <span class="kw">in</span>
-    Html5<span class="kw">.</span>P<span class="kw">.</span>print (output_string file_handle) a_page;
-    close_out file_handle;
-    <span class="kw">match</span> Sys<span class="kw">.</span>command (Printf<span class="kw">.</span>sprintf <span class="st">&quot;tidy -im -ashtml %s&quot;</span> page_name) <span class="kw">with</span>
-    | <span class="dv">0</span> -&gt; ()
-    | c -&gt;
-      print_endline <span class="st">&quot;You don&#39;t have tidy, no pretty printing of html&quot;</span>
-  <span class="kw">end</span>
-    pages</code></pre></div>
-<p>Notice the example include a script tag usage and CSS usage. This is using just <code>tyxml</code> and the <code>stdlib</code>.</p>
-<p>For completeness, here’s the CSS followed by the JavaScript and finally the Makefile to build it all</p>
-<div class="sourceCode"><pre class="sourceCode css"><code class="sourceCode css"><span class="fl">#links_bar</span> li <span class="kw">{</span>
-    <span class="kw">margin:</span><span class="dt">1em</span><span class="kw">;</span>
-    <span class="kw">padding:</span><span class="dt">0.4em</span><span class="kw">;</span>
-    <span class="kw">font-size:</span><span class="dt">large</span><span class="kw">;</span>
-    <span class="kw">display:</span><span class="dt">inline</span><span class="kw">;</span>
-    <span class="kw">cursor:</span><span class="dt">pointer</span><span class="kw">;</span>
-    <span class="kw">border:</span><span class="dt">none</span><span class="kw">;</span>
-    <span class="kw">border-radius:</span><span class="dt">0px</span><span class="kw">;</span>
-    <span class="kw">transition:</span><span class="dt">.2s</span> linear<span class="kw">;</span>
-    <span class="kw">text-align:</span><span class="dt">center</span><span class="kw">;</span>
-<span class="kw">}</span></code></pre></div>
-<div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="st">&quot;use strict&quot;</span><span class="op">;</span>
-
-<span class="kw">var</span> handle <span class="op">=</span> <span class="va">document</span>.<span class="at">getElementById</span>(<span class="st">&quot;payload&quot;</span>)<span class="op">;</span>
-
-<span class="va">console</span>.<span class="at">log</span>(<span class="st">&quot;Hello World&quot;</span>)<span class="op">;</span>
-<span class="va">console</span>.<span class="at">log</span>(handle)<span class="op">;</span></code></pre></div>
-<div class="sourceCode"><pre class="sourceCode makefile"><code class="sourceCode makefile"><span class="dt">site_gen </span><span class="ch">:=</span><span class="st"> make_site</span>
-
-<span class="dv">all:</span>
-	ocamlfind ocamlc site_html.ml -package tyxml -linkpkg -o <span class="ch">${</span><span class="dt">site_gen</span><span class="ch">}</span>
-	./<span class="ch">${</span><span class="dt">site_gen</span><span class="ch">}</span>
-
-<span class="dv">clean:</span>
-	rm -f *.cmo *.cmt *.cmi <span class="ch">${</span><span class="dt">site_gen</span><span class="ch">}</span> index.html</code></pre></div>
-<p>This all creates an <code>index.html</code> file that you can open in your browser. This example is also included in the <code>tyxml</code> source code under <code>examples</code>. I hope this helps you get started with OCaml easier.</p>]]></description>
-    <pubDate>Wed, 24 Feb 2016 00:00:00 UT</pubDate>
-    <guid>http://hyegar.com/2016/02/24/tyxml-ocaml-example/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 
