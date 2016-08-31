@@ -33,13 +33,102 @@
         <li><a href="./">Home</a></li>
         <li><a href="./about">About</a></li>
         <li><a href="./archive">Archive</a></li>
-        <li><a href="./resume">Resume</a></li>
+        <li><a href="./Resume">Resume</a></li>
     </ul>
 </nav>
 
     
     <section id="content">
       <article>
+    <header>
+        <h1>
+            <a href="./2016/08/31/grabbing-function-location/" title="Permalink">
+                Calling a C function from within a binary on OS X/iOS
+            </a>
+        </h1>
+        <span class="post-date">August 31, 2016</span> in 
+        <span class="post-tags"><a href="./tags/c/">c</a>, <a href="./tags/osx/">osx</a>, <a href="./tags/code%20injection/">code injection</a>, <a href="./tags/binary/">binary</a>, <a href="./tags/hopper/">hopper</a></span>
+    </header>
+    <p><em>If you like this and other posts of mine, then reach out to me at edgar.factorial@gmail.com, I’m looking for remote contract work.</em></p>
+<p>Let’s say we have a C binary given to us and there’s a C function in it that we want to call. For example, say we have this code, assume it is called <code>inject_me.c</code>:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;stdio.h&gt;</span>
+
+<span class="dt">int</span> test_function(<span class="dt">char</span> *some_word)
+{
+  <span class="kw">return</span> printf(<span class="st">&quot;Did say: %s</span><span class="ch">\n</span><span class="st">&quot;</span>, some_word);
+}
+
+<span class="dt">int</span> main (<span class="dt">int</span> argc, <span class="dt">char</span> **argv)
+{
+  <span class="kw">return</span> test_function(<span class="st">&quot;Hello World&quot;</span>);
+}</code></pre></div>
+<p>and we want to call the function <code>test_function</code> by ourselves. To do that we need to find the location of the function in the binary. We can do that by disassembling the binary, I used to use command line tools for that but now I’m using <code>hopper</code>. (Hopper is an AMAZING program). Once we disassemble it, we find the function in memory:</p>
+<div class="figure">
+<img src="./images/found_test_function.png" />
+
+</div>
+<p>Notice that I highlighted the actual location of: <code>0x100000f20</code>. Now we can inject it with this code, assume it is called <code>inject.c</code></p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;stdio.h&gt;</span>
+<span class="ot">#include &lt;string.h&gt;</span>
+<span class="ot">#include &lt;mach-o/dyld.h&gt;</span>
+
+<span class="ot">#define SPOT 0x100000f20</span>
+
+<span class="kw">typedef</span> <span class="dt">int</span> pull_it(<span class="dt">char</span> *);
+
+<span class="dt">static</span> pull_it *pulled = NULL;
+
+__attribute__((constructor))
+<span class="dt">void</span> example_injection()
+{
+  <span class="dt">char</span> path[<span class="dv">1024</span>];
+  <span class="dt">uint32_t</span> size = <span class="kw">sizeof</span>(path);
+  _NSGetExecutablePath(path, &amp;size);
+  
+  <span class="kw">for</span> (<span class="dt">uint32_t</span> i = <span class="dv">0</span>; i &lt; _dyld_image_count(); i++) {
+    <span class="kw">if</span> (strcmp(_dyld_get_image_name(i), path) == <span class="dv">0</span>) {
+      intptr_t slide = _dyld_get_image_vmaddr_slide(i);
+
+      pulled = (pull_it*)(intptr_t)(slide + SPOT);
+      printf(<span class="st">&quot;slide: %lu</span><span class="ch">\n</span><span class="st">&quot;</span>, slide);
+      pulled(<span class="st">&quot;Please work</span><span class="ch">\n</span><span class="st">&quot;</span>);
+    }
+  }
+
+  printf(<span class="st">&quot;This ran before the actual program</span><span class="ch">\n</span><span class="st">&quot;</span>);
+}</code></pre></div>
+<ol style="list-style-type: decimal">
+<li><p>The <code>__attribute__((constructor))</code> calls the wrapped function before <code>main</code> goes off.</p></li>
+<li><p>The slide is needed because: (I found this on some Apple mailing list and don’t remember from where anymore)</p></li>
+</ol>
+<pre><code>Q: Can someone enlighten me as to what the virtual memory slide amount
+is ? (this parameter is returned by _dyld_get_image_vmaddr_slide for
+instance)
+
+A: The shared libraries are prebound to an initial base address but
+when the shared library gets loaded dyld can &quot;slide&quot; the library to a
+new base address, this is where the virtual memory slide comes from.</code></pre>
+<p>Build both with this <code>Makefile</code></p>
+<div class="sourceCode"><pre class="sourceCode makefile"><code class="sourceCode makefile"><span class="dt">osx_clang </span><span class="ch">:=</span><span class="st"> </span><span class="ch">$(</span><span class="kw">shell</span><span class="st"> xcrun --sdk macosx --find clang</span><span class="ch">)</span>
+<span class="dt">osx_sdk </span><span class="ch">:=</span><span class="st"> </span><span class="ch">$(</span><span class="kw">shell</span><span class="st"> xcrun --sdk macosx --show-sdk-path</span><span class="ch">)</span>
+<span class="dt">c_flags </span><span class="ch">:=</span><span class="st"> -std=c11</span>
+
+<span class="dv">inject_me:</span><span class="dt">inject_me.c</span>
+	<span class="ch">@${</span><span class="dt">osx_clang</span><span class="ch">}</span><span class="fu"> -isysroot </span><span class="ch">${</span><span class="dt">osx_sdk</span><span class="ch">}</span><span class="fu"> </span><span class="ch">${</span><span class="dt">c_flags</span><span class="ch">}</span><span class="fu"> </span><span class="ch">$&lt;</span><span class="fu"> -o </span><span class="ch">$@</span>
+
+<span class="dv">code_injection:</span><span class="dt">inject_me</span>
+	<span class="ch">@${</span><span class="dt">osx_clang</span><span class="ch">}</span><span class="fu"> -isysroot </span><span class="ch">${</span><span class="dt">osx_sdk</span><span class="ch">}</span><span class="fu"> </span><span class="ch">${</span><span class="dt">c_flags</span><span class="ch">}</span><span class="fu"> inject.c -dynamiclib -o </span><span class="ch">$@</span><span class="fu">.dylib</span></code></pre></div>
+<p>Now we can invoke it like so:</p>
+<pre class="shell"><code>$ make code_injection
+$ DYLD_INSERT_LIBRARIES=code_injection.dylib ./inject_me
+slide: 125042688
+Did say: Please work
+
+This ran before the actual program
+Did say: Hello World</code></pre>
+<p>Yay, it works. BTW, this works for jailbroken iOS as well.</p>
+</article>
+<article>
     <header>
         <h1>
             <a href="./2016/07/18/imperative-traversal-ocaml/" title="Permalink">
@@ -422,54 +511,6 @@ $ /T<span class="kw">.</span>js</code></pre></div>
   timeout ~arg:() ~timeout:<span class="dv">4</span> ~default_value:(<span class="dv">-1</span>) (partialed <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>)
   |&gt; ignore</code></pre></div>
 <p>I’ve added this to my <code>podge</code> library found <a href="http://github.com/fxfactorial/podge">here</a>, a collection of useful utility functions.</p>
-</article>
-<article>
-    <header>
-        <h1>
-            <a href="./2016/03/15/building-xen-arm-from-source/" title="Permalink">
-                Building xen-arm-builder from source
-            </a>
-        </h1>
-        <span class="post-date">March 15, 2016</span> in 
-        <span class="post-tags"><a href="./tags/mirageos/">mirageos</a>, <a href="./tags/sdcard/">sdcard</a>, <a href="./tags/xen/">xen</a>, <a href="./tags/ocaml/">ocaml</a></span>
-    </header>
-    <p>I’m in Morocco for the first <a href="http://marrakech2016.mirage.io/">mirageos</a> hackathon. One of the things I’ve done here is build <a href="https://github.com/mirage/xen-arm-builder">xen-arm-builder</a> from source and it was a big challenge. Here’s my general notes and pointers to help you get over this hump. I assume you know what mirageos/xen are.</p>
-<p>Much MUCH thanks to <a href="http://roscidus.com/blog/">Thomas Leonard</a> and <a href="http://somerandomidiot.com/">Mindy Preston</a> for lending me a cubieboard2 and helping me with all the debugging, compiling issues; wouldn’t have been able to do it without them.</p>
-<h1 id="machine-setup">Machine Setup</h1>
-<p>I did this on Ubuntu 15 and was deploying to a <a href="http://cubieboard.org/2013/06/19/cubieboard2-is-here/">cubieboard2</a>.</p>
-<h1 id="example-workflow">Example Workflow</h1>
-<p>Assuming that you are connecting the cubieboard2 to your laptop over a serial connection then you can get a shell on the machine with</p>
-<pre class="shell"><code>$ screen -h 10000 /dev/ttyUSB0 115200</code></pre>
-<p>Then say you are using <a href="https://github.com/mirage/mirage-skeleton">mirage-skeleton</a>, here’s an example flow.</p>
-<pre class="shell"><code>$ git clone https://github.com/mirage/mirage-skeleton
-$ cd mirage-skeleton
-$ make configure MODE=xen
-$ cd console
-$ make
-$ sudo xl create console.xe</code></pre>
-<p>Yay Unikernel on Cubieboard2!</p>
-<h1 id="troublesome-issues">Troublesome issues</h1>
-<p>I had many, many issues in building the code from source, here are some troubleshooting steps that might help you as well.</p>
-<ol start="0" style="list-style-type: decimal">
-<li>Be sure to have fast internet because building from source including making a clone of the Linux source, ouch.</li>
-<li><code>OPAMVERBOSE=1 opam &lt;anything&gt;</code> is incredibly useful.</li>
-<li>Ubuntu 15 will install a <code>gcc-5.0</code> version of the cross-compiler, be sure to do <code>make build CC=arm-linux-gnueabihf-gcc-4.8</code> instead of a plain <code>make build</code>.</li>
-<li>Be sure to <strong>not</strong> use the <code>4.02.0</code> compiler, the cubieboard2 is super slow and that OCaml compiler had a performance bug, use the <code>4.02.3</code> compiler instead.</li>
-<li>Check <code>top</code> to see some kind of xp binary, it eats the CPU and that really slows down compilation, best to kill them.</li>
-<li>Do make sure that the time on the machine is correct, otherwise you’ll have weird hanging by opam which will seem like its building but actually its just stuck on a timing issue, aka be sure to do: <code>sudo ntpdate uk.pool.ntp.org</code> before doing anything with mirage/opam/aptitude.</li>
-<li>If you get odd errors like:</li>
-</ol>
-<pre class="shell"><code>Parsing config from console.xl
-xc: error: panic: xc_dom_core.c:185: failed to open file: No such file or directory: Internal error
-libxl: error: libxl_dom.c:377:libxl__build_pv: xc_dom_kernel_file failed: No such file or directory
-libxl: error: libxl_create.c:1022:domcreate_rebuild_done: cannot
-(re-)build domain: -3</code></pre>
-<p>Then check that the libraries are correctly set in <code>/usr/lib</code>, check with</p>
-<pre class="shell"><code>$ sudo strace -e open xl create console.xl</code></pre>
-<p>and either <code>cp</code> or <code>ln</code> them correctly.</p>
-<ol start="7" style="list-style-type: decimal">
-<li>I recommend just installing all the <code>depopts</code> of all the mirage projects, there are some bugs in mirage opam files that don’t install other needed packages.</li>
-</ol>
 </article>
 
 

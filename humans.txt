@@ -2,7 +2,7 @@
 
 /* TEAM */
 Author: Edgar Aroutiounian
-Contact: edgar@beancode.io
+Contact: edgar.factorial@gmail.com
 Twitter: @edgararout
 LinkedIn: http://www.linkedin.com/e/fpf/82724921
 GitHub: http://github.com/fxfactorial

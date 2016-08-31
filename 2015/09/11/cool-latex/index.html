@@ -33,7 +33,7 @@
         <li><a href="../../../../">Home</a></li>
         <li><a href="../../../../about">About</a></li>
         <li><a href="../../../../archive">Archive</a></li>
-        <li><a href="../../../../resume">Resume</a></li>
+        <li><a href="../../../../Resume">Resume</a></li>
     </ul>
 </nav>
 
@@ -96,10 +96,10 @@
 <pre class="org-mode"><code>#+LATEX_HEADER: \usepackage{animate}
 #+LATEX_HEADER: \usepackage{graphics}</code></pre></li>
 <li><p>For the place where you want to add the animation, add code like the following to your <code>.org</code> file:</p>
-<pre class="tex"><code>\begin{center}
-%                                            fps filename from to
+<div class="sourceCode"><pre class="sourceCode tex"><code class="sourceCode latex">\begin{center}
+<span class="co">%                                            fps filename from to</span>
   \animategraphics[autoplay, loop, width=4in]{2}{p_N200_it}{1}{68}
-\end{center}</code></pre>
+\end{center}</code></pre></div>
 <p>In this example, I gave it some optional arguments and said use 2 frames per second and for all the filenames that start with p_N200_it, go from 1 to 68, for example <code>p_N200_it4.png</code>.</p>
 <p><strong>Note:</strong> <code>\animategraphics</code> can take other optional arguments, like <code>controls</code>. Please sure to check out its easily googlable manual for all the details.</p></li>
 </ol>
