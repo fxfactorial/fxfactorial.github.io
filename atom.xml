@@ -7,8 +7,115 @@
         <description><![CDATA[Personal blog of Edgar Aroutiounian]]></description>
         <atom:link href="http://hyegar.com/atom.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Wed, 31 Aug 2016 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Tue, 20 Sep 2016 00:00:00 UT</lastBuildDate>
         <item>
+    <title>ReactJS, JSX, async/await, babel, webpack and getting it all working</title>
+    <link>http://hyegar.com/2016/09/20/webdev-setup/index.html</link>
+    <description><![CDATA[<h3 id="stranger-in-a-strange-land">Stranger in a strange land</h3>
+<p>I’m not primarily a front-end dev so getting everything setup and configured for web development is particularly frustrating for me and most blog posts, tutorials don’t actually give explanations, just copy-pasting blindly tons of little configs.</p>
+<p>Here’s my post that I’m using as reference for me and hopefully for any other non-frontend developer that wants to use the latest and greatest <code>JavaScript</code> like <code>fetch</code>, <code>async</code>, <code>await</code>, <code>React</code>, <code>JSX</code>.</p>
+<h3 id="getting-started-compiling-javascript-to-javascript">Getting started, compiling JavaScript to …JavaScript</h3>
+<p>Because of fragmentation in implementations of the latest <code>JavaScript</code> features, we’ll use <code>babel</code> to compile our <code>JavaScript</code> using the latest features to <code>JavaScript</code> that will work in <code>Chrome</code>, <code>Firefox</code> and <code>Safari</code>.</p>
+<p><code>babel</code> has a concept of <code>plugins</code>. These are like features that you can turn on during the compilation steps and are pretty granular. Often you’ll want a whole bunch of plugins together and that is so common enough that <code>babel</code> has something called <code>presets</code>. You can put that in separate <code>.babelrc</code> file, but I prefer not having so much silly little config files, so you can also put it in your package.json; example:</p>
+<div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode javascript"> <span class="st">&quot;babel&quot;</span><span class="op">:</span> <span class="op">{</span>
+    <span class="st">&quot;presets&quot;</span><span class="op">:</span> [
+      <span class="st">&quot;react&quot;</span><span class="op">,</span>
+      <span class="st">&quot;es2015&quot;</span><span class="op">,</span>
+      <span class="st">&quot;stage-3&quot;</span>
+    ]<span class="op">,</span>
+    <span class="st">&quot;plugins&quot;</span><span class="op">:</span> [
+        <span class="st">&quot;transform-es2015-modules-commonjs&quot;</span><span class="op">,</span>
+        <span class="st">&quot;transform-async-to-generator&quot;</span><span class="op">,</span>
+        <span class="st">&quot;transform-runtime&quot;</span>
+    ]
+  <span class="op">}</span></code></pre></div>
+<p>These are the ones I’m using to compile <code>JSX</code>, use ES6 modules, and <code>async</code>, <code>await</code>.</p>
+<p>So when you invoke <code>babel</code>, it will look at the <code>package.json</code>, see the <code>babel</code> field and turn on those features, so an example invocation is:</p>
+<pre class="shell"><code>$ babel lib --out-dir dist</code></pre>
+<p>which will compile all the code in the <code>lib</code> directory and output the results in the <code>dist</code> directory. This process is the same for <code>node</code>.</p>
+<h3 id="bundling-code">Bundling code</h3>
+<p>Now we have our legal <code>JavaScript</code> for today’s browsers/node. We can bundle up everything as a single <code>JavaScript</code> file using <code>webpack</code>. I previously used <code>browserify</code> but like all things web, apparently its not hot anymore. We can invoke it like so:</p>
+<pre class="shell"><code>$ webpack --progress --colors dist/homepage.js bundle.js</code></pre>
+<p>where <code>bundle.js</code> is the name of the single output file that we’ll get. You can apparently do some kind of config file for webpack, yet another config file, but this is enough for me right now.</p>
+<h3 id="actual-codeproject-with-jsx">Actual code/project with JSX</h3>
+<p>So let’s say we have these two files, one is <code>homepage.jsx</code> and the other is <code>button.jsx</code>. Note that I use a real example of <code>async</code>, <code>await</code>, for a great explanation see <a href="https://zeit.co/blog/async-and-await">here</a>, for <code>OCaml</code> programmers, <code>await</code> is basically <code>&gt;&gt;=</code> or <code>let%lwt</code>.</p>
+<p>This is <code>button.jsx</code></p>
+<div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="st">&#39;use strict&#39;</span><span class="op">;</span>
+<span class="im">import</span> React <span class="im">from</span> <span class="st">&#39;react&#39;</span><span class="op">;</span>
+
+<span class="kw">class</span> Button <span class="kw">extends</span> <span class="va">React</span>.<span class="at">Component</span> <span class="op">{</span>
+
+  async <span class="at">do_request</span>(e) <span class="op">{</span>
+    <span class="kw">let</span> query <span class="op">=</span>
+	<span class="st">&#39;https://api.bitcoinaverage.com&#39;</span> <span class="op">+</span>
+	<span class="st">&#39;/ticker/global/USD&#39;</span><span class="op">;</span>
+    <span class="kw">let</span> nonsense <span class="op">=</span> <span class="st">&quot;https://foo.bar&quot;</span><span class="op">;</span>
+    <span class="cf">try</span> <span class="op">{</span>
+      <span class="kw">let</span> pulled <span class="op">=</span> await <span class="at">fetch</span>(query)<span class="op">;</span>
+      <span class="kw">let</span> body <span class="op">=</span> await <span class="va">pulled</span>.<span class="at">json</span>()<span class="op">;</span>
+      <span class="va">console</span>.<span class="at">log</span>(body)<span class="op">;</span>
+
+      await <span class="at">fetch</span>(nonsense)<span class="op">;</span>
+
+    <span class="op">}</span> <span class="cf">catch</span> (e) <span class="op">{</span>
+      <span class="va">console</span>.<span class="at">log</span>(<span class="st">&quot;Exception raised:&quot;</span><span class="op">,</span> e)<span class="op">;</span>
+      <span class="va">console</span>.<span class="at">log</span>(<span class="st">&#39;Logic continued&#39;</span>)<span class="op">;</span>
+    <span class="op">}</span>
+  <span class="op">}</span>
+
+  <span class="at">render</span> () <span class="op">{</span>
+    <span class="kw">let</span> s <span class="op">=</span> <span class="op">{</span><span class="dt">color</span><span class="op">:</span><span class="st">&#39;red&#39;</span><span class="op">};</span>
+    <span class="cf">return</span> (
+      <span class="op">&lt;</span>p style<span class="op">={</span>s<span class="op">}</span>
+	 onClick<span class="op">={</span><span class="kw">this</span>.<span class="va">do_request</span>.<span class="at">bind</span>(<span class="kw">this</span>)<span class="op">}&gt;</span>
+	Click Me
+      <span class="op">&lt;</span><span class="ss">/p&gt;</span>
+<span class="ss">    </span><span class="sc">)</span><span class="ss">;</span>
+<span class="ss">  }</span>
+<span class="ss">};</span>
+<span class="ss">// Remember to put wrap in {}</span>
+<span class="ss">export {Button};</span></code></pre></div>
+<p>and <code>homepage.jsx</code></p>
+<div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="st">&#39;use strict&#39;</span><span class="op">;</span>
+
+<span class="im">import</span> React <span class="im">from</span> <span class="st">&#39;react&#39;</span><span class="op">;</span>
+<span class="im">import</span> ReactDOM <span class="im">from</span> <span class="st">&#39;react-dom&#39;</span><span class="op">;</span>
+<span class="co">// REMEMBER to do {} since button.jsx doesn&#39;t do</span>
+<span class="co">// export default</span>
+<span class="im">import</span> <span class="op">{</span>Button<span class="op">}</span> <span class="im">from</span> <span class="st">&#39;./button&#39;</span><span class="op">;</span>
+
+<span class="kw">class</span> Page <span class="kw">extends</span> <span class="va">React</span>.<span class="at">Component</span> <span class="op">{</span>
+  <span class="at">render</span> () <span class="op">{</span>
+    <span class="cf">return</span> (
+      <span class="op">&lt;</span>div<span class="op">&gt;</span>
+	Hello World
+	<span class="op">&lt;</span>Button/<span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="ss">/div&gt;</span>
+<span class="ss">    </span><span class="sc">)</span><span class="ss">;</span>
+<span class="ss">  }</span>
+<span class="ss">};</span>
+
+<span class="ss">ReactDOM.render</span><span class="sc">(</span><span class="ss">&lt;Page/</span><span class="op">&gt;,</span>
+		<span class="va">document</span>.<span class="at">getElementById</span>(<span class="st">&#39;cont&#39;</span>))<span class="op">;</span></code></pre></div>
+<p>So all this will be compiled correctly and turned into one <code>bundle.js</code> which we can use in this <code>index.html</code></p>
+<div class="sourceCode"><pre class="sourceCode html"><code class="sourceCode html"><span class="dt">&lt;!DOCTYPE </span>html<span class="dt">&gt;</span>
+<span class="kw">&lt;meta</span><span class="ot"> charset=</span><span class="st">&quot;utf-8&quot;</span><span class="kw">&gt;</span>
+<span class="kw">&lt;body&gt;</span>
+  <span class="kw">&lt;div</span><span class="ot"> id=</span><span class="st">&quot;cont&quot;</span><span class="kw">&gt;&lt;/div&gt;</span>
+  <span class="kw">&lt;script</span><span class="ot"> src=</span><span class="st">&quot;bundle.js&quot;</span><span class="kw">&gt;&lt;/script&gt;</span>
+<span class="kw">&lt;/body&gt;</span></code></pre></div>
+<p>and when we click the button we see this in the Chrome dev tools:</p>
+<pre><code>Object {24h_avg: 614.98, ask: 613.72, bid: 613.05, last: 613.56, timestamp: &quot;Tue, 20 Sep 2016 20:09:30 -0000&quot;…}
+bundle.js:23085 GET https://foo.bar/ net::ERR_NAME_NOT_RESOLVED_callee$ @ bundle.js:23085tryCatch @ bundle.js:23242invoke @ bundle.js:23516prototype.(anonymous function) @ bundle.js:23275step @ bundle.js:23872(anonymous function) @ bundle.js:23883
+bundle.js:23095 Exception raised: TypeError: Failed to fetch(…)
+bundle.js:23096 Logic continued</code></pre>
+<p>Yay, things worked.</p>
+<p>See the repo <a href="https://github.com/fxfactorial/react-example-with-async-await-babel">here</a> for the full <code>package.json</code></p>]]></description>
+    <pubDate>Tue, 20 Sep 2016 00:00:00 UT</pubDate>
+    <guid>http://hyegar.com/2016/09/20/webdev-setup/index.html</guid>
+    <dc:creator>Edgar Aroutiounian</dc:creator>
+</item>
+<item>
     <title>Calling a C function from within a binary on OS X/iOS</title>
     <link>http://hyegar.com/2016/08/31/grabbing-function-location/index.html</link>
     <description><![CDATA[<p><em>If you like this and other posts of mine, then reach out to me at edgar.factorial@gmail.com, I’m looking for remote contract work.</em></p>
@@ -698,106 +805,6 @@ aanamlbblmaefofc.org</code></pre>
 <p><img src="/images/company-objc.png" />)</p>]]></description>
     <pubDate>Wed, 02 Mar 2016 00:00:00 UT</pubDate>
     <guid>http://hyegar.com/2016/03/02/emacs-for-objc/index.html</guid>
-    <dc:creator>Edgar Aroutiounian</dc:creator>
-</item>
-<item>
-    <title>Let's make a webkit browser in Objective-C++</title>
-    <link>http://hyegar.com/2016/02/26/lets-make-a-browser/index.html</link>
-    <description><![CDATA[<p>This is a short post showing you how to write a simple <code>OS X</code> based web browser using <code>Objective-C</code> in just 80 lines of code and with no XCode. Its very valuable because making a Cocoa application without XCode is sometimes kind of hard.</p>
-<p>First let’s start with the <code>Makefile</code></p>
-<div class="sourceCode"><pre class="sourceCode makefile"><code class="sourceCode makefile"><span class="dt">opts </span><span class="ch">:=</span><span class="st"> -std=c++11 -fobjc-arc</span>
-<span class="dt">fws </span><span class="ch">:=</span><span class="st"> -framework Cocoa -framework Webkit</span>
-<span class="dt">libs </span><span class="ch">:=</span><span class="st"> -lc++</span>
-<span class="dt">exec </span><span class="ch">:=</span><span class="st"> Prog</span>
-<span class="dt">wrapper </span><span class="ch">:=</span><span class="st"> xcrun -r</span>
-
-<span class="dv">all:</span>
-	<span class="ch">${</span><span class="dt">wrapper</span><span class="ch">}</span> clang++ <span class="ch">${</span><span class="dt">opts</span><span class="ch">}</span> <span class="ch">${</span><span class="dt">fws</span><span class="ch">}</span> <span class="ch">${</span><span class="dt">libs</span><span class="ch">}</span> main.mm -o <span class="ch">${</span><span class="dt">exec</span><span class="ch">}</span>
-	./<span class="ch">${</span><span class="dt">exec</span><span class="ch">}</span></code></pre></div>
-<p>We’re going to use Webkit, ARC, C++11 and immediately run the program.</p>
-<p>Now the program, I’m going to assume you are familiar with Cocoa development, Objective-C.</p>
-<div class="sourceCode"><pre class="sourceCode objectivec"><code class="sourceCode objectivec"><span class="co">/* -*- objc -*- */</span>
-
-<span class="ot">#import &lt;Foundation/Foundation.h&gt;</span>
-<span class="ot">#import &lt;Webkit/WebKit.h&gt;</span>
-<span class="ot">#import &lt;iostream&gt;</span>
-
-<span class="kw">@interface</span> Window_delegate : NSObject &lt;NSWindowDelegate&gt;
-<span class="kw">@end</span>
-
-<span class="kw">@implementation</span> Window_delegate
-
--(<span class="dt">void</span>)windowWillClose:(id)a
-{
-  NSLog(<span class="st">@&quot;Exiting&quot;</span>);
-  exit(<span class="dv">0</span>);
-}
-<span class="kw">@end</span>
-
-<span class="kw">@interface</span> App_delegate : NSObject &lt;NSApplicationDelegate&gt;
-@property (weak, nonatomic) NSWindow *_window;
-<span class="kw">@end</span>
-
-<span class="kw">@implementation</span> App_delegate
-
--(instancetype)init:(NSWindow*)parent_window
-{
-  <span class="kw">if</span> (<span class="kw">self</span> = [<span class="kw">super</span> init]) {
-    <span class="kw">self</span>._window = parent_window;
-    <span class="kw">return</span> <span class="kw">self</span>;
-  }
-  <span class="kw">return</span> nil;
-}
-
--(<span class="dt">void</span>)applicationDidFinishLaunching:(NSNotification *)a_notification
-{
-  WebView *wb = [[WebView alloc] initWithFrame:<span class="kw">self</span>._window.contentView.frame];
-  [<span class="kw">self</span>._window.contentView addSubview:wb];
-  [[wb mainFrame]
-    loadRequest:[NSURLRequest
-		  requestWithURL:[NSURL URLWithString:<span class="st">@&quot;http://hyegar.com&quot;</span>]]];
-}
-
-<span class="kw">@end</span>
-
-<span class="dt">void</span> start_program(<span class="dt">void</span>)
-{
-  NSApplication *app = [NSApplication sharedApplication];
-  <span class="co">// Critical to have this so that you can add menus</span>
-  [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-
-  NSWindow *window =
-    [[NSWindow alloc]
-      initWithContentRect:NSMakeRect(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">800</span>, <span class="dv">600</span>)
-		styleMask: NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask
-		  backing:NSBackingStoreBuffered
-		    defer:NO];
-
-  [window center];
-  window.title = <span class="st">@&quot;Hello World&quot;</span>;
-  [window makeKeyAndOrderFront:window];
-
-  Window_delegate *d = [Window_delegate new];
-  window.delegate = d;
-
-  App_delegate *application_delegate = [[App_delegate alloc] init:window];
-  app.delegate = application_delegate;
-  [app activateIgnoringOtherApps:YES];
-  [app run];
-}
-
-<span class="dt">int</span> main(<span class="dt">int</span> argc, <span class="dt">char</span> **argv)
-{
-  std::cout &lt;&lt; <span class="st">&quot;Starting Application</span><span class="ch">\n</span><span class="st">&quot;</span>;
-  @autoreleasepool {
-    start_program();
-  }
-}</code></pre></div>
-<p>a simple <code>make</code> invocation at the command line will build and run this program which should open up a page to this blog.</p>
-<p>Notice that <code>C++</code> wasn’t really used, I added it here to make this blog post content rich and code sample very reusable for you as a starter post.</p>
-<p>A post in the future will show you how to add <code>NSMenu</code>(s) to this application.</p>]]></description>
-    <pubDate>Fri, 26 Feb 2016 00:00:00 UT</pubDate>
-    <guid>http://hyegar.com/2016/02/26/lets-make-a-browser/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 

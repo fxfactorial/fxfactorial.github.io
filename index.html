@@ -35,13 +35,123 @@
         <li><a href="./archive">Archive</a></li>
         <li><a href="./resume">Resume</a></li>
 	<li><a href="./hackerspace">Hackerspace</a></li>
-
     </ul>
 </nav>
 
     
     <section id="content">
       <article>
+    <header>
+        <h1>
+            <a href="./2016/09/20/webdev-setup/" title="Permalink">
+                ReactJS, JSX, async/await, babel, webpack and getting it all working
+            </a>
+        </h1>
+        <span class="post-date">September 20, 2016</span> in 
+        <span class="post-tags"><a href="./tags/async/">async</a>, <a href="./tags/babel/">babel</a>, <a href="./tags/webpack/">webpack</a>, <a href="./tags/npm/">npm</a>, <a href="./tags/await/">await</a></span>
+    </header>
+    <h3 id="stranger-in-a-strange-land">Stranger in a strange land</h3>
+<p>I’m not primarily a front-end dev so getting everything setup and configured for web development is particularly frustrating for me and most blog posts, tutorials don’t actually give explanations, just copy-pasting blindly tons of little configs.</p>
+<p>Here’s my post that I’m using as reference for me and hopefully for any other non-frontend developer that wants to use the latest and greatest <code>JavaScript</code> like <code>fetch</code>, <code>async</code>, <code>await</code>, <code>React</code>, <code>JSX</code>.</p>
+<h3 id="getting-started-compiling-javascript-to-javascript">Getting started, compiling JavaScript to …JavaScript</h3>
+<p>Because of fragmentation in implementations of the latest <code>JavaScript</code> features, we’ll use <code>babel</code> to compile our <code>JavaScript</code> using the latest features to <code>JavaScript</code> that will work in <code>Chrome</code>, <code>Firefox</code> and <code>Safari</code>.</p>
+<p><code>babel</code> has a concept of <code>plugins</code>. These are like features that you can turn on during the compilation steps and are pretty granular. Often you’ll want a whole bunch of plugins together and that is so common enough that <code>babel</code> has something called <code>presets</code>. You can put that in separate <code>.babelrc</code> file, but I prefer not having so much silly little config files, so you can also put it in your package.json; example:</p>
+<div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode javascript"> <span class="st">&quot;babel&quot;</span><span class="op">:</span> <span class="op">{</span>
+    <span class="st">&quot;presets&quot;</span><span class="op">:</span> [
+      <span class="st">&quot;react&quot;</span><span class="op">,</span>
+      <span class="st">&quot;es2015&quot;</span><span class="op">,</span>
+      <span class="st">&quot;stage-3&quot;</span>
+    ]<span class="op">,</span>
+    <span class="st">&quot;plugins&quot;</span><span class="op">:</span> [
+        <span class="st">&quot;transform-es2015-modules-commonjs&quot;</span><span class="op">,</span>
+        <span class="st">&quot;transform-async-to-generator&quot;</span><span class="op">,</span>
+        <span class="st">&quot;transform-runtime&quot;</span>
+    ]
+  <span class="op">}</span></code></pre></div>
+<p>These are the ones I’m using to compile <code>JSX</code>, use ES6 modules, and <code>async</code>, <code>await</code>.</p>
+<p>So when you invoke <code>babel</code>, it will look at the <code>package.json</code>, see the <code>babel</code> field and turn on those features, so an example invocation is:</p>
+<pre class="shell"><code>$ babel lib --out-dir dist</code></pre>
+<p>which will compile all the code in the <code>lib</code> directory and output the results in the <code>dist</code> directory. This process is the same for <code>node</code>.</p>
+<h3 id="bundling-code">Bundling code</h3>
+<p>Now we have our legal <code>JavaScript</code> for today’s browsers/node. We can bundle up everything as a single <code>JavaScript</code> file using <code>webpack</code>. I previously used <code>browserify</code> but like all things web, apparently its not hot anymore. We can invoke it like so:</p>
+<pre class="shell"><code>$ webpack --progress --colors dist/homepage.js bundle.js</code></pre>
+<p>where <code>bundle.js</code> is the name of the single output file that we’ll get. You can apparently do some kind of config file for webpack, yet another config file, but this is enough for me right now.</p>
+<h3 id="actual-codeproject-with-jsx">Actual code/project with JSX</h3>
+<p>So let’s say we have these two files, one is <code>homepage.jsx</code> and the other is <code>button.jsx</code>. Note that I use a real example of <code>async</code>, <code>await</code>, for a great explanation see <a href="https://zeit.co/blog/async-and-await">here</a>, for <code>OCaml</code> programmers, <code>await</code> is basically <code>&gt;&gt;=</code> or <code>let%lwt</code>.</p>
+<p>This is <code>button.jsx</code></p>
+<div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="st">'use strict'</span><span class="op">;</span>
+<span class="im">import</span> React <span class="im">from</span> <span class="st">'react'</span><span class="op">;</span>
+
+<span class="kw">class</span> Button <span class="kw">extends</span> <span class="va">React</span>.<span class="at">Component</span> <span class="op">{</span>
+
+  async <span class="at">do_request</span>(e) <span class="op">{</span>
+    <span class="kw">let</span> query <span class="op">=</span>
+	<span class="st">'https://api.bitcoinaverage.com'</span> <span class="op">+</span>
+	<span class="st">'/ticker/global/USD'</span><span class="op">;</span>
+    <span class="kw">let</span> nonsense <span class="op">=</span> <span class="st">&quot;https://foo.bar&quot;</span><span class="op">;</span>
+    <span class="cf">try</span> <span class="op">{</span>
+      <span class="kw">let</span> pulled <span class="op">=</span> await <span class="at">fetch</span>(query)<span class="op">;</span>
+      <span class="kw">let</span> body <span class="op">=</span> await <span class="va">pulled</span>.<span class="at">json</span>()<span class="op">;</span>
+      <span class="va">console</span>.<span class="at">log</span>(body)<span class="op">;</span>
+
+      await <span class="at">fetch</span>(nonsense)<span class="op">;</span>
+
+    <span class="op">}</span> <span class="cf">catch</span> (e) <span class="op">{</span>
+      <span class="va">console</span>.<span class="at">log</span>(<span class="st">&quot;Exception raised:&quot;</span><span class="op">,</span> e)<span class="op">;</span>
+      <span class="va">console</span>.<span class="at">log</span>(<span class="st">'Logic continued'</span>)<span class="op">;</span>
+    <span class="op">}</span>
+  <span class="op">}</span>
+
+  <span class="at">render</span> () <span class="op">{</span>
+    <span class="kw">let</span> s <span class="op">=</span> <span class="op">{</span><span class="dt">color</span><span class="op">:</span><span class="st">'red'</span><span class="op">};</span>
+    <span class="cf">return</span> (
+      <span class="op">&lt;</span>p style<span class="op">={</span>s<span class="op">}</span>
+	 onClick<span class="op">={</span><span class="kw">this</span>.<span class="va">do_request</span>.<span class="at">bind</span>(<span class="kw">this</span>)<span class="op">}&gt;</span>
+	Click Me
+      <span class="op">&lt;</span><span class="ss">/p&gt;</span>
+<span class="ss">    </span><span class="sc">)</span><span class="ss">;</span>
+<span class="ss">  }</span>
+<span class="ss">};</span>
+<span class="ss">// Remember to put wrap in {}</span>
+<span class="ss">export {Button};</span></code></pre></div>
+<p>and <code>homepage.jsx</code></p>
+<div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="st">'use strict'</span><span class="op">;</span>
+
+<span class="im">import</span> React <span class="im">from</span> <span class="st">'react'</span><span class="op">;</span>
+<span class="im">import</span> ReactDOM <span class="im">from</span> <span class="st">'react-dom'</span><span class="op">;</span>
+<span class="co">// REMEMBER to do {} since button.jsx doesn't do</span>
+<span class="co">// export default</span>
+<span class="im">import</span> <span class="op">{</span>Button<span class="op">}</span> <span class="im">from</span> <span class="st">'./button'</span><span class="op">;</span>
+
+<span class="kw">class</span> Page <span class="kw">extends</span> <span class="va">React</span>.<span class="at">Component</span> <span class="op">{</span>
+  <span class="at">render</span> () <span class="op">{</span>
+    <span class="cf">return</span> (
+      <span class="op">&lt;</span>div<span class="op">&gt;</span>
+	Hello World
+	<span class="op">&lt;</span>Button/<span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="ss">/div&gt;</span>
+<span class="ss">    </span><span class="sc">)</span><span class="ss">;</span>
+<span class="ss">  }</span>
+<span class="ss">};</span>
+
+<span class="ss">ReactDOM.render</span><span class="sc">(</span><span class="ss">&lt;Page/</span><span class="op">&gt;,</span>
+		<span class="va">document</span>.<span class="at">getElementById</span>(<span class="st">'cont'</span>))<span class="op">;</span></code></pre></div>
+<p>So all this will be compiled correctly and turned into one <code>bundle.js</code> which we can use in this <code>index.html</code></p>
+<div class="sourceCode"><pre class="sourceCode html"><code class="sourceCode html"><span class="dt">&lt;!DOCTYPE </span>html<span class="dt">&gt;</span>
+<span class="kw">&lt;meta</span><span class="ot"> charset=</span><span class="st">&quot;utf-8&quot;</span><span class="kw">&gt;</span>
+<span class="kw">&lt;body&gt;</span>
+  <span class="kw">&lt;div</span><span class="ot"> id=</span><span class="st">&quot;cont&quot;</span><span class="kw">&gt;&lt;/div&gt;</span>
+  <span class="kw">&lt;script</span><span class="ot"> src=</span><span class="st">&quot;bundle.js&quot;</span><span class="kw">&gt;&lt;/script&gt;</span>
+<span class="kw">&lt;/body&gt;</span></code></pre></div>
+<p>and when we click the button we see this in the Chrome dev tools:</p>
+<pre><code>Object {24h_avg: 614.98, ask: 613.72, bid: 613.05, last: 613.56, timestamp: &quot;Tue, 20 Sep 2016 20:09:30 -0000&quot;…}
+bundle.js:23085 GET https://foo.bar/ net::ERR_NAME_NOT_RESOLVED_callee$ @ bundle.js:23085tryCatch @ bundle.js:23242invoke @ bundle.js:23516prototype.(anonymous function) @ bundle.js:23275step @ bundle.js:23872(anonymous function) @ bundle.js:23883
+bundle.js:23095 Exception raised: TypeError: Failed to fetch(…)
+bundle.js:23096 Logic continued</code></pre>
+<p>Yay, things worked.</p>
+<p>See the repo <a href="https://github.com/fxfactorial/react-example-with-async-await-babel">here</a> for the full <code>package.json</code></p>
+</article>
+<article>
     <header>
         <h1>
             <a href="./2016/08/31/grabbing-function-location/" title="Permalink">
@@ -471,48 +581,6 @@ $ /T<span class="kw">.</span>js</code></pre></div>
 <p>And we test it by starting up <code>./TEST_CASE</code>, opening <code>htop</code> and finding <code>TEST_CASE</code> (hit <code>t</code> in htop to see a tree based process view) and running <code>socat STDIN TCP:localhost:&lt;some_port&gt;</code>, where <code>&lt;some_port&gt;</code> is a number in our list of ports (remember <code>[2000; 2001; 2002; 2003; 2004]</code>).</p>
 <p>Thus we see in <code>htop</code> the CPU % utilization move for each of the threads of <code>TEST_CASE</code>.</p>
 <p>Success! Real system threads.</p>
-</article>
-<article>
-    <header>
-        <h1>
-            <a href="./2016/03/22/simple-timeouts/" title="Permalink">
-                Simple timeout usage
-            </a>
-        </h1>
-        <span class="post-date">March 22, 2016</span> in 
-        <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/unix/">unix</a>, <a href="./tags/timeout/">timeout</a></span>
-    </header>
-    <p>I wanted to use a timeout in OCaml for some shell coding but I didn’t want to introduce a big dependency on <code>Lwt</code>. After some googling I found <a href="https://www.reddit.com/r/ocaml/comments/3qapbv/question_about_writing_a_timeout_function_and_the/">this</a></p>
-<p>Here’s my take on the timeout function, basically its the same but I push everything into the timeout function itself and use labeled args along a callback for when the timeout goes off.</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> timeout ?(on_timeout = <span class="kw">fun</span> () -&gt; ()) ~arg ~timeout ~default_value f =
-  <span class="kw">let</span> <span class="ot">module</span> Wrapper = <span class="kw">struct</span> <span class="kw">exception</span> <span class="dt">Timeout</span> <span class="kw">end</span> <span class="kw">in</span>
-  <span class="kw">let</span> sigalrm_handler = Sys<span class="kw">.</span><span class="dt">Signal_handle</span> (<span class="kw">fun</span> _ -&gt; raise Wrapper<span class="kw">.</span><span class="dt">Timeout</span>) <span class="kw">in</span>
-  <span class="kw">let</span> old_behavior = Sys<span class="kw">.</span>signal Sys<span class="kw">.</span>sigalrm sigalrm_handler <span class="kw">in</span>
-  <span class="kw">let</span> reset_sigalrm () = Sys<span class="kw">.</span>set_signal Sys<span class="kw">.</span>sigalrm old_behavior <span class="kw">in</span>
-  ignore (Unix<span class="kw">.</span>alarm timeout);
-  <span class="kw">try</span>
-    <span class="kw">let</span> res = f arg <span class="kw">in</span>
-    reset_sigalrm ();
-    res
-  <span class="kw">with</span> exc -&gt;
-    reset_sigalrm ();
-    <span class="kw">if</span> exc = Wrapper<span class="kw">.</span><span class="dt">Timeout</span>
-    <span class="kw">then</span> (on_timeout (); default_value)
-    <span class="kw">else</span> raise exc</code></pre></div>
-<p>and you can can use it like so:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">Sys<span class="kw">.</span>command
-|&gt; timeout 
-   ~arg:<span class="st">&quot;sleep 3&quot;</span> 
-   ~timeout:<span class="dv">2</span> 
-   ~default_value:(<span class="dv">-1</span>) 
-   ~on_timeout:(<span class="kw">fun</span> () -&gt; print_endline <span class="st">&quot;func timed out&quot;</span>)</code></pre></div>
-<p>You might notice that your wrapped function only gets one arg, so how can we use this timeout wrapper on functions that take more than one argument? By currying and using a dummy arg of unit.</p>
-<p>Example:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> () =
-  <span class="kw">let</span> partialed first second third () = first + second + third <span class="kw">in</span>
-  timeout ~arg:() ~timeout:<span class="dv">4</span> ~default_value:(<span class="dv">-1</span>) (partialed <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>)
-  |&gt; ignore</code></pre></div>
-<p>I’ve added this to my <code>podge</code> library found <a href="http://github.com/fxfactorial/podge">here</a>, a collection of useful utility functions.</p>
 </article>
 
 
