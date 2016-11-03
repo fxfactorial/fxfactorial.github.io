@@ -7,8 +7,118 @@
         <description><![CDATA[Personal blog of Edgar Aroutiounian]]></description>
         <atom:link href="http://hyegar.com/atom.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Tue, 20 Sep 2016 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Thu, 03 Nov 2016 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Using JavaScriptCore with examples</title>
+    <link>http://hyegar.com/2016/11/03/using-javascriptcore/index.html</link>
+    <description><![CDATA[<h2 id="motivation">Motivation</h2>
+<p>I like mixing languages and I especially like <code>OCaml</code>, <code>JavaScript</code>. Lately I’ve been writing <code>OCaml</code> bindings to <code>JavaScriptCore</code>, JSC is what underpins Safari both iOS and desktop variants, and ReactNative. When you’re writing bindings, you kinda need to know the <code>C/C++</code> library that you’re binding to.</p>
+<h2 id="example">Example</h2>
+<p>We’re going to provide a pretty meaty example, we’ll make a custom object in C++ code, then we’ll use it from a <code>JavaScript</code> script. Imagine we want to expose a <code>File</code> like object, JS the language itself has no notion of a File, so it will need support from the C/C++ level; you can imagine this as the objects that say <code>[native code]</code>.</p>
+<p>Here’s the code, afterwards is a detailed breakdown (The <code>R</code> C++ feature confuses the syntax highlighter)</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="ot">#include &lt;string&gt;</span>
+<span class="ot">#include &lt;iostream&gt;</span>
+<span class="ot">#include &lt;JavaScriptCore/JavaScriptCore.h&gt;</span>
+
+std::string getcwd_string(<span class="dt">void</span>)
+{
+   <span class="dt">char</span> buff[PATH_MAX];
+   getcwd(buff, PATH_MAX);
+   std::string cwd(buff);
+   <span class="kw">return</span> cwd;
+}
+
+<span class="dt">const</span> <span class="dt">char</span>*
+jsvalue_to_utf8_string(JSGlobalContextRef ctx, JSValueRef v)
+{
+  JSStringRef valueAsString = JSValueToStringCopy(ctx, v, NULL);
+  size_t jsSize = JSStringGetMaximumUTF8CStringSize(valueAsString);
+  <span class="dt">char</span>* jsBuffer = (<span class="dt">char</span>*)malloc(jsSize);
+  JSStringGetUTF8CString(valueAsString, jsBuffer, jsSize);
+  JSStringRelease(valueAsString);
+  <span class="kw">return</span> jsBuffer;
+}
+
+<span class="dt">void</span> run_example(<span class="dt">void</span>)
+{
+  JSClassDefinition definition = kJSClassDefinitionEmpty;
+  definition.className = <span class="st">&quot;File&quot;</span>;
+  definition.callAsConstructor = [](<span class="kw">auto</span> ctx,
+				    <span class="kw">auto</span> object,
+				    <span class="kw">auto</span> argumentCount,
+				    <span class="kw">auto</span> arguments[],
+				    <span class="kw">auto</span> *exception) -&gt; JSObjectRef {
+    <span class="kw">auto</span> file_name =
+    JSValueMakeString(ctx, JSStringCreateWithUTF8CString(getcwd_string().c_str()));
+    <span class="kw">auto</span> prop_name = JSStringCreateWithUTF8CString(<span class="st">&quot;cwdName&quot;</span>);
+    <span class="kw">auto</span> example_obj = JSObjectMake(ctx, <span class="kw">nullptr</span>, <span class="kw">nullptr</span>);
+
+    JSObjectSetProperty(ctx,
+			example_obj,
+			prop_name,
+			file_name,
+			kJSPropertyAttributeNone,
+			<span class="kw">nullptr</span>);
+    <span class="kw">return</span> example_obj;
+  };
+
+  <span class="kw">auto</span> ctx = JSGlobalContextCreate(<span class="kw">nullptr</span>);
+  <span class="kw">auto</span> js_example_class = JSClassCreate(&amp;definition);
+  <span class="kw">auto</span> example_obj = JSObjectMake(ctx, js_example_class, <span class="kw">nullptr</span>);
+  <span class="co">// auto called_result = JSObjectCallAsConstructor(ctx, example_obj, 0, nullptr, nullptr);</span>
+  <span class="co">// auto property_check =</span>
+  <span class="co">//   JSObjectGetProperty(ctx,</span>
+  <span class="co">// 			called_result,</span>
+  <span class="co">// 			JSStringCreateWithUTF8CString(&quot;cwdName&quot;),</span>
+  <span class="co">// 			nullptr);</span>
+
+  <span class="co">// std::cout &lt;&lt; jsvalue_to_utf8_string(ctx, property_check) &lt;&lt; std::endl;</span>
+  std::string code_to_eval = <span class="st">R&quot;(</span>
+<span class="st">const example_code = new File;</span>
+<span class="st">example_code.cwdName;</span>
+<span class="st">)&quot;;</span>
+<span class="st">  JSValueRef exn;</span>
+
+<span class="st">  auto global_object = JSContextGetGlobalObject(ctx);</span>
+<span class="st">  JSObjectSetProperty(ctx,</span>
+<span class="st">		      global_object,</span>
+<span class="st">		      JSStringCreateWithUTF8CString(&quot;File&quot;),</span>
+<span class="st">		      example_obj,</span>
+<span class="st">		      kJSPropertyAttributeNone,</span>
+<span class="st">		      nullptr);</span>
+
+<span class="st">  auto sanity_check =</span>
+<span class="st">    JSEvaluateScript(ctx,</span>
+<span class="st">		     JSStringCreateWithUTF8CString(code_to_eval.c_str()),</span>
+<span class="st">		     nullptr,</span>
+<span class="st">		     nullptr,</span>
+<span class="st">		     1,</span>
+<span class="st">		     &amp;exn);</span>
+<span class="st">  if (exn)</span>
+<span class="st">    std::cout &lt;&lt; jsvalue_to_utf8_string(ctx, exn) &lt;&lt; std::endl;</span>
+
+<span class="st">  std::cout &lt;&lt; jsvalue_to_utf8_string(ctx, sanity_check) &lt;&lt; std::endl;</span>
+<span class="st">}</span>
+
+<span class="st">int main(int argc, char **argv)</span>
+<span class="st">{</span>
+<span class="st">  run_example();</span>
+<span class="st">  return 0;</span>
+<span class="st">}</span></code></pre></div>
+<p>compile with, should work just fine on Linux as well, but using:</p>
+<p><code>libjavascriptcoregtk-4.0</code> instead of the <code>-framework JavaScriptCore</code></p>
+<pre class="shell"><code>$ clang++ -framework JavaScriptCore -std=c++14 jsc_examples.cpp -oF </code></pre>
+<h2 id="explanations">Explanations</h2>
+<p>The real meat of the code starts at <code>run_example</code>. We start by creating a <code>JSClassDefinition</code>, this creates a template that lets us control all the behavior of our custom object. Then we provide an implementation for what code ought to be run when our custom object will created with <code>new</code>, notice using <code>C++14</code>’s nice ability to use <code>auto</code> for the parameter names, also notice that we explicitly have to give back the return type of <code>JSObjectRef</code>, you get a bit spoiled by the <code>OCaml</code> type system. Then we create a <code>JavaScript</code> object, set the property <code>cwdName</code> and return that new object from the constructor call.</p>
+<p>Then we need to make a global context, this is like the environment that your JavaScript runs in and we grab the global object out of it, like <code>window</code> in the browser. (The commented out code is if you wanted to call the constructor and get the result directly in code)</p>
+<p>We set the class object as a property to the global, aka like doing <code>window.d3 = //d3's code</code>. Then we evaluate a script, some fun trival all your <code>&lt;script&gt;</code> tags actually have a return value, its the last value.</p>
+<p>Tada.</p>
+<p>FWIW I’m doing the OCaml bindings <a href="https://github.com/fxfactorial/ocaml-javascriptcore">here</a> github stars appreciated :)</p>]]></description>
+    <pubDate>Thu, 03 Nov 2016 00:00:00 UT</pubDate>
+    <guid>http://hyegar.com/2016/11/03/using-javascriptcore/index.html</guid>
+    <dc:creator>Edgar Aroutiounian</dc:creator>
+</item>
+<item>
     <title>ReactJS, JSX, async/await, babel, webpack and getting it all working</title>
     <link>http://hyegar.com/2016/09/20/webdev-setup/index.html</link>
     <description><![CDATA[<h3 id="stranger-in-a-strange-land">Stranger in a strange land</h3>
@@ -746,65 +856,6 @@ aanamlbblmaefofc.org</code></pre>
 <p>Yay. Be sure to check my archives for many more quick and useful posts on OCaml.</p>]]></description>
     <pubDate>Sun, 06 Mar 2016 00:00:00 UT</pubDate>
     <guid>http://hyegar.com/2016/03/06/get-date-string-in-ocaml/index.html</guid>
-    <dc:creator>Edgar Aroutiounian</dc:creator>
-</item>
-<item>
-    <title>Getting objective-c code completion on emacs</title>
-    <link>http://hyegar.com/2016/03/02/emacs-for-objc/index.html</link>
-    <description><![CDATA[<p>To get full code completion for objective-c in emacs you need to:</p>
-<ol style="list-style-type: decimal">
-<li>Have <code>company-mode</code> installed, its a generic backend for code completion in emacs and the community loves it.</li>
-<li>Add some elisp to your <code>init.el</code>.</li>
-</ol>
-<p>I assume you have <code>company-mode</code> already installed, this will provide <code>company-clang</code> as well which is what will provide completion.</p>
-<h1 id="some-elisp">Some elisp</h1>
-<p>Here is my elisp that I use, you’ll notice that I also get codecompletion on Linux for objective-c, you can too by following my other blog <a href="http://hyegar.com/2016/02/22/ios-cross-compiler/">post</a>.</p>
-<pre class="common-lisp"><code>(defvar osx-base-path
-  &quot;/Applications/Xcode.app/Contents/Developer/Platforms/&quot;)
-
-(if (equal system-type &#39;darwin)
-    ; Only the then clause needs a progn, else part doesn&#39;t need it.
-    (progn
-      ;; Forgot what this was for..think some os x issues. 
-      (setenv &quot;LC_CTYPE&quot; &quot;UTF-8&quot;)
-      (setq mac-option-modifier &#39;super
-	    flycheck-make-executable &quot;/usr/local/bin/make&quot;
-	    company-clang-executable
-	    (concat &quot;/Applications/Xcode.app/Contents/Developer/&quot;
-		    &quot;Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++&quot;)
-	    company-clang-arguments
-	    `(&quot;-std=c++11&quot;
-	      &quot;-isysroot&quot;
-	      ; If coding for iOS
-	      ;; (concat osx-base-path
-	      ;; &quot;iPhoneOS.platform/Developer/SDKs/iPhoneOS9.2.sdk&quot;)
-	      ; If coding for OS X
-	      ,(concat osx-base-path
-		       &quot;MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk&quot;)
-	      &quot;-I&quot; &quot;/usr/include/c++/4.2.1&quot;
-	      &quot;-I&quot; &quot;/usr/local/lib/ocaml/&quot;)
-	    flycheck-c/c++-clang-executable
-	    (concat &quot;/Applications/Xcode.app/Contents/Developer/&quot;
-		    &quot;Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++&quot;)
-	    mac-command-modifier &#39;meta))
-  (set-face-attribute &#39;default nil :height 110)
-  (setq company-clang-executable &quot;armv7-apple-darwin11-clang&quot;
-	company-clang-arguments &#39;(&quot;-std=c++11&quot;
-				  &quot;-isysroot&quot;
-				  &quot;/home/gar/.nix-profile/iPhoneOS9.2.sdk&quot;
-				  &quot;-I/usr/local/lib/ocaml/&quot;)))
-
-(setq company-backends &#39;(company-clang
-			 company-capf
-			 company-c-headers
-			 company-jedi))
-(add-to-list &#39;auto-mode-alist &#39;(&quot;\\.mm\\&#39;&quot; . objc-mode))
-(global-set-key (kbd &quot;M-/&quot;) &#39;company-complete)</code></pre>
-<p>Some of that is alittle opinionated and but the <code>company-clang-arguments</code> is the most important part really. Update the SDKs file name ending as this post becomes outdated.</p>
-<p>Here’s what you should expect to see:</p>
-<p><img src="/images/company-objc.png" />)</p>]]></description>
-    <pubDate>Wed, 02 Mar 2016 00:00:00 UT</pubDate>
-    <guid>http://hyegar.com/2016/03/02/emacs-for-objc/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 
