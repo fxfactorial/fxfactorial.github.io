@@ -42,6 +42,75 @@
       <article>
     <header>
         <h1>
+            <a href="./2016/12/23/async-promises-node/" title="Permalink">
+                node's async, await, Promises.
+            </a>
+        </h1>
+        <span class="post-date">December 23, 2016</span> in 
+        <span class="post-tags"><a href="./tags/async/">async</a>, <a href="./tags/lwt/">lwt</a>, <a href="./tags/await/">await</a>, <a href="./tags/async/">async</a>, <a href="./tags/promises/">promises</a></span>
+    </header>
+    <p>While studying for interviews I’m talking breaks by working on <a href="https://github.com/fxfactorial/silicondzor">silicondzor.com</a></p>
+<p>This is giving me some real web dev experience and I’m using the latest and greatest features of <code>JavaScript</code> and <code>node</code>.</p>
+<p>One thing that I’m really liking in modern <code>JavaScript</code> is the <code>async</code> story, it reminds me a lot of <code>OCaml</code> and both are somewhat converging, i.e <code>ES6</code>’s introduction of Promises which are basically <code>'a Lwt.t</code>, and Lwt renaming <code>Lwt.t</code> into Promises in <code>2.7.0</code>.</p>
+<p>Here’s like my conceptual cheatsheet about using <code>Promises</code> from scratch, converting an callback API into a <code>Promises</code> API and then taking it to the next step with <code>async</code>, <code>await</code>.</p>
+<h1 id="basic-callback-apis">Basic callback APIs</h1>
+<p><code>node</code> uses an event based programming paradigm and this is reflected in basically all server side code, ie the trailing callback argument to asynchronously call once the task completes.</p>
+<p>Let’s simulate it with this function</p>
+<div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="co">// Plain CB based API</span>
+<span class="kw">const</span> test_func <span class="op">=</span> (item<span class="op">,</span> cb) <span class="op">=&gt;</span> <span class="op">{</span>
+  <span class="at">setTimeout</span>(() <span class="op">=&gt;</span> <span class="op">{</span>
+    <span class="cf">if</span> (item <span class="op">&lt;</span> <span class="dv">5</span>) <span class="at">cb</span>(<span class="kw">null</span><span class="op">,</span> <span class="st">'Success'</span>)<span class="op">;</span>
+    <span class="cf">else</span> <span class="at">cb</span>(<span class="kw">new</span> <span class="at">Error</span>(<span class="st">'Oops'</span>)<span class="op">,</span> <span class="kw">null</span>)<span class="op">;</span>
+  <span class="op">},</span> <span class="dv">3000</span>)<span class="op">;</span>
+<span class="op">};</span>
+
+<span class="at">test_func</span>(<span class="dv">3</span><span class="op">,</span> (err<span class="op">,</span> success) <span class="op">=&gt;</span> <span class="va">console</span>.<span class="at">log</span>(success))<span class="op">;</span></code></pre></div>
+<p>This models typical <code>node</code> code, the callback being called <code>three</code> seconds after execution of <code>test_func</code></p>
+<p>This seems pretty fine for this example but once you have logic that is dependent on the success of one callback API after another then you start to have a difficult to reason about triangle of callbacks on the screen.</p>
+<h1 id="promises">Promises</h1>
+<p><code>ES6</code> introduces <code>Promises</code> and these are quite convienent, think of a Promise as being a box which will have a value in it sometime later.</p>
+<p>We can turn any callback based API into a Promises based one.</p>
+<div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="co">// Promises based</span>
+<span class="kw">const</span> test_func_promise <span class="op">=</span> item <span class="op">=&gt;</span> <span class="op">{</span>
+  <span class="cf">return</span> <span class="kw">new</span> <span class="at">Promise</span>((accept<span class="op">,</span> reject) <span class="op">=&gt;</span> <span class="op">{</span>
+    <span class="at">test_func</span>(item<span class="op">,</span> (err<span class="op">,</span> success) <span class="op">=&gt;</span> <span class="op">{</span>
+      <span class="cf">if</span> (err) <span class="at">reject</span>(err)<span class="op">;</span>
+      <span class="cf">else</span> <span class="at">accept</span>(success)<span class="op">;</span>
+    <span class="op">}</span>)<span class="op">;</span>
+  <span class="op">}</span>)<span class="op">;</span>
+<span class="op">};</span>
+
+<span class="at">test_func_promise</span>(<span class="dv">2</span>)
+.<span class="at">then</span>(item <span class="op">=&gt;</span> <span class="op">{</span> <span class="va">console</span>.<span class="at">log</span>(<span class="st">'Sucess!!'</span><span class="op">,</span> item)<span class="op">;</span> <span class="op">}</span>)
+.<span class="at">catch</span>(err <span class="op">=&gt;</span> <span class="va">console</span>.<span class="at">error</span>(err))<span class="op">;</span></code></pre></div>
+<p>When you create a new <code>Promise</code> you need to provide it with two function, one to be called when there’s a success and when the Promise should fail. Hence when calling <code>test_func_promise</code> returns a Promise, not the value <code>'Success'</code>. Also if you use the plain Promises approach be sure to include a <code>.catch</code> call.</p>
+<p>This is nicer than the original callback API approach, but now all your success or failure logic and everything following that effectively has to be all in either <code>.then</code> or <code>.catch</code> and that’s a bit awkward still.</p>
+<h1 id="asyncawait">async/await</h1>
+<p><code>ES7</code> introduced <code>async</code>, <code>await</code> where I basically think of the latter as <code>&gt;&gt;=</code> and <code>async</code> as sort of like <code>&gt;|=</code>. With <code>async</code>, <code>await</code> we can call <code>Promises</code> based code as if it was synchronous code.</p>
+<div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">const</span> test_func_async_example <span class="op">=</span> <span class="at">async</span> (item) <span class="op">=&gt;</span> <span class="op">{</span>
+  <span class="cf">try</span> <span class="op">{</span>
+    <span class="kw">const</span> result <span class="op">=</span> await <span class="at">test_func_promise</span>(item)<span class="op">;</span>
+    <span class="va">console</span>.<span class="at">log</span>(<span class="vs">`Yay: </span><span class="sc">${</span>result<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span>
+  <span class="op">}</span> <span class="cf">catch</span>(e) <span class="op">{</span>
+    <span class="va">console</span>.<span class="at">error</span>(<span class="vs">`Messed up: </span><span class="sc">${</span>e<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span>
+  <span class="op">}</span>
+<span class="op">};</span>
+
+<span class="at">test_func_async_example</span>(<span class="dv">6</span>)<span class="op">;</span>
+<span class="at">test_func_async_example</span>(<span class="dv">3</span>)<span class="op">;</span></code></pre></div>
+<p>First notice how whatever function we use <code>await</code> inside of, we need to tag that function with <code>async</code> and now this function returns a <code>Promise</code></p>
+<p>Now when we call <code>test_func_promises</code> with <code>await</code> prefixed, then we get the value that the <code>Promise</code> resolved. Also whatever the <code>reject</code> condition of the <code>Promise</code> was then becomes the exception of the <code>catch</code> following the <code>await</code> usage.</p>
+<h1 id="summary">Summary</h1>
+<p><code>async</code>, <code>await</code> are very powerful features of <code>ES7</code>, <code>Promises</code> are from <code>ES6</code>. Not every <code>JavaScript</code> engine supports <code>ES7</code> so you’ll have to use <code>babel</code> to compile your <code>async</code>, <code>await</code> to runnable code; basically turns the <code>async</code>, <code>await</code> to generators (also an amazing topic).</p>
+<p>On newer versions of node, I’m using <code>v7.3.0</code>, you can turn on features from the future with command line arguments. Check all of them with:</p>
+<pre><code>$ node --v8-options | less</code></pre>
+<p>I’m turning on native <code>async</code>, <code>await</code> with <code>--harmony_async_await</code>, so my final invocation is:</p>
+<pre><code>$ node --harmony_async_await test.js</code></pre>
+<p>You can get all the code as one script <a href="https://gist.github.com/fxfactorial/60edd7c3c8948754d21dbc9f517e37ee">here</a></p>
+</article>
+<article>
+    <header>
+        <h1>
             <a href="./2016/11/03/using-javascriptcore/" title="Permalink">
                 Using JavaScriptCore with examples
             </a>
@@ -145,8 +214,7 @@ jsvalue_to_utf8_string(JSGlobalContextRef ctx, JSValueRef v)
 <span class="st">}</span></code></pre></div>
 <p>compile with, should work just fine on Linux as well, but using:</p>
 <p><code>libjavascriptcoregtk-4.0</code> instead of the <code>-framework JavaScriptCore</code></p>
-<pre class="shell"><code>$ clang++ -framework JavaScriptCore -std=c++14 jsc_examples.cpp -o F</code></pre>
-<p>When you run <code>./F</code>, then it should print out the current working directory.</p>
+<pre class="shell"><code>$ clang++ -framework JavaScriptCore -std=c++14 jsc_examples.cpp -oF </code></pre>
 <h2 id="explanations">Explanations</h2>
 <p>The real meat of the code starts at <code>run_example</code>. We start by creating a <code>JSClassDefinition</code>, this creates a template that lets us control all the behavior of our custom object. Then we provide an implementation for what code ought to be run when our custom object will created with <code>new</code>, notice using <code>C++14</code>’s nice ability to use <code>auto</code> for the parameter names, also notice that we explicitly have to give back the return type of <code>JSObjectRef</code>, you get a bit spoiled by the <code>OCaml</code> type system. Then we create a <code>JavaScript</code> object, set the property <code>cwdName</code> and return that new object from the constructor call.</p>
 <p>Then we need to make a global context, this is like the environment that your JavaScript runs in and we grab the global object out of it, like <code>window</code> in the browser. (The commented out code is if you wanted to call the constructor and get the result directly in code)</p>
@@ -474,144 +542,6 @@ Did say: Hello World</code></pre>
   in_order_traversal root
   print_newline ();
   print_spiral root</code></pre></div>
-</article>
-<article>
-    <header>
-        <h1>
-            <a href="./2016/07/17/js-of-ocaml-usage/" title="Permalink">
-                Intermediate js_of_ocaml
-            </a>
-        </h1>
-        <span class="post-date">July 17, 2016</span> in 
-        <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/js_of_ocaml/">js_of_ocaml</a>, <a href="./tags/javascript/">javascript</a>, <a href="./tags/ppx/">ppx</a>, <a href="./tags/depth_first_search/">depth_first_search</a></span>
-    </header>
-    <p>This post is mainly aimed at intermediate level users of <code>js_of_ocaml</code>, the <code>OCaml</code> to <code>JavaScript</code> compiler and at improving the sad state of documentation for <code>js_of_ocaml</code>. (Plus I’m interviewing for jobs, hire me!, and wanted to use both OCaml, JavaScript while preparing for interviews)</p>
-<h1 id="ocaml-typing-of-javascript-uses-ppx">OCaml typing of JavaScript (Uses PPX)</h1>
-<p>Say we want to express some algorithms in OCaml but using JavaScript as the runtime execution language/environment. Let’s start with our main data structure, a tree node.</p>
-<div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">function</span> <span class="at">TreeNode</span>(value) <span class="op">{</span>
-  <span class="kw">this</span>.<span class="at">value</span> <span class="op">=</span> value<span class="op">;</span>
-  <span class="kw">this</span>.<span class="at">left</span> <span class="op">=</span> <span class="kw">this</span>.<span class="at">right</span> <span class="op">=</span> <span class="kw">null</span><span class="op">;</span>
-<span class="op">}</span></code></pre></div>
-<p>Our OCaml version will be:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">class</span> <span class="kw">type</span> ['data] tree_node = <span class="kw">object</span>
-  <span class="kw">method</span> value : 'data Js<span class="kw">.</span>prop
-  <span class="kw">method</span> left : 'data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>prop
-  <span class="kw">method</span> right : 'data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>prop
-<span class="kw">end</span></code></pre></div>
-<p>Note that there is a small thing about typing the nullability of the left, right fields, I will return to this at the end of the blog post and it was done for convenience.</p>
-<p>So explanations:</p>
-<ol start="0" style="list-style-type: decimal">
-<li>We are creating a <code>class type</code>, this just describes the object, how we describe it is key.</li>
-<li>The <code>'data</code> is a type variable and lets us use any kind of type for the value in this node.</li>
-<li>OCaml objects only expose methods to the outside world, so properties need <code>Js.prop</code>, this lets us read and write to this field. We can control it to be read only by instead using <code>Js.readonly_prop</code> or even write only with <code>Js.writeonly_prop</code>.</li>
-<li>Methods <code>left</code>, <code>right</code> are also properties. Read the signature from right to left, aka <code>left</code> is a JavaScript read or write property which has a JavaScript object typed as <code>tree_node</code> and parameterized with the <code>'data</code> type variable. Aka tree_nodes of <code>string</code> or <code>int</code> or whatever the type of <code>'data</code> is.</li>
-</ol>
-<p>Now we need to provide a way to make this object.</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> __hidden__ =
-  Js<span class="kw">.</span>Unsafe<span class="kw">.</span>pure_js_expr <span class="st">&quot;function TreeNode(value) {</span><span class="ch">\</span>
-<span class="st">                          this.value = value; </span><span class="ch">\</span>
-<span class="st">                          this.left = this.right = null;}&quot;</span></code></pre></div>
-<p>This is the JavaScript we’ll be using, essentially. Do note that the field names match up, this is important. Now we provide a constructor function:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> node : ('data -&gt; 'data tree_node Js<span class="kw">.</span>t) Js<span class="kw">.</span>constr = __hidden__</code></pre></div>
-<p>This <code>node</code> constructor says that its a special JavaScript constructor that will invoke <code>__hidden__</code> with <code>new</code> and such that it expects one argument. An example is:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> root = <span class="kw">new</span>%js node <span class="st">&quot;Hello&quot;</span></code></pre></div>
-<p>We can also make specialized constructors,</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> node_from_int : (<span class="dt">int</span> -&gt; <span class="dt">int</span> tree_node Js<span class="kw">.</span>t) Js<span class="kw">.</span>constr = __hidden__</code></pre></div>
-<p>and a simple usage:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> () =
-  <span class="kw">let</span> root = <span class="kw">new</span>%js node <span class="st">&quot;Hello&quot;</span> <span class="kw">in</span>
-  root##.left := <span class="kw">new</span>%js node <span class="st">&quot;Left side&quot;</span>;
-  root##.left##.left := <span class="kw">new</span>%js node <span class="st">&quot;Grand Kid&quot;</span>;
-
-  <span class="co">(* Note that this just prints the raw object representation of the</span>
-<span class="co">  field value *)</span>
-  Firebug<span class="kw">.</span>console##log root##.left##.left##.value;
-
-  <span class="co">(* This shows the value as expected *)</span>
-  print_endline root##.left##.left##.value</code></pre></div>
-<p>You can compile and run it on node with: (Assuming file name is <code>trees_in_js.ml</code>)</p>
-<pre class="shell"><code>$ ocamlfind ocamlc -package js_of_ocaml.ppx -linkpkg trees_in_js.ml
-$ js_of_ocaml a.out -o T.js
-$ node T.js</code></pre>
-<p>And you should get something like the following printed out:</p>
-<pre class="shell"><code>h { t: 0, c: 'Grand Kid', l: 9 }
-Grand Kid</code></pre>
-<h1 id="depth-first-search-level-order-traversal-complete-examples">Depth First Search, Level order traversal complete examples</h1>
-<p>Now here’s an example of a preorder depth first search and level order traversal.</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">class</span> <span class="kw">type</span> ['data] tree_node = <span class="kw">object</span>
-  <span class="kw">method</span> value : 'data Js<span class="kw">.</span>prop
-  <span class="kw">method</span> left : 'data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>prop
-  <span class="kw">method</span> right : 'data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>prop
-<span class="kw">end</span>
-
-<span class="kw">let</span> node : ('data -&gt; 'data tree_node Js<span class="kw">.</span>t) Js<span class="kw">.</span>constr = __hidden__
-
-<span class="kw">let</span> depth_first_search starting_node =
-  <span class="kw">let</span> stack = Stack<span class="kw">.</span>create () <span class="kw">in</span>
-  Stack<span class="kw">.</span>push starting_node stack;
-  <span class="kw">while</span> not (Stack<span class="kw">.</span>is_empty stack) <span class="kw">do</span>
-    <span class="kw">let</span> iter_node = Stack<span class="kw">.</span>pop stack <span class="kw">in</span>
-
-    Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s &quot;</span> iter_node##.value
-    |&gt; print_string;
-
-    <span class="kw">if</span> Js<span class="kw">.</span>Opt<span class="kw">.</span>return iter_node##.right |&gt; Js<span class="kw">.</span>Opt<span class="kw">.</span>test
-    <span class="kw">then</span> Stack<span class="kw">.</span>push iter_node##.right stack;
-
-    <span class="kw">if</span> Js<span class="kw">.</span>Opt<span class="kw">.</span>return iter_node##.left |&gt; Js<span class="kw">.</span>Opt<span class="kw">.</span>test
-    <span class="kw">then</span> Stack<span class="kw">.</span>push iter_node##.left stack
-
-  <span class="kw">done</span>
-
-<span class="kw">let</span> level_order starting_node =
-  <span class="kw">let</span> q = Queue<span class="kw">.</span>create () <span class="kw">in</span>
-  Queue<span class="kw">.</span>add starting_node q;
-
-  <span class="kw">while</span> not (Queue<span class="kw">.</span>is_empty q) <span class="kw">do</span>
-    <span class="kw">let</span> pop = Queue<span class="kw">.</span>pop q <span class="kw">in</span>
-    Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s &quot;</span> pop##.value
-    |&gt; print_string;
-
-    <span class="kw">if</span> Js<span class="kw">.</span>Opt<span class="kw">.</span>(return pop##.left |&gt; test)
-    <span class="kw">then</span> Queue<span class="kw">.</span>push pop##.left q;
-
-    <span class="kw">if</span> Js<span class="kw">.</span>Opt<span class="kw">.</span>(return pop##.right |&gt; test)
-    <span class="kw">then</span> Queue<span class="kw">.</span>push pop##.right q
-
-  <span class="kw">done</span>
-
-<span class="kw">let</span> () =
-  <span class="kw">let</span> root = <span class="kw">new</span>%js node <span class="st">&quot;F&quot;</span> <span class="kw">in</span>
-  root##.left := <span class="kw">new</span>%js node <span class="st">&quot;B&quot;</span>;
-  root##.right := <span class="kw">new</span>%js node <span class="st">&quot;G&quot;</span>;
-  root##.right##.right := <span class="kw">new</span>%js node <span class="st">&quot;I&quot;</span>;
-  root##.left##.left := <span class="kw">new</span>%js node <span class="st">&quot;A&quot;</span>;
-  root##.left##.right := <span class="kw">new</span>%js node <span class="st">&quot;D&quot;</span>;
-  root##.left##.right##.left := <span class="kw">new</span>%js node <span class="st">&quot;C&quot;</span>;
-  root##.left##.right##.right := <span class="kw">new</span>%js node <span class="st">&quot;E&quot;</span>;
-  root##.right##.right##.left := <span class="kw">new</span>%js node <span class="st">&quot;H&quot;</span>;
-
-  depth_first_search root |&gt; print_newline;
-  level_order root |&gt; print_newline</code></pre></div>
-<p>and compile it just like given earlier in the blog post. Shameless plug, you can also turn it into an executable with a feature I added to the <code>js_of_ocaml</code> compiler,</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">$ ocamlfind ocamlc -package js_of_ocaml.ppx -linkpkg trees_in_js.ml
-$ js_of_ocaml --custom-header='#!/usr/bin/env node' a.out -o T<span class="kw">.</span>js
-$ chmod +x T<span class="kw">.</span>js
-$ /T<span class="kw">.</span>js</code></pre></div>
-<p>Yay, we used the resources of two programming languages standard libaries in one program!</p>
-<p>Now we can return to why the typing of the <code>class type</code> matters. The fully correct typing of <code>tree_node</code> is:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">class</span> <span class="kw">type</span> ['data] tree_node = <span class="kw">object</span>
-  <span class="kw">method</span> value : 'data Js<span class="kw">.</span>prop
-  <span class="kw">method</span> left : 'data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>Opt<span class="kw">.</span>t Js<span class="kw">.</span>prop
-  <span class="kw">method</span> right : 'data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>Opt<span class="kw">.</span>t Js<span class="kw">.</span>prop
-<span class="kw">end</span></code></pre></div>
-<p>Notice the addition of <code>Js.Opt.t</code>. Since the <code>left</code>, <code>right</code> are nullable, we should capture that in the OCaml API, this however does force us to use <code>Js.Opt</code> and so we’d have to do things like:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">root##.left := <span class="kw">new</span>%js node <span class="st">&quot;Left side&quot;</span> |&gt; Js<span class="kw">.</span>Opt<span class="kw">.</span>return;</code></pre></div>
-<p>When trying to set the field, etc. But since we didn’t expose that nullability of the field in the type signature, the <code>depth_first_search</code> code needs to check if the field is indeed <code>null</code>, which would have been otherwise forced by the type system had we used <code>Js.Opt</code>, aka:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">if</span> Js<span class="kw">.</span>Opt<span class="kw">.</span>return iter_node##.right |&gt; Js<span class="kw">.</span>Opt<span class="kw">.</span>test
-<span class="kw">then</span> Stack<span class="kw">.</span>push iter_node##.right stack;</code></pre></div>
-<p>These are tradeoffs that you can make in your own usage.</p>
-<p>I hope this makes it easier for you to use OCaml, JavaScript together.</p>
 </article>
 
 

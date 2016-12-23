@@ -7,8 +7,73 @@
         <description><![CDATA[Personal blog of Edgar Aroutiounian]]></description>
         <atom:link href="http://hyegar.com/atom.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Thu, 03 Nov 2016 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Fri, 23 Dec 2016 00:00:00 UT</lastBuildDate>
         <item>
+    <title>node's async, await, Promises.</title>
+    <link>http://hyegar.com/2016/12/23/async-promises-node/index.html</link>
+    <description><![CDATA[<p>While studying for interviews I’m talking breaks by working on <a href="https://github.com/fxfactorial/silicondzor">silicondzor.com</a></p>
+<p>This is giving me some real web dev experience and I’m using the latest and greatest features of <code>JavaScript</code> and <code>node</code>.</p>
+<p>One thing that I’m really liking in modern <code>JavaScript</code> is the <code>async</code> story, it reminds me a lot of <code>OCaml</code> and both are somewhat converging, i.e <code>ES6</code>’s introduction of Promises which are basically <code>'a Lwt.t</code>, and Lwt renaming <code>Lwt.t</code> into Promises in <code>2.7.0</code>.</p>
+<p>Here’s like my conceptual cheatsheet about using <code>Promises</code> from scratch, converting an callback API into a <code>Promises</code> API and then taking it to the next step with <code>async</code>, <code>await</code>.</p>
+<h1 id="basic-callback-apis">Basic callback APIs</h1>
+<p><code>node</code> uses an event based programming paradigm and this is reflected in basically all server side code, ie the trailing callback argument to asynchronously call once the task completes.</p>
+<p>Let’s simulate it with this function</p>
+<div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="co">// Plain CB based API</span>
+<span class="kw">const</span> test_func <span class="op">=</span> (item<span class="op">,</span> cb) <span class="op">=&gt;</span> <span class="op">{</span>
+  <span class="at">setTimeout</span>(() <span class="op">=&gt;</span> <span class="op">{</span>
+    <span class="cf">if</span> (item <span class="op">&lt;</span> <span class="dv">5</span>) <span class="at">cb</span>(<span class="kw">null</span><span class="op">,</span> <span class="st">&#39;Success&#39;</span>)<span class="op">;</span>
+    <span class="cf">else</span> <span class="at">cb</span>(<span class="kw">new</span> <span class="at">Error</span>(<span class="st">&#39;Oops&#39;</span>)<span class="op">,</span> <span class="kw">null</span>)<span class="op">;</span>
+  <span class="op">},</span> <span class="dv">3000</span>)<span class="op">;</span>
+<span class="op">};</span>
+
+<span class="at">test_func</span>(<span class="dv">3</span><span class="op">,</span> (err<span class="op">,</span> success) <span class="op">=&gt;</span> <span class="va">console</span>.<span class="at">log</span>(success))<span class="op">;</span></code></pre></div>
+<p>This models typical <code>node</code> code, the callback being called <code>three</code> seconds after execution of <code>test_func</code></p>
+<p>This seems pretty fine for this example but once you have logic that is dependent on the success of one callback API after another then you start to have a difficult to reason about triangle of callbacks on the screen.</p>
+<h1 id="promises">Promises</h1>
+<p><code>ES6</code> introduces <code>Promises</code> and these are quite convienent, think of a Promise as being a box which will have a value in it sometime later.</p>
+<p>We can turn any callback based API into a Promises based one.</p>
+<div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="co">// Promises based</span>
+<span class="kw">const</span> test_func_promise <span class="op">=</span> item <span class="op">=&gt;</span> <span class="op">{</span>
+  <span class="cf">return</span> <span class="kw">new</span> <span class="at">Promise</span>((accept<span class="op">,</span> reject) <span class="op">=&gt;</span> <span class="op">{</span>
+    <span class="at">test_func</span>(item<span class="op">,</span> (err<span class="op">,</span> success) <span class="op">=&gt;</span> <span class="op">{</span>
+      <span class="cf">if</span> (err) <span class="at">reject</span>(err)<span class="op">;</span>
+      <span class="cf">else</span> <span class="at">accept</span>(success)<span class="op">;</span>
+    <span class="op">}</span>)<span class="op">;</span>
+  <span class="op">}</span>)<span class="op">;</span>
+<span class="op">};</span>
+
+<span class="at">test_func_promise</span>(<span class="dv">2</span>)
+.<span class="at">then</span>(item <span class="op">=&gt;</span> <span class="op">{</span> <span class="va">console</span>.<span class="at">log</span>(<span class="st">&#39;Sucess!!&#39;</span><span class="op">,</span> item)<span class="op">;</span> <span class="op">}</span>)
+.<span class="at">catch</span>(err <span class="op">=&gt;</span> <span class="va">console</span>.<span class="at">error</span>(err))<span class="op">;</span></code></pre></div>
+<p>When you create a new <code>Promise</code> you need to provide it with two function, one to be called when there’s a success and when the Promise should fail. Hence when calling <code>test_func_promise</code> returns a Promise, not the value <code>'Success'</code>. Also if you use the plain Promises approach be sure to include a <code>.catch</code> call.</p>
+<p>This is nicer than the original callback API approach, but now all your success or failure logic and everything following that effectively has to be all in either <code>.then</code> or <code>.catch</code> and that’s a bit awkward still.</p>
+<h1 id="asyncawait">async/await</h1>
+<p><code>ES7</code> introduced <code>async</code>, <code>await</code> where I basically think of the latter as <code>&gt;&gt;=</code> and <code>async</code> as sort of like <code>&gt;|=</code>. With <code>async</code>, <code>await</code> we can call <code>Promises</code> based code as if it was synchronous code.</p>
+<div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">const</span> test_func_async_example <span class="op">=</span> <span class="at">async</span> (item) <span class="op">=&gt;</span> <span class="op">{</span>
+  <span class="cf">try</span> <span class="op">{</span>
+    <span class="kw">const</span> result <span class="op">=</span> await <span class="at">test_func_promise</span>(item)<span class="op">;</span>
+    <span class="va">console</span>.<span class="at">log</span>(<span class="vs">`Yay: </span><span class="sc">${</span>result<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span>
+  <span class="op">}</span> <span class="cf">catch</span>(e) <span class="op">{</span>
+    <span class="va">console</span>.<span class="at">error</span>(<span class="vs">`Messed up: </span><span class="sc">${</span>e<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span>
+  <span class="op">}</span>
+<span class="op">};</span>
+
+<span class="at">test_func_async_example</span>(<span class="dv">6</span>)<span class="op">;</span>
+<span class="at">test_func_async_example</span>(<span class="dv">3</span>)<span class="op">;</span></code></pre></div>
+<p>First notice how whatever function we use <code>await</code> inside of, we need to tag that function with <code>async</code> and now this function returns a <code>Promise</code></p>
+<p>Now when we call <code>test_func_promises</code> with <code>await</code> prefixed, then we get the value that the <code>Promise</code> resolved. Also whatever the <code>reject</code> condition of the <code>Promise</code> was then becomes the exception of the <code>catch</code> following the <code>await</code> usage.</p>
+<h1 id="summary">Summary</h1>
+<p><code>async</code>, <code>await</code> are very powerful features of <code>ES7</code>, <code>Promises</code> are from <code>ES6</code>. Not every <code>JavaScript</code> engine supports <code>ES7</code> so you’ll have to use <code>babel</code> to compile your <code>async</code>, <code>await</code> to runnable code; basically turns the <code>async</code>, <code>await</code> to generators (also an amazing topic).</p>
+<p>On newer versions of node, I’m using <code>v7.3.0</code>, you can turn on features from the future with command line arguments. Check all of them with:</p>
+<pre><code>$ node --v8-options | less</code></pre>
+<p>I’m turning on native <code>async</code>, <code>await</code> with <code>--harmony_async_await</code>, so my final invocation is:</p>
+<pre><code>$ node --harmony_async_await test.js</code></pre>
+<p>You can get all the code as one script <a href="https://gist.github.com/fxfactorial/60edd7c3c8948754d21dbc9f517e37ee">here</a></p>]]></description>
+    <pubDate>Fri, 23 Dec 2016 00:00:00 UT</pubDate>
+    <guid>http://hyegar.com/2016/12/23/async-promises-node/index.html</guid>
+    <dc:creator>Edgar Aroutiounian</dc:creator>
+</item>
+<item>
     <title>Using JavaScriptCore with examples</title>
     <link>http://hyegar.com/2016/11/03/using-javascriptcore/index.html</link>
     <description><![CDATA[<h2 id="motivation">Motivation</h2>
@@ -107,8 +172,7 @@ jsvalue_to_utf8_string(JSGlobalContextRef ctx, JSValueRef v)
 <span class="st">}</span></code></pre></div>
 <p>compile with, should work just fine on Linux as well, but using:</p>
 <p><code>libjavascriptcoregtk-4.0</code> instead of the <code>-framework JavaScriptCore</code></p>
-<pre class="shell"><code>$ clang++ -framework JavaScriptCore -std=c++14 jsc_examples.cpp -o F</code></pre>
-<p>When you run <code>./F</code>, then it should print out the current working directory.</p>
+<pre class="shell"><code>$ clang++ -framework JavaScriptCore -std=c++14 jsc_examples.cpp -oF </code></pre>
 <h2 id="explanations">Explanations</h2>
 <p>The real meat of the code starts at <code>run_example</code>. We start by creating a <code>JSClassDefinition</code>, this creates a template that lets us control all the behavior of our custom object. Then we provide an implementation for what code ought to be run when our custom object will created with <code>new</code>, notice using <code>C++14</code>’s nice ability to use <code>auto</code> for the parameter names, also notice that we explicitly have to give back the return type of <code>JSObjectRef</code>, you get a bit spoiled by the <code>OCaml</code> type system. Then we create a <code>JavaScript</code> object, set the property <code>cwdName</code> and return that new object from the constructor call.</p>
 <p>Then we need to make a global context, this is like the environment that your JavaScript runs in and we grab the global object out of it, like <code>window</code> in the browser. (The commented out code is if you wanted to call the constructor and get the result directly in code)</p>
@@ -800,63 +864,6 @@ aanamlbblmaefofc.org</code></pre>
 <p>For reference the github repo is <a href="https://github.com/fxfactorial/dga-padcrypt-ocaml">here</a>.</p>]]></description>
     <pubDate>Mon, 07 Mar 2016 00:00:00 UT</pubDate>
     <guid>http://hyegar.com/2016/03/07/dga-padcrypt-ocaml/index.html</guid>
-    <dc:creator>Edgar Aroutiounian</dc:creator>
-</item>
-<item>
-    <title>Date formating + hash digest example in OCaml</title>
-    <link>http://hyegar.com/2016/03/06/get-date-string-in-ocaml/index.html</link>
-    <description><![CDATA[<p>This is another blog post in my quest to improve the state of OCaml coding for the average programmer. Today’s blog post is getting a date string in OCaml, a seemingly trivial thing to do in many other programming languages, and using it in a real world hashing example.</p>
-<h1 id="low-level-way">Low level way</h1>
-<p>You do could it like this:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="co">(* Assume this is code.ml *)</span>
-<span class="kw">let</span> time_now () =
-  Unix<span class="kw">.</span>(
-    <span class="kw">let</span> localtime = localtime (time ()) <span class="kw">in</span>
-    Printf<span class="kw">.</span>sprintf <span class="st">&quot;[%02u:%02u:%02u]&quot;</span>
-      localtime.tm_hour localtime.tm_min localtime.tm_sec)
-	  
-<span class="kw">let</span> () = time_now () |&gt; print_endline</code></pre></div>
-<p>This will require you to link the <code>unix</code> package against your program, for example:</p>
-<pre class="shell"><code>$ ocamlfind ocamlopt -package unix -linkpkg code.ml -o Time_now</code></pre>
-<h1 id="higher-level-way-crypto-example">Higher level way + Crypto example</h1>
-<p>At some point this low level interface might not be appropriate and you’ll want higher abstracts. <code>Calendar</code> is an package on opam that provides such abstractions; install with:</p>
-<pre class="shell"><code>$ opam install calendar</code></pre>
-<p>The API of <code>calendar</code>, which you’ll find under the module <code>CalendarLib</code>, is rather large. Here’s some real world code that you can reuse, built upon. The example also uses a cryptographic package which you can get with</p>
-<pre class="shell"><code>$ opam install nocrypto</code></pre>
-<p>and the code:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="co">(* Assume this is code.ml *)</span>
-<span class="ot">module</span> D = CalendarLib<span class="kw">.</span><span class="dt">Date</span>
-
-<span class="kw">let</span> nr_domains = <span class="dv">24</span>
-
-<span class="kw">let</span> seed_string ~date i =
-  Printf<span class="kw">.</span>sprintf
-    <span class="st">&quot;%d-%d-%d:%d&quot;</span>
-    (D<span class="kw">.</span>day_of_month date)
-    (D<span class="kw">.</span>month date |&gt; D<span class="kw">.</span>int_of_month)
-    (D<span class="kw">.</span>year date)
-    i
-
-<span class="kw">let</span> domain_generate date =
-  <span class="kw">let</span> <span class="kw">rec</span> helper count accum =
-    <span class="kw">if</span> count = nr_domains <span class="kw">then</span> accum
-    <span class="kw">else</span> seed_string ~date count :: helper (count + <span class="dv">1</span>) accum
-  <span class="kw">in</span>
-  helper <span class="dv">0</span> []
-
-<span class="kw">let</span> () =
-  Nocrypto_entropy_unix<span class="kw">.</span>initialize ();
-  CalendarLib<span class="kw">.</span>Date<span class="kw">.</span>today ()
-  |&gt; domain_generate
-  |&gt; List<span class="kw">.</span>iter <span class="kw">begin</span> <span class="kw">fun</span> date_stamp -&gt;
-    Nocrypto<span class="kw">.</span>Hash<span class="kw">.</span>digest <span class="dt">`SHA256</span> (Cstruct<span class="kw">.</span>of_string date_stamp)
-    |&gt; Cstruct<span class="kw">.</span>to_string |&gt; print_endline
-  <span class="kw">end</span></code></pre></div>
-<p>and compiling with:</p>
-<pre class="shell"><code>$ ocamlfind ocamlopt -package calendar,nocrypto.unix -linkpkg code.ml -o Ex</code></pre>
-<p>Yay. Be sure to check my archives for many more quick and useful posts on OCaml.</p>]]></description>
-    <pubDate>Sun, 06 Mar 2016 00:00:00 UT</pubDate>
-    <guid>http://hyegar.com/2016/03/06/get-date-string-in-ocaml/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 

@@ -141,8 +141,7 @@ jsvalue_to_utf8_string(JSGlobalContextRef ctx, JSValueRef v)
 <span class="st">}</span></code></pre></div>
 <p>compile with, should work just fine on Linux as well, but using:</p>
 <p><code>libjavascriptcoregtk-4.0</code> instead of the <code>-framework JavaScriptCore</code></p>
-<pre class="shell"><code>$ clang++ -framework JavaScriptCore -std=c++14 jsc_examples.cpp -o F</code></pre>
-<p>When you run <code>./F</code>, then it should print out the current working directory.</p>
+<pre class="shell"><code>$ clang++ -framework JavaScriptCore -std=c++14 jsc_examples.cpp -oF </code></pre>
 <h2 id="explanations">Explanations</h2>
 <p>The real meat of the code starts at <code>run_example</code>. We start by creating a <code>JSClassDefinition</code>, this creates a template that lets us control all the behavior of our custom object. Then we provide an implementation for what code ought to be run when our custom object will created with <code>new</code>, notice using <code>C++14</code>’s nice ability to use <code>auto</code> for the parameter names, also notice that we explicitly have to give back the return type of <code>JSObjectRef</code>, you get a bit spoiled by the <code>OCaml</code> type system. Then we create a <code>JavaScript</code> object, set the property <code>cwdName</code> and return that new object from the constructor call.</p>
 <p>Then we need to make a global context, this is like the environment that your JavaScript runs in and we grab the global object out of it, like <code>window</code> in the browser. (The commented out code is if you wanted to call the constructor and get the result directly in code)</p>
