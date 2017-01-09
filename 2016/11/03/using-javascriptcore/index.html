@@ -50,27 +50,27 @@
 <h2 id="example">Example</h2>
 <p>We’re going to provide a pretty meaty example, we’ll make a custom object in C++ code, then we’ll use it from a <code>JavaScript</code> script. Imagine we want to expose a <code>File</code> like object, JS the language itself has no notion of a File, so it will need support from the C/C++ level; you can imagine this as the objects that say <code>[native code]</code>.</p>
 <p>Here’s the code, afterwards is a detailed breakdown (The <code>R</code> C++ feature confuses the syntax highlighter)</p>
-<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="ot">#include &lt;string&gt;</span>
-<span class="ot">#include &lt;iostream&gt;</span>
-<span class="ot">#include &lt;JavaScriptCore/JavaScriptCore.h&gt;</span>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="pp">#include </span><span class="im">&lt;string&gt;</span>
+<span class="pp">#include </span><span class="im">&lt;iostream&gt;</span>
+<span class="pp">#include </span><span class="im">&lt;JavaScriptCore/JavaScriptCore.h&gt;</span>
 
-std::string getcwd_string(<span class="dt">void</span>)
+<span class="bu">std::</span>string getcwd_string(<span class="dt">void</span>)
 {
    <span class="dt">char</span> buff[PATH_MAX];
    getcwd(buff, PATH_MAX);
-   std::string cwd(buff);
-   <span class="kw">return</span> cwd;
+   <span class="bu">std::</span>string cwd(buff);
+   <span class="cf">return</span> cwd;
 }
 
-<span class="dt">const</span> <span class="dt">char</span>*
+<span class="at">const</span> <span class="dt">char</span>*
 jsvalue_to_utf8_string(JSGlobalContextRef ctx, JSValueRef v)
 {
   JSStringRef valueAsString = JSValueToStringCopy(ctx, v, NULL);
-  size_t jsSize = JSStringGetMaximumUTF8CStringSize(valueAsString);
+  <span class="dt">size_t</span> jsSize = JSStringGetMaximumUTF8CStringSize(valueAsString);
   <span class="dt">char</span>* jsBuffer = (<span class="dt">char</span>*)malloc(jsSize);
   JSStringGetUTF8CString(valueAsString, jsBuffer, jsSize);
   JSStringRelease(valueAsString);
-  <span class="kw">return</span> jsBuffer;
+  <span class="cf">return</span> jsBuffer;
 }
 
 <span class="dt">void</span> run_example(<span class="dt">void</span>)
@@ -93,7 +93,7 @@ jsvalue_to_utf8_string(JSGlobalContextRef ctx, JSValueRef v)
 			file_name,
 			kJSPropertyAttributeNone,
 			<span class="kw">nullptr</span>);
-    <span class="kw">return</span> example_obj;
+    <span class="cf">return</span> example_obj;
   };
 
   <span class="kw">auto</span> ctx = JSGlobalContextCreate(<span class="kw">nullptr</span>);
@@ -107,7 +107,7 @@ jsvalue_to_utf8_string(JSGlobalContextRef ctx, JSValueRef v)
   <span class="co">// 			nullptr);</span>
 
   <span class="co">// std::cout &lt;&lt; jsvalue_to_utf8_string(ctx, property_check) &lt;&lt; std::endl;</span>
-  std::string code_to_eval = <span class="st">R&quot;(</span>
+  <span class="bu">std::</span>string code_to_eval = <span class="st">R&quot;(</span>
 <span class="st">const example_code = new File;</span>
 <span class="st">example_code.cwdName;</span>
 <span class="st">)&quot;;</span>

@@ -52,11 +52,11 @@
 <p>Now I’ll show you an example of calling OCaml from Objective-C. Much of this code will have simplifications as its an example for getting you started. Also note that dealing at the C level and the OCaml runtime can be tricky and is not for beginners.</p>
 <p>Here’s the OCaml code first, assume it is named code.ml</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="dv">1</span>  <span class="kw">let</span> make_string () =
-<span class="dv">2</span>    print_endline <span class="st">&quot;Hello Word from OCaml&quot;</span>;
+<span class="dv">2</span>    <span class="dt">print_endline</span> <span class="st">&quot;Hello Word from OCaml&quot;</span>;
 <span class="dv">3</span>    <span class="st">&quot;Hello World &quot;</span>
 <span class="dv">4</span>  
 <span class="dv">5</span>  <span class="kw">let</span> () =
-<span class="dv">6</span>    Callback<span class="kw">.</span>register <span class="st">&quot;make_string&quot;</span> make_string</code></pre></div>
+<span class="dv">6</span>    <span class="dt">Callback</span>.register <span class="st">&quot;make_string&quot;</span> make_string</code></pre></div>
 <p>We’re essentially telling the runtime to make this function available to grab as a handle, in this case it’s a handle on a closure.</p>
 <p>And now the Objective-C code, assume it is named main.c</p>
 <div class="sourceCode"><pre class="sourceCode objectivec"><code class="sourceCode objectivec"> <span class="dv">1</span>  #define CAML_NAME_SPACE

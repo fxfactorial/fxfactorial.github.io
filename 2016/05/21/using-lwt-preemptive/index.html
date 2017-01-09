@@ -52,20 +52,20 @@
 <p>A common complaint about OCaml is the lack of true parallelism, about the single threadedness of the runtime. This is true but its not like <code>OCaml</code> programmers don’t have solutions some solutions. Here’s an easy example that you can instantly use in your coding.</p>
 <h1 id="setup">Setup</h1>
 <p>First we will need some way to verify that our system threads are actually working, we’ll use some math equation to purposefully cause CPU load. Here’s the <code>Sieve Of Eratosthenes</code> Algorithm that I copied from <a href="http://www.scriptol.com/programming/sieve.php#ocaml">here</a>.</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">open</span> List
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">open</span> <span class="dt">List</span>
 
-<span class="kw">type</span> integer = <span class="dt">Int</span> <span class="kw">of</span> <span class="dt">int</span>
-<span class="kw">let</span> number_two = <span class="dt">Int</span>(<span class="dv">2</span>)
-<span class="kw">let</span> number_zero = <span class="dt">Int</span>(<span class="dv">0</span>)
-<span class="kw">let</span> is_less_than_two (<span class="dt">Int</span> n) = n &lt; <span class="dv">2</span>
-<span class="kw">let</span> incr (<span class="dt">Int</span> n) = <span class="dt">Int</span>(n + <span class="dv">1</span>)
-<span class="kw">let</span> decr (<span class="dt">Int</span> n) = <span class="dt">Int</span>(n - <span class="dv">1</span>)
-<span class="kw">let</span> is_number_zero (<span class="dt">Int</span> n) = n = <span class="dv">0</span>
+<span class="kw">type</span> integer = Int <span class="kw">of</span> <span class="dt">int</span>
+<span class="kw">let</span> number_two = Int(<span class="dv">2</span>)
+<span class="kw">let</span> number_zero = Int(<span class="dv">0</span>)
+<span class="kw">let</span> is_less_than_two (Int n) = n &lt; <span class="dv">2</span>
+<span class="kw">let</span> <span class="dt">incr</span> (Int n) = Int(n + <span class="dv">1</span>)
+<span class="kw">let</span> <span class="dt">decr</span> (Int n) = Int(n - <span class="dv">1</span>)
+<span class="kw">let</span> is_number_zero (Int n) = n = <span class="dv">0</span>
 
 <span class="kw">let</span> iota n =
   <span class="kw">let</span> <span class="kw">rec</span> loop curr counter =
     <span class="kw">if</span> is_less_than_two counter <span class="kw">then</span> []
-    <span class="kw">else</span> curr::(loop (incr curr) (decr counter))
+    <span class="kw">else</span> curr::(loop (<span class="dt">incr</span> curr) (<span class="dt">decr</span> counter))
   <span class="kw">in</span>
   loop number_two n
 
@@ -75,42 +75,42 @@
     | car::cdr <span class="kw">when</span> is_number_zero car -&gt;
       car::(choose_pivot cdr)
     | car::cdr -&gt;
-      car::(choose_pivot (do_sieve car (decr car) cdr))
+      car::(choose_pivot (do_sieve car (<span class="dt">decr</span> car) cdr))
 
   <span class="kw">and</span> do_sieve step current lst =
     <span class="kw">match</span> lst <span class="kw">with</span>
     | [] -&gt; []
     | car::cdr -&gt;
       <span class="kw">if</span> is_number_zero current
-      <span class="kw">then</span> number_zero::(do_sieve step (decr step) cdr)
-      <span class="kw">else</span> car::(do_sieve step (decr current) cdr)
+      <span class="kw">then</span> number_zero::(do_sieve step (<span class="dt">decr</span> step) cdr)
+      <span class="kw">else</span> car::(do_sieve step (<span class="dt">decr</span> current) cdr)
   <span class="kw">in</span>
   choose_pivot lst
 
 <span class="kw">let</span> is_prime n =
   <span class="kw">match</span> rev (sieve (iota n)) <span class="kw">with</span>
-    x::_ -&gt; not (is_number_zero x)</code></pre></div>
+    x::_ -&gt; <span class="dt">not</span> (is_number_zero x)</code></pre></div>
 <p>Now our <code>Lwt</code>, <code>Lwt_preemptive</code> code:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">open</span> Lwt<span class="kw">.</span>Infix
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">open</span> Lwt.Infix
 
 <span class="kw">let</span> do_example port =
-  <span class="kw">let</span> address = Unix<span class="kw">.</span>(<span class="dt">ADDR_INET</span> (inet_addr_loopback, port)) <span class="kw">in</span>
-  Lwt_io<span class="kw">.</span>establish_server address (<span class="kw">fun</span> (tcp_in, tcp_out) -&gt;
-      () |&gt; Lwt_preemptive<span class="kw">.</span>detach (<span class="kw">fun</span> () -&gt;
+  <span class="kw">let</span> address = Unix.(ADDR_INET (inet_addr_loopback, port)) <span class="kw">in</span>
+  Lwt_io.establish_server address (<span class="kw">fun</span> (tcp_in, tcp_out) -&gt;
+      () |&gt; Lwt_preemptive.detach (<span class="kw">fun</span> () -&gt;
           <span class="kw">while</span> <span class="kw">true</span> <span class="kw">do</span>
-            ignore (is_prime (<span class="dt">Int</span> port))
+            <span class="dt">ignore</span> (is_prime (Int port))
           <span class="kw">done</span>
         )
-      |&gt; Lwt<span class="kw">.</span>ignore_result
+      |&gt; Lwt.ignore_result
     )
-  |&gt; ignore |&gt; Lwt<span class="kw">.</span>return
+  |&gt; <span class="dt">ignore</span> |&gt; Lwt.return
 
 <span class="kw">let</span> () =
-  <span class="kw">let</span> <span class="kw">rec</span> forever () = fst (Lwt<span class="kw">.</span>wait ()) &gt;&gt;= forever <span class="kw">in</span>
-  Lwt_preemptive<span class="kw">.</span>init <span class="dv">5</span> <span class="dv">10</span> ignore;
+  <span class="kw">let</span> <span class="kw">rec</span> forever () = <span class="dt">fst</span> (Lwt.wait ()) &gt;&gt;= forever <span class="kw">in</span>
+  Lwt_preemptive.init <span class="dv">5</span> <span class="dv">10</span> <span class="dt">ignore</span>;
   ([<span class="dv">2000</span>; <span class="dv">2001</span>; <span class="dv">2002</span>; <span class="dv">2003</span>; <span class="dv">2004</span>]
-   |&gt; Lwt_list<span class="kw">.</span>iter_p do_example &gt;&gt;= forever)
-  |&gt; Lwt_main<span class="kw">.</span>run</code></pre></div>
+   |&gt; Lwt_list.iter_p do_example &gt;&gt;= forever)
+  |&gt; Lwt_main.run</code></pre></div>
 <p>The code that runs inside the callback to <code>Lwt_io.establish_server</code> uses <code>Lwt_preemptive.detach</code>, this creates a new system thread whenever there is something that connects on ports <code>[2000; 2001; 2002; 2003; 2004]</code>. You don’t have to call <code>Lwt_preemptive.init</code> since detach will do it anyway, but I am doing it to ensure that at least 5 threads are made with 10 being the max.</p>
 <p>We compile it with:</p>
 <pre class="shell"><code>$ ocamlfind ocamlopt -thread -package lwt.unix,lwt.preemptive test_case.ml -linkpkg -o TEST_CASE</code></pre>

@@ -56,20 +56,20 @@
 
 <span class="kw">let</span> () =
   <span class="kw">let</span> some_ip = <span class="st">&quot;172.56.31.240&quot;</span> <span class="kw">in</span>
-  <span class="kw">let</span> this_mmdb = Maxminddb<span class="kw">.</span>create <span class="st">&quot;etc/GeoLite2-City.mmdb&quot;</span> <span class="kw">in</span>
-  <span class="kw">let</span> loc = Maxminddb<span class="kw">.</span>location some_ip this_mmdb <span class="kw">in</span>
-  <span class="kw">let</span> <span class="ot">open</span> Maxminddb <span class="kw">in</span>
-  Printf<span class="kw">.</span>sprintf <span class="st">&quot;%f %f %d %s&quot;</span> loc.latitude loc.longitude loc.metro_code loc.time_zone
-  |&gt; print_endline;
-  <span class="kw">let</span> geo_borders = borders ~lang:<span class="dt">French</span> ~ip:some_ip this_mmdb <span class="kw">in</span>
-  Printf<span class="kw">.</span>sprintf
+  <span class="kw">let</span> this_mmdb = Maxminddb.create <span class="st">&quot;etc/GeoLite2-City.mmdb&quot;</span> <span class="kw">in</span>
+  <span class="kw">let</span> loc = Maxminddb.location some_ip this_mmdb <span class="kw">in</span>
+  <span class="kw">let</span> <span class="kw">open</span> Maxminddb <span class="kw">in</span>
+  <span class="dt">Printf</span>.sprintf <span class="st">&quot;%f %f %d %s&quot;</span> loc.latitude loc.longitude loc.metro_code loc.time_zone
+  |&gt; <span class="dt">print_endline</span>;
+  <span class="kw">let</span> geo_borders = borders ~lang:French ~ip:some_ip this_mmdb <span class="kw">in</span>
+  <span class="dt">Printf</span>.sprintf
     <span class="st">&quot;%s %s %s %s %s&quot;</span>
     geo_borders.postal_code
     geo_borders.city_name
     geo_borders.country_name
     geo_borders.continent_name
     geo_borders.iso_code
-  |&gt; print_endline</code></pre></div>
+  |&gt; <span class="dt">print_endline</span></code></pre></div>
 <p>And the corresponding result on the shell</p>
 <pre class="shell"><code>$ utop loc_dump.ml
 33.895900 -118.220100 803 America/Los_Angeles

@@ -47,16 +47,16 @@
     </header>
     <p><em>If you like this and other posts of mine, then reach out to me at edgar.factorial@gmail.com, I’m looking for remote contract work.</em></p>
 <p>Let’s say we have a C binary given to us and there’s a C function in it that we want to call. For example, say we have this code, assume it is called <code>inject_me.c</code>:</p>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;stdio.h&gt;</span>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span>
 
 <span class="dt">int</span> test_function(<span class="dt">char</span> *some_word)
 {
-  <span class="kw">return</span> printf(<span class="st">&quot;Did say: %s</span><span class="ch">\n</span><span class="st">&quot;</span>, some_word);
+  <span class="cf">return</span> printf(<span class="st">&quot;Did say: %s</span><span class="sc">\n</span><span class="st">&quot;</span>, some_word);
 }
 
 <span class="dt">int</span> main (<span class="dt">int</span> argc, <span class="dt">char</span> **argv)
 {
-  <span class="kw">return</span> test_function(<span class="st">&quot;Hello World&quot;</span>);
+  <span class="cf">return</span> test_function(<span class="st">&quot;Hello World&quot;</span>);
 }</code></pre></div>
 <p>and we want to call the function <code>test_function</code> by ourselves. To do that we need to find the location of the function in the binary. We can do that by disassembling the binary, I used to use command line tools for that but now I’m using <code>hopper</code>. (Hopper is an AMAZING program). Once we disassemble it, we find the function in memory:</p>
 <div class="figure">
@@ -64,11 +64,11 @@
 
 </div>
 <p>Notice that I highlighted the actual location of: <code>0x100000f20</code>. Now we can inject it with this code, assume it is called <code>inject.c</code></p>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;stdio.h&gt;</span>
-<span class="ot">#include &lt;string.h&gt;</span>
-<span class="ot">#include &lt;mach-o/dyld.h&gt;</span>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span>
+<span class="pp">#include </span><span class="im">&lt;string.h&gt;</span>
+<span class="pp">#include </span><span class="im">&lt;mach-o/dyld.h&gt;</span>
 
-<span class="ot">#define SPOT 0x100000f20</span>
+<span class="pp">#define SPOT 0x100000f20</span>
 
 <span class="kw">typedef</span> <span class="dt">int</span> pull_it(<span class="dt">char</span> *);
 
@@ -81,17 +81,17 @@ __attribute__((constructor))
   <span class="dt">uint32_t</span> size = <span class="kw">sizeof</span>(path);
   _NSGetExecutablePath(path, &amp;size);
   
-  <span class="kw">for</span> (<span class="dt">uint32_t</span> i = <span class="dv">0</span>; i &lt; _dyld_image_count(); i++) {
-    <span class="kw">if</span> (strcmp(_dyld_get_image_name(i), path) == <span class="dv">0</span>) {
-      intptr_t slide = _dyld_get_image_vmaddr_slide(i);
+  <span class="cf">for</span> (<span class="dt">uint32_t</span> i = <span class="dv">0</span>; i &lt; _dyld_image_count(); i++) {
+    <span class="cf">if</span> (strcmp(_dyld_get_image_name(i), path) == <span class="dv">0</span>) {
+      <span class="dt">intptr_t</span> slide = _dyld_get_image_vmaddr_slide(i);
 
-      pulled = (pull_it*)(intptr_t)(slide + SPOT);
-      printf(<span class="st">&quot;slide: %lu</span><span class="ch">\n</span><span class="st">&quot;</span>, slide);
-      pulled(<span class="st">&quot;Please work</span><span class="ch">\n</span><span class="st">&quot;</span>);
+      pulled = (pull_it*)(<span class="dt">intptr_t</span>)(slide + SPOT);
+      printf(<span class="st">&quot;slide: %lu</span><span class="sc">\n</span><span class="st">&quot;</span>, slide);
+      pulled(<span class="st">&quot;Please work</span><span class="sc">\n</span><span class="st">&quot;</span>);
     }
   }
 
-  printf(<span class="st">&quot;This ran before the actual program</span><span class="ch">\n</span><span class="st">&quot;</span>);
+  printf(<span class="st">&quot;This ran before the actual program</span><span class="sc">\n</span><span class="st">&quot;</span>);
 }</code></pre></div>
 <ol style="list-style-type: decimal">
 <li><p>The <code>__attribute__((constructor))</code> calls the wrapped function before <code>main</code> goes off.</p></li>

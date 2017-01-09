@@ -125,7 +125,7 @@ Found 1 error</code></pre>
   <span class="kw">if</span> is_use u
   <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
   <span class="kw">else</span> <span class="kw">begin</span>
-    print_endline <span class="st">&quot;Hey Coder Reading hyegar.com&quot;</span>;
+    <span class="dt">print_endline</span> <span class="st">&quot;Hey Coder Reading hyegar.com&quot;</span>;
     <span class="st">&quot;Hello JS World -&gt; This type is incompatible with&quot;</span>
   <span class="kw">end</span></code></pre></div>
 <h2 id="interesting-sidenotes">Interesting Sidenotes</h2>
@@ -134,7 +134,7 @@ Found 1 error</code></pre>
   <span class="kw">if</span> is_use u
   <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
   <span class="kw">else</span> (
-    print_endline <span class="st">&quot;Hey Coder Reading hyegar.com&quot;</span>;
+    <span class="dt">print_endline</span> <span class="st">&quot;Hey Coder Reading hyegar.com&quot;</span>;
     <span class="st">&quot;Hello JS World -&gt; This type is incompatible with&quot;</span>)</code></pre></div>
 <p>More interesting is the usage of <code>;</code>. First think to yourself, what is the return value of printing to the screen, nothing really. In OCaml we represent side effect and dummy values with <code>()</code>, said outloud as unit and written in type signatures as <code>unit</code>. When you see <code>unit</code> in a signature then it usually means the function is doing some kind of side effect like printing to screen or talking to a db.</p>
 <p>So I could have also written it as:</p>
@@ -142,7 +142,7 @@ Found 1 error</code></pre>
   <span class="kw">if</span> is_use u
   <span class="kw">then</span> spf <span class="st">&quot;%s%s&quot;</span> (err_operation u) (err_value l)
   <span class="kw">else</span> (
-    <span class="kw">let</span> () = print_endline <span class="st">&quot;Hey Coder Reading hyegar.com&quot;</span> <span class="kw">in</span>
+    <span class="kw">let</span> () = <span class="dt">print_endline</span> <span class="st">&quot;Hey Coder Reading hyegar.com&quot;</span> <span class="kw">in</span>
     <span class="st">&quot;Hello JS World -&gt; This type is incompatible with&quot;</span>)</code></pre></div>
 <p>but the <code>;</code> is simplier and shorter.</p>
 <p>Back to our coding:</p>

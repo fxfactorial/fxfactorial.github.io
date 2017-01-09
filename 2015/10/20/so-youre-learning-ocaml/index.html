@@ -100,14 +100,14 @@ FLG -w +a-4-40..42-44-45-48</code></pre>
 </ol>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">#require &quot;podge&quot;</span>
 <span class="kw">let</span> () = 
-  Podge<span class="kw">.</span>Unix<span class="kw">.</span>read_process_output <span class="st">&quot;ls -halt&quot;</span> |&gt; List<span class="kw">.</span>iter print_endline</code></pre></div>
+  Podge.Unix.read_process_output <span class="st">&quot;ls -halt&quot;</span> |&gt; <span class="dt">List</span>.iter <span class="dt">print_endline</span></code></pre></div>
 <p>The <code>|&gt;</code> just means piping, its piping the output of <code>read_process_output</code> into the input of the partially applied function <code>iter</code></p>
 <ol start="2" style="list-style-type: decimal">
 <li>Reading a file</li>
 </ol>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">#require &quot;podge&quot;</span>
 <span class="kw">let</span> () = 
-  Podge<span class="kw">.</span>Unix<span class="kw">.</span>read_lines <span class="st">&quot;code.ml&quot;</span> |&gt; List<span class="kw">.</span>iter print_endline</code></pre></div>
+  Podge.Unix.read_lines <span class="st">&quot;code.ml&quot;</span> |&gt; <span class="dt">List</span>.iter <span class="dt">print_endline</span></code></pre></div>
 <p>Similar to 1, this reads all lines of file and gives it to the input of the partially applied function <code>iter</code>.</p>
 <p>These are two simple code samples from <code>Podge</code>, check out the <a href="https://github.com/fxfactorial/podge">repo</a> for other useful modules like: (The README has code examples)</p>
 <ul>
@@ -247,79 +247,79 @@ Modules:      Pg
 <span class="ot">#use &quot;topfind&quot;</span>
 <span class="ot">#require &quot;podge&quot;</span>
 
-<span class="ot">module</span> U = Yojson<span class="kw">.</span>Basic<span class="kw">.</span><span class="dt">Util</span>
-<span class="ot">module</span> A = Podge<span class="kw">.</span><span class="dt">ANSITerminal</span>
+<span class="kw">module</span> U = Yojson.Basic.Util
+<span class="kw">module</span> A = Podge.ANSITerminal
 
-<span class="kw">type</span> cmd = <span class="dt">Scp</span> <span class="kw">of</span> <span class="dt">int</span> * <span class="dt">string</span>
-         | <span class="dt">Ssh</span> <span class="kw">of</span> <span class="dt">int</span> * <span class="dt">string</span>
+<span class="kw">type</span> cmd = Scp <span class="kw">of</span> <span class="dt">int</span> * <span class="dt">string</span>
+         | Ssh <span class="kw">of</span> <span class="dt">int</span> * <span class="dt">string</span>
 
-<span class="kw">type</span> error_condition = <span class="dt">Copy_error</span> | <span class="dt">Exec_error</span>
+<span class="kw">type</span> error_condition = Copy_error | Exec_error
 
 <span class="kw">let</span> connected_devices () =
-  Podge<span class="kw">.</span>Unix<span class="kw">.</span>read_process_output <span class="st">&quot;gandalf -s&quot;</span>
-  |&gt; Podge<span class="kw">.</span>List<span class="kw">.</span>drop ~n:<span class="dv">5</span>
-  |&gt; String<span class="kw">.</span>concat <span class="st">&quot;&quot;</span>
-  |&gt; Yojson<span class="kw">.</span>Basic<span class="kw">.</span>from_string
-  |&gt; U<span class="kw">.</span>to_list
-  |&gt; List<span class="kw">.</span>fold_left
-    (<span class="kw">fun</span> accum item -&gt; U<span class="kw">.</span>(member <span class="st">&quot;Local Port&quot;</span> item |&gt; to_int) :: accum) []
+  Podge.Unix.read_process_output <span class="st">&quot;gandalf -s&quot;</span>
+  |&gt; Podge.<span class="dt">List</span>.drop ~n:<span class="dv">5</span>
+  |&gt; <span class="dt">String</span>.concat <span class="st">&quot;&quot;</span>
+  |&gt; Yojson.Basic.from_string
+  |&gt; U.to_list
+  |&gt; <span class="dt">List</span>.fold_left
+    (<span class="kw">fun</span> accum item -&gt; U.(member <span class="st">&quot;Local Port&quot;</span> item |&gt; to_int) :: accum) []
 
 <span class="kw">let</span> command = <span class="kw">function</span>
-  | <span class="dt">Scp</span> (port, target) -&gt;
-    Printf<span class="kw">.</span>sprintf <span class="st">&quot;scp -P %d %s root@localhost:~/&quot;</span> port target
-  | <span class="dt">Ssh</span> (port, cmd) -&gt;
-    Printf<span class="kw">.</span>sprintf <span class="st">&quot;ssh root@localhost -p %d </span><span class="ch">\&quot;</span><span class="st">%s</span><span class="ch">\&quot;</span><span class="st">&quot;</span> port cmd
+  | Scp (port, target) -&gt;
+    <span class="dt">Printf</span>.sprintf <span class="st">&quot;scp -P %d %s root@localhost:~/&quot;</span> port target
+  | Ssh (port, cmd) -&gt;
+    <span class="dt">Printf</span>.sprintf <span class="st">&quot;ssh root@localhost -p %d </span><span class="ch">\&quot;</span><span class="st">%s</span><span class="ch">\&quot;</span><span class="st">&quot;</span> port cmd
 
 <span class="kw">let</span> usage () =
   <span class="st">&quot;This deploy script assumes that it was started</span><span class="ch">\n\</span>
 <span class="st">   from the makefile with `make deploy` and that gandalf is running&quot;</span>
-  |&gt; print_endline;
-  exit <span class="dv">1</span>
+  |&gt; <span class="dt">print_endline</span>;
+  <span class="dt">exit</span> <span class="dv">1</span>
 
 <span class="kw">let</span> with_gandalf udid ~f =
-  <span class="kw">let</span> f_name = Filename<span class="kw">.</span>temp_file <span class="st">&quot;gandalf&quot;</span> <span class="st">&quot;deployment&quot;</span> <span class="kw">in</span>
-  <span class="kw">let</span> f_chan = open_out f_name <span class="kw">in</span>
-  Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s:2000:22&quot;</span> udid |&gt; output_string f_chan;
-  close_out f_chan;
+  <span class="kw">let</span> f_name = <span class="dt">Filename</span>.temp_file <span class="st">&quot;gandalf&quot;</span> <span class="st">&quot;deployment&quot;</span> <span class="kw">in</span>
+  <span class="kw">let</span> f_chan = <span class="dt">open_out</span> f_name <span class="kw">in</span>
+  <span class="dt">Printf</span>.sprintf <span class="st">&quot;%s:2000:22&quot;</span> udid |&gt; <span class="dt">output_string</span> f_chan;
+  <span class="dt">close_out</span> f_chan;
   <span class="kw">let</span> gandalf_pid =
-    Unix<span class="kw">.</span>(create_process <span class="st">&quot;gandalf&quot;</span> [|<span class="st">&quot;gandalf&quot;</span>; <span class="st">&quot;-m&quot;</span>; f_name|] stdin stdout stderr)
+    Unix.(create_process <span class="st">&quot;gandalf&quot;</span> [|<span class="st">&quot;gandalf&quot;</span>; <span class="st">&quot;-m&quot;</span>; f_name|] <span class="dt">stdin</span> <span class="dt">stdout</span> <span class="dt">stderr</span>)
   <span class="kw">in</span>
-  Unix<span class="kw">.</span>sleep <span class="dv">1</span>;
+  Unix.sleep <span class="dv">1</span>;
   f ();
-  Unix<span class="kw">.</span>kill gandalf_pid <span class="dv">5</span>
+  Unix.kill gandalf_pid <span class="dv">5</span>
 
 <span class="kw">let</span> cmd_result ~error_msg = <span class="kw">function</span>
   | outcome <span class="kw">when</span> outcome &lt;&gt; <span class="dv">0</span> -&gt;
-    A<span class="kw">.</span>colored_message ~m_color:Podge<span class="kw">.</span>T<span class="kw">.</span><span class="dt">Red</span> error_msg |&gt; prerr_endline;
-    exit <span class="dv">1</span>
+    A.colored_message ~m_color:Podge.T.Red error_msg |&gt; <span class="dt">prerr_endline</span>;
+    <span class="dt">exit</span> <span class="dv">1</span>
   | _ -&gt; ()
 
 <span class="kw">let</span> () =
-  <span class="kw">if</span> Array<span class="kw">.</span>length Sys<span class="kw">.</span>argv &lt;&gt; <span class="dv">3</span> <span class="kw">then</span> usage ()
+  <span class="kw">if</span> <span class="dt">Array</span>.length <span class="dt">Sys</span>.argv &lt;&gt; <span class="dv">3</span> <span class="kw">then</span> usage ()
   <span class="kw">else</span>
-    with_gandalf Sys<span class="kw">.</span>argv.(<span class="dv">2</span>) <span class="kw">begin</span> <span class="kw">fun</span> () -&gt;
+    with_gandalf <span class="dt">Sys</span>.argv.(<span class="dv">2</span>) <span class="kw">begin</span> <span class="kw">fun</span> () -&gt;
       <span class="kw">let</span> devices = connected_devices () <span class="kw">in</span>
-      devices |&gt; List<span class="kw">.</span>iter <span class="kw">begin</span> <span class="kw">fun</span> i_device -&gt;
-        <span class="kw">let</span> scp_cmd = Sys<span class="kw">.</span>(<span class="dt">Scp</span> (i_device, argv.(<span class="dv">1</span>))) |&gt; command <span class="kw">in</span>
-        Printf<span class="kw">.</span>sprintf <span class="st">&quot;Deploying binary to remote device: %s&quot;</span> scp_cmd
-        |&gt; A<span class="kw">.</span>colored_message |&gt; print_endline;
-        Sys<span class="kw">.</span>command scp_cmd
+      devices |&gt; <span class="dt">List</span>.iter <span class="kw">begin</span> <span class="kw">fun</span> i_device -&gt;
+        <span class="kw">let</span> scp_cmd = <span class="dt">Sys</span>.(Scp (i_device, argv.(<span class="dv">1</span>))) |&gt; command <span class="kw">in</span>
+        <span class="dt">Printf</span>.sprintf <span class="st">&quot;Deploying binary to remote device: %s&quot;</span> scp_cmd
+        |&gt; A.colored_message |&gt; <span class="dt">print_endline</span>;
+        <span class="dt">Sys</span>.command scp_cmd
         |&gt; cmd_result ~error_msg:<span class="st">&quot;Was unable to copy over the binary&quot;</span>;
         <span class="kw">let</span> ssh_cmd_sign =
-          Sys<span class="kw">.</span>(<span class="dt">Ssh</span> (i_device, <span class="st">&quot;ldid -S /var/root/&quot;</span> ^ argv.(<span class="dv">1</span>))) |&gt; command
+          <span class="dt">Sys</span>.(Ssh (i_device, <span class="st">&quot;ldid -S /var/root/&quot;</span> ^ argv.(<span class="dv">1</span>))) |&gt; command
         <span class="kw">in</span>
-        Printf<span class="kw">.</span>sprintf <span class="st">&quot;Signing binary on remote device: %s&quot;</span> ssh_cmd_sign
-        |&gt; A<span class="kw">.</span>colored_message |&gt; print_endline;
-        Sys<span class="kw">.</span>command ssh_cmd_sign
+        <span class="dt">Printf</span>.sprintf <span class="st">&quot;Signing binary on remote device: %s&quot;</span> ssh_cmd_sign
+        |&gt; A.colored_message |&gt; <span class="dt">print_endline</span>;
+        <span class="dt">Sys</span>.command ssh_cmd_sign
         |&gt; cmd_result
-          ~error_msg:(Printf<span class="kw">.</span>sprintf <span class="st">&quot;Signing binary on remote device: %s&quot;</span> ssh_cmd_sign);
-        <span class="kw">let</span> ssh_cmd = Sys<span class="kw">.</span>(<span class="dt">Ssh</span> (i_device, <span class="st">&quot;/var/root/&quot;</span> ^ argv.(<span class="dv">1</span>))) |&gt; command <span class="kw">in</span>
-        Printf<span class="kw">.</span>sprintf <span class="st">&quot;Executing binary on remote device: %s&quot;</span> ssh_cmd
-        |&gt; print_endline;
-        Sys<span class="kw">.</span>command ssh_cmd
+          ~error_msg:(<span class="dt">Printf</span>.sprintf <span class="st">&quot;Signing binary on remote device: %s&quot;</span> ssh_cmd_sign);
+        <span class="kw">let</span> ssh_cmd = <span class="dt">Sys</span>.(Ssh (i_device, <span class="st">&quot;/var/root/&quot;</span> ^ argv.(<span class="dv">1</span>))) |&gt; command <span class="kw">in</span>
+        <span class="dt">Printf</span>.sprintf <span class="st">&quot;Executing binary on remote device: %s&quot;</span> ssh_cmd
+        |&gt; <span class="dt">print_endline</span>;
+        <span class="dt">Sys</span>.command ssh_cmd
         |&gt; cmd_result ~error_msg:<span class="st">&quot;Was unable to execute the binary&quot;</span>;
-        A<span class="kw">.</span>colored_message <span class="st">&quot;Deployed and tested successfully&quot;</span>
-        |&gt; print_endline
+        A.colored_message <span class="st">&quot;Deployed and tested successfully&quot;</span>
+        |&gt; <span class="dt">print_endline</span>
       <span class="kw">end</span>
     <span class="kw">end</span></code></pre></div>
 </article>

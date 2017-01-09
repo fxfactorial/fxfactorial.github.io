@@ -7,8 +7,85 @@
         <description><![CDATA[Personal blog of Edgar Aroutiounian]]></description>
         <atom:link href="http://hyegar.com/atom.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Fri, 23 Dec 2016 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Sun, 08 Jan 2017 00:00:00 UT</lastBuildDate>
         <item>
+    <title>variants in C++14 without boost</title>
+    <link>http://hyegar.com/2017/01/08/variants-in-cpp/index.html</link>
+    <description><![CDATA[<h1 id="variants-in-their-native-land">Variants in their native land</h1>
+<p>One of the best parts of functional programming are <code>Algebraic Data Types</code>, also known as <code>Sum</code> types, also known as <code>variants</code>. They help you make more type safe programs, self-documenting code.</p>
+<p>Here are some examples in <code>OCaml</code></p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">type</span> &#39;a <span class="dt">option</span> = <span class="dt">Some</span> <span class="kw">of</span> &#39;a | <span class="dt">None</span></code></pre></div>
+<p>This is the famous option type of functional programming. A fun thing about option is that its also a Monad, so <code>&gt;&gt;=</code> aka <code>bind</code> is easily defined as:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> ( &gt;&gt;= ) x f = <span class="kw">match</span> x <span class="kw">with</span> <span class="dt">Some</span> h -&gt; f h | _ -&gt; <span class="dt">None</span></code></pre></div>
+<p>Another example recently added to the OCaml standard library is the result type.</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">type</span> (&#39;success, &#39;failure) result = Ok <span class="kw">of</span> &#39;success | Error <span class="kw">of</span> &#39;failure</code></pre></div>
+<p>The things prefixed with <code>'</code> are called type variables, they let you write generic code from the getgo. We only need one for <code>option</code> but we need two different ones for result so that the type of the <code>Ok</code> variant need not be the same as the type of the <code>Error</code> variant.</p>
+<p>Once you get an <code>result</code> value, you can pattern match on it:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> process_result = <span class="kw">function</span> 
+  | Ok r -&gt; <span class="co">(* Do something with r *)</span>
+  | Error reason -&gt; <span class="co">(* Do something with the error *)</span></code></pre></div>
+<h1 id="variants-in-c">variants in C++</h1>
+<p>In <code>C++</code> variants are not first class citizens of the language, so they need to be provided by a library. In modern <code>C++</code> our options are <code>C++17</code>’s <code>std::variant</code>, <code>boost::variant</code> or someone’s own rolled version.</p>
+<p>I don’t want the <code>boost</code> dependency and I can’t use <code>C++17</code> so I looked for a library implementation. I found one by <a href="https://github.com/mapbox/variant">mapbox</a> and it fit my usecase perfectly; its a header only template library and I like the API provided. Here’s my implementation of <code>option</code> using the <code>mapbox</code> variant library.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="co">// Let&#39;s assume this file is named optional.hpp</span>
+<span class="pp">#pragma once</span>
+
+<span class="pp">#include </span><span class="im">&lt;mapbox/variant.hpp&gt;</span>
+
+<span class="kw">namespace</span> optional {
+  <span class="kw">struct</span> None { };
+  <span class="kw">template</span>&lt;<span class="kw">typename</span> T&gt;
+  <span class="kw">struct</span> Some { T payload; };
+
+  <span class="kw">template</span>&lt;<span class="kw">typename</span> T&gt;
+  <span class="kw">struct</span> Optional : mapbox::util::variant&lt;None, Some&lt;T&gt;&gt; {
+    <span class="kw">using</span> Base = mapbox::util::variant&lt;None, Some&lt;T&gt;&gt;;
+    <span class="kw">using</span> Base::Base;
+  };
+
+  <span class="co">// These two are helper functions, like std::make_unique, etc.</span>
+  <span class="kw">template</span>&lt;<span class="kw">typename</span> T&gt;
+  <span class="kw">auto</span> some(T x)  { <span class="cf">return</span> Optional&lt;T&gt;{Some&lt;T&gt;{x}}; }
+
+  <span class="kw">template</span>&lt;<span class="kw">typename</span> T&gt;
+  <span class="kw">auto</span> none(<span class="dt">void</span>) { <span class="cf">return</span> Optional&lt;T&gt;{None{}}; }
+
+}</code></pre></div>
+<p>And here’s an example usage:</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="co">// Let&#39;s assume this file is named main.cpp</span>
+<span class="pp">#include </span><span class="im">&lt;string&gt;</span>
+<span class="pp">#include </span><span class="im">&lt;iostream&gt;</span>
+
+<span class="pp">#include </span><span class="im">&quot;optional.hpp&quot;</span>
+
+<span class="co">// This lets just make std::string just by adding a suffix of &#39;s&#39;</span>
+<span class="co">// to things that otherwise look like char *</span>
+<span class="kw">using</span> <span class="kw">namespace</span> <span class="bu">std::</span>literals<span class="bu">::</span>string_literals;
+
+<span class="co">// Pretend that this is something that could fail.</span>
+<span class="kw">auto</span> file_contents(<span class="dt">void</span>) {
+  <span class="cf">return</span> optional::some(<span class="st">&quot;some file contents&quot;</span>s);
+}
+
+<span class="dt">int</span> main(<span class="dt">void</span>)
+{
+  file_contents()
+    .match(
+  	   [](optional::None) {
+  	     <span class="bu">std::</span>cout &lt;&lt; <span class="st">&quot;Check if file existed</span><span class="sc">\n</span><span class="st">&quot;</span>;
+  	   },
+  	   [](<span class="kw">auto</span> some) {
+  	     <span class="bu">std::</span>cout &lt;&lt; <span class="st">&quot;File contents: &quot;</span> &lt;&lt; some.payload;
+  	   });
+}</code></pre></div>
+<p>and you can easily compile it with, assuming that you added mapbox/variant.hpp to your compiler’s include search path…</p>
+<pre class="shell"><code>$ clang++ -std=c++14 main.cpp</code></pre>
+<p>Happy coding.</p>]]></description>
+    <pubDate>Sun, 08 Jan 2017 00:00:00 UT</pubDate>
+    <guid>http://hyegar.com/2017/01/08/variants-in-cpp/index.html</guid>
+    <dc:creator>Edgar Aroutiounian</dc:creator>
+</item>
+<item>
     <title>node's async, await, Promises.</title>
     <link>http://hyegar.com/2016/12/23/async-promises-node/index.html</link>
     <description><![CDATA[<p>While studying for interviews I’m talking breaks by working on <a href="https://github.com/fxfactorial/silicondzor">silicondzor.com</a></p>
@@ -81,27 +158,27 @@
 <h2 id="example">Example</h2>
 <p>We’re going to provide a pretty meaty example, we’ll make a custom object in C++ code, then we’ll use it from a <code>JavaScript</code> script. Imagine we want to expose a <code>File</code> like object, JS the language itself has no notion of a File, so it will need support from the C/C++ level; you can imagine this as the objects that say <code>[native code]</code>.</p>
 <p>Here’s the code, afterwards is a detailed breakdown (The <code>R</code> C++ feature confuses the syntax highlighter)</p>
-<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="ot">#include &lt;string&gt;</span>
-<span class="ot">#include &lt;iostream&gt;</span>
-<span class="ot">#include &lt;JavaScriptCore/JavaScriptCore.h&gt;</span>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="pp">#include </span><span class="im">&lt;string&gt;</span>
+<span class="pp">#include </span><span class="im">&lt;iostream&gt;</span>
+<span class="pp">#include </span><span class="im">&lt;JavaScriptCore/JavaScriptCore.h&gt;</span>
 
-std::string getcwd_string(<span class="dt">void</span>)
+<span class="bu">std::</span>string getcwd_string(<span class="dt">void</span>)
 {
    <span class="dt">char</span> buff[PATH_MAX];
    getcwd(buff, PATH_MAX);
-   std::string cwd(buff);
-   <span class="kw">return</span> cwd;
+   <span class="bu">std::</span>string cwd(buff);
+   <span class="cf">return</span> cwd;
 }
 
-<span class="dt">const</span> <span class="dt">char</span>*
+<span class="at">const</span> <span class="dt">char</span>*
 jsvalue_to_utf8_string(JSGlobalContextRef ctx, JSValueRef v)
 {
   JSStringRef valueAsString = JSValueToStringCopy(ctx, v, NULL);
-  size_t jsSize = JSStringGetMaximumUTF8CStringSize(valueAsString);
+  <span class="dt">size_t</span> jsSize = JSStringGetMaximumUTF8CStringSize(valueAsString);
   <span class="dt">char</span>* jsBuffer = (<span class="dt">char</span>*)malloc(jsSize);
   JSStringGetUTF8CString(valueAsString, jsBuffer, jsSize);
   JSStringRelease(valueAsString);
-  <span class="kw">return</span> jsBuffer;
+  <span class="cf">return</span> jsBuffer;
 }
 
 <span class="dt">void</span> run_example(<span class="dt">void</span>)
@@ -124,7 +201,7 @@ jsvalue_to_utf8_string(JSGlobalContextRef ctx, JSValueRef v)
 			file_name,
 			kJSPropertyAttributeNone,
 			<span class="kw">nullptr</span>);
-    <span class="kw">return</span> example_obj;
+    <span class="cf">return</span> example_obj;
   };
 
   <span class="kw">auto</span> ctx = JSGlobalContextCreate(<span class="kw">nullptr</span>);
@@ -138,7 +215,7 @@ jsvalue_to_utf8_string(JSGlobalContextRef ctx, JSValueRef v)
   <span class="co">// 			nullptr);</span>
 
   <span class="co">// std::cout &lt;&lt; jsvalue_to_utf8_string(ctx, property_check) &lt;&lt; std::endl;</span>
-  std::string code_to_eval = <span class="st">R&quot;(</span>
+  <span class="bu">std::</span>string code_to_eval = <span class="st">R&quot;(</span>
 <span class="st">const example_code = new File;</span>
 <span class="st">example_code.cwdName;</span>
 <span class="st">)&quot;;</span>
@@ -295,16 +372,16 @@ bundle.js:23096 Logic continued</code></pre>
     <link>http://hyegar.com/2016/08/31/grabbing-function-location/index.html</link>
     <description><![CDATA[<p><em>If you like this and other posts of mine, then reach out to me at edgar.factorial@gmail.com, I’m looking for remote contract work.</em></p>
 <p>Let’s say we have a C binary given to us and there’s a C function in it that we want to call. For example, say we have this code, assume it is called <code>inject_me.c</code>:</p>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;stdio.h&gt;</span>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span>
 
 <span class="dt">int</span> test_function(<span class="dt">char</span> *some_word)
 {
-  <span class="kw">return</span> printf(<span class="st">&quot;Did say: %s</span><span class="ch">\n</span><span class="st">&quot;</span>, some_word);
+  <span class="cf">return</span> printf(<span class="st">&quot;Did say: %s</span><span class="sc">\n</span><span class="st">&quot;</span>, some_word);
 }
 
 <span class="dt">int</span> main (<span class="dt">int</span> argc, <span class="dt">char</span> **argv)
 {
-  <span class="kw">return</span> test_function(<span class="st">&quot;Hello World&quot;</span>);
+  <span class="cf">return</span> test_function(<span class="st">&quot;Hello World&quot;</span>);
 }</code></pre></div>
 <p>and we want to call the function <code>test_function</code> by ourselves. To do that we need to find the location of the function in the binary. We can do that by disassembling the binary, I used to use command line tools for that but now I’m using <code>hopper</code>. (Hopper is an AMAZING program). Once we disassemble it, we find the function in memory:</p>
 <div class="figure">
@@ -312,11 +389,11 @@ bundle.js:23096 Logic continued</code></pre>
 
 </div>
 <p>Notice that I highlighted the actual location of: <code>0x100000f20</code>. Now we can inject it with this code, assume it is called <code>inject.c</code></p>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;stdio.h&gt;</span>
-<span class="ot">#include &lt;string.h&gt;</span>
-<span class="ot">#include &lt;mach-o/dyld.h&gt;</span>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span>
+<span class="pp">#include </span><span class="im">&lt;string.h&gt;</span>
+<span class="pp">#include </span><span class="im">&lt;mach-o/dyld.h&gt;</span>
 
-<span class="ot">#define SPOT 0x100000f20</span>
+<span class="pp">#define SPOT 0x100000f20</span>
 
 <span class="kw">typedef</span> <span class="dt">int</span> pull_it(<span class="dt">char</span> *);
 
@@ -329,17 +406,17 @@ __attribute__((constructor))
   <span class="dt">uint32_t</span> size = <span class="kw">sizeof</span>(path);
   _NSGetExecutablePath(path, &amp;size);
   
-  <span class="kw">for</span> (<span class="dt">uint32_t</span> i = <span class="dv">0</span>; i &lt; _dyld_image_count(); i++) {
-    <span class="kw">if</span> (strcmp(_dyld_get_image_name(i), path) == <span class="dv">0</span>) {
-      intptr_t slide = _dyld_get_image_vmaddr_slide(i);
+  <span class="cf">for</span> (<span class="dt">uint32_t</span> i = <span class="dv">0</span>; i &lt; _dyld_image_count(); i++) {
+    <span class="cf">if</span> (strcmp(_dyld_get_image_name(i), path) == <span class="dv">0</span>) {
+      <span class="dt">intptr_t</span> slide = _dyld_get_image_vmaddr_slide(i);
 
-      pulled = (pull_it*)(intptr_t)(slide + SPOT);
-      printf(<span class="st">&quot;slide: %lu</span><span class="ch">\n</span><span class="st">&quot;</span>, slide);
-      pulled(<span class="st">&quot;Please work</span><span class="ch">\n</span><span class="st">&quot;</span>);
+      pulled = (pull_it*)(<span class="dt">intptr_t</span>)(slide + SPOT);
+      printf(<span class="st">&quot;slide: %lu</span><span class="sc">\n</span><span class="st">&quot;</span>, slide);
+      pulled(<span class="st">&quot;Please work</span><span class="sc">\n</span><span class="st">&quot;</span>);
     }
   }
 
-  printf(<span class="st">&quot;This ran before the actual program</span><span class="ch">\n</span><span class="st">&quot;</span>);
+  printf(<span class="st">&quot;This ran before the actual program</span><span class="sc">\n</span><span class="st">&quot;</span>);
 }</code></pre></div>
 <ol style="list-style-type: decimal">
 <li><p>The <code>__attribute__((constructor))</code> calls the wrapped function before <code>main</code> goes off.</p></li>
@@ -387,7 +464,7 @@ Did say: Hello World</code></pre>
 <span class="kw">let</span> new_node data = {data; left = <span class="dt">None</span>; right = <span class="dt">None</span>;}
 
 <span class="kw">let</span> insert tree new_data =
-  <span class="kw">let</span> <span class="ot">module</span> Wrapper = <span class="kw">struct</span> <span class="kw">exception</span> <span class="dt">Stop_loop</span> <span class="kw">end</span> <span class="kw">in</span>
+  <span class="kw">let</span> <span class="kw">module</span> Wrapper = <span class="kw">struct</span> <span class="kw">exception</span> Stop_loop <span class="kw">end</span> <span class="kw">in</span>
   <span class="kw">let</span> iter = <span class="dt">ref</span> tree <span class="kw">in</span>
   <span class="kw">try</span>
     <span class="kw">while</span> <span class="kw">true</span> <span class="kw">do</span>
@@ -395,98 +472,98 @@ Did say: Hello World</code></pre>
       <span class="kw">then</span> <span class="kw">match</span> !iter.left <span class="kw">with</span>
         | <span class="dt">None</span> -&gt;
           !iter.left &lt;- <span class="dt">Some</span> (new_node new_data);
-          raise Wrapper<span class="kw">.</span><span class="dt">Stop_loop</span>
+          <span class="dt">raise</span> Wrapper.Stop_loop
         | <span class="dt">Some</span> left_tree -&gt; iter := left_tree
       <span class="kw">else</span> <span class="kw">if</span> new_data &gt; !iter.data
       <span class="kw">then</span> <span class="kw">match</span> !iter.right <span class="kw">with</span>
         | <span class="dt">None</span> -&gt;
           !iter.right &lt;- <span class="dt">Some</span> (new_node new_data);
-          raise Wrapper<span class="kw">.</span><span class="dt">Stop_loop</span>
+          <span class="dt">raise</span> Wrapper.Stop_loop
         | <span class="dt">Some</span> right_tree -&gt; iter := right_tree
     <span class="kw">done</span>
-  <span class="kw">with</span> Wrapper<span class="kw">.</span><span class="dt">Stop_loop</span> -&gt; ()
+  <span class="kw">with</span> Wrapper.Stop_loop -&gt; ()
 
 <span class="kw">let</span> pre_order_traversal tree =
-  <span class="kw">let</span> s = Stack<span class="kw">.</span>create () <span class="kw">in</span>
-  Stack<span class="kw">.</span>push tree s;
-  <span class="kw">while</span> not (Stack<span class="kw">.</span>is_empty s) <span class="kw">do</span>
-    <span class="kw">let</span> iter_node = Stack<span class="kw">.</span>pop s <span class="kw">in</span>
+  <span class="kw">let</span> s = <span class="dt">Stack</span>.create () <span class="kw">in</span>
+  <span class="dt">Stack</span>.push tree s;
+  <span class="kw">while</span> <span class="dt">not</span> (<span class="dt">Stack</span>.is_empty s) <span class="kw">do</span>
+    <span class="kw">let</span> iter_node = <span class="dt">Stack</span>.pop s <span class="kw">in</span>
 
-    Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s &quot;</span> iter_node.data
-    |&gt; print_string;
+    <span class="dt">Printf</span>.sprintf <span class="st">&quot;%s &quot;</span> iter_node.data
+    |&gt; <span class="dt">print_string</span>;
 
     (<span class="kw">match</span> iter_node.right <span class="kw">with</span>
        <span class="dt">None</span> -&gt; ()
-     | <span class="dt">Some</span> right -&gt; Stack<span class="kw">.</span>push right s);
+     | <span class="dt">Some</span> right -&gt; <span class="dt">Stack</span>.push right s);
 
     (<span class="kw">match</span> iter_node.left <span class="kw">with</span>
        <span class="dt">None</span> -&gt; ()
-     | <span class="dt">Some</span> left -&gt; Stack<span class="kw">.</span>push left s)
+     | <span class="dt">Some</span> left -&gt; <span class="dt">Stack</span>.push left s)
   <span class="kw">done</span>
 
 <span class="kw">let</span> in_order_traversal tree =
-  <span class="kw">let</span> <span class="ot">module</span> W = <span class="kw">struct</span> <span class="kw">exception</span> <span class="dt">Stop_loop</span> <span class="kw">end</span> <span class="kw">in</span>
-  <span class="kw">let</span> visited_stack = Stack<span class="kw">.</span>create () <span class="kw">in</span>
+  <span class="kw">let</span> <span class="kw">module</span> W = <span class="kw">struct</span> <span class="kw">exception</span> Stop_loop <span class="kw">end</span> <span class="kw">in</span>
+  <span class="kw">let</span> visited_stack = <span class="dt">Stack</span>.create () <span class="kw">in</span>
   <span class="kw">let</span> iter_node = <span class="dt">ref</span> (<span class="dt">Some</span> tree) <span class="kw">in</span>
   <span class="kw">try</span> <span class="kw">while</span> <span class="kw">true</span> <span class="kw">do</span>
       <span class="co">(* Inner loop, we keep trying to go left *)</span>
       (<span class="kw">try</span> <span class="kw">while</span> <span class="kw">true</span> <span class="kw">do</span>
            <span class="kw">match</span> !iter_node <span class="kw">with</span>
-           | <span class="dt">None</span> -&gt; raise W<span class="kw">.</span><span class="dt">Stop_loop</span>
+           | <span class="dt">None</span> -&gt; <span class="dt">raise</span> W.Stop_loop
            | <span class="dt">Some</span> left -&gt;
-             Stack<span class="kw">.</span>push left visited_stack;
+             <span class="dt">Stack</span>.push left visited_stack;
              iter_node := left.left
          <span class="kw">done</span>;
-       <span class="kw">with</span> W<span class="kw">.</span><span class="dt">Stop_loop</span> -&gt; ());
+       <span class="kw">with</span> W.Stop_loop -&gt; ());
 
       <span class="co">(* If we have no more to process in the stack, then we&#39;re</span>
 <span class="co">         done *)</span>
-      <span class="kw">if</span> Stack<span class="kw">.</span>length visited_stack = <span class="dv">0</span>
-      <span class="kw">then</span> raise W<span class="kw">.</span><span class="dt">Stop_loop</span>
+      <span class="kw">if</span> <span class="dt">Stack</span>.length visited_stack = <span class="dv">0</span>
+      <span class="kw">then</span> <span class="dt">raise</span> W.Stop_loop
       <span class="kw">else</span>
         <span class="co">(* Here we&#39;re forced to start moving rightward *)</span>
-        <span class="kw">let</span> temp = Stack<span class="kw">.</span>pop visited_stack <span class="kw">in</span>
-        Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s &quot;</span> temp.data |&gt; print_string;
+        <span class="kw">let</span> temp = <span class="dt">Stack</span>.pop visited_stack <span class="kw">in</span>
+        <span class="dt">Printf</span>.sprintf <span class="st">&quot;%s &quot;</span> temp.data |&gt; <span class="dt">print_string</span>;
         iter_node := temp.right
     <span class="kw">done</span>
-  <span class="kw">with</span> W<span class="kw">.</span><span class="dt">Stop_loop</span> -&gt; ()
+  <span class="kw">with</span> W.Stop_loop -&gt; ()
 
 <span class="kw">let</span> print_spiral root =
-  <span class="kw">let</span> (current, next) = Stack<span class="kw">.</span>(<span class="dt">ref</span> (create ()), <span class="dt">ref</span> (create ())) <span class="kw">in</span>
+  <span class="kw">let</span> (current, next) = <span class="dt">Stack</span>.(<span class="dt">ref</span> (create ()), <span class="dt">ref</span> (create ())) <span class="kw">in</span>
   <span class="kw">let</span> left_to_right = <span class="dt">ref</span> <span class="kw">true</span> <span class="kw">in</span>
 
   <span class="kw">let</span> swap a b = <span class="kw">let</span> (a_, b_) = !a, !b <span class="kw">in</span> a := b_; b := a_ <span class="kw">in</span>
 
-  Stack<span class="kw">.</span>push root !current;
+  <span class="dt">Stack</span>.push root !current;
 
-  <span class="kw">while</span> not (Stack<span class="kw">.</span>is_empty !current) <span class="kw">do</span>
-    <span class="kw">let</span> r = Stack<span class="kw">.</span>top !current <span class="kw">in</span>
-    Stack<span class="kw">.</span>pop !current |&gt; ignore;
-    Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s &quot;</span> r.data |&gt; print_string;
+  <span class="kw">while</span> <span class="dt">not</span> (<span class="dt">Stack</span>.is_empty !current) <span class="kw">do</span>
+    <span class="kw">let</span> r = <span class="dt">Stack</span>.top !current <span class="kw">in</span>
+    <span class="dt">Stack</span>.pop !current |&gt; <span class="dt">ignore</span>;
+    <span class="dt">Printf</span>.sprintf <span class="st">&quot;%s &quot;</span> r.data |&gt; <span class="dt">print_string</span>;
     <span class="kw">if</span> !left_to_right <span class="kw">then</span>
       <span class="kw">begin</span>
-        (<span class="kw">match</span> r.left <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> l -&gt; Stack<span class="kw">.</span>push l !next);
-        (<span class="kw">match</span> r.right <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> r -&gt; Stack<span class="kw">.</span>push r !next)
+        (<span class="kw">match</span> r.left <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> l -&gt; <span class="dt">Stack</span>.push l !next);
+        (<span class="kw">match</span> r.right <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> r -&gt; <span class="dt">Stack</span>.push r !next)
       <span class="kw">end</span>
     <span class="kw">else</span> <span class="kw">begin</span>
-      (<span class="kw">match</span> r.right <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> r -&gt; Stack<span class="kw">.</span>push r !next);
-      (<span class="kw">match</span> r.left <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> l -&gt; Stack<span class="kw">.</span>push l !next)
+      (<span class="kw">match</span> r.right <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> r -&gt; <span class="dt">Stack</span>.push r !next);
+      (<span class="kw">match</span> r.left <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> l -&gt; <span class="dt">Stack</span>.push l !next)
     <span class="kw">end</span>;
 
-    <span class="kw">if</span> Stack<span class="kw">.</span>length !current = <span class="dv">0</span>
-    <span class="kw">then</span> (left_to_right := not !left_to_right; swap current next)
+    <span class="kw">if</span> <span class="dt">Stack</span>.length !current = <span class="dv">0</span>
+    <span class="kw">then</span> (left_to_right := <span class="dt">not</span> !left_to_right; swap current next)
 
   <span class="kw">done</span>
 
 <span class="kw">let</span> () =
   <span class="kw">let</span> root = new_node <span class="st">&quot;F&quot;</span> <span class="kw">in</span>
 
-  [<span class="st">&quot;B&quot;</span>;<span class="st">&quot;G&quot;</span>;<span class="st">&quot;A&quot;</span>;<span class="st">&quot;D&quot;</span>;<span class="st">&quot;I&quot;</span>;<span class="st">&quot;C&quot;</span>;<span class="st">&quot;E&quot;</span>;<span class="st">&quot;H&quot;</span>] |&gt; List<span class="kw">.</span>iter (insert root);
+  [<span class="st">&quot;B&quot;</span>;<span class="st">&quot;G&quot;</span>;<span class="st">&quot;A&quot;</span>;<span class="st">&quot;D&quot;</span>;<span class="st">&quot;I&quot;</span>;<span class="st">&quot;C&quot;</span>;<span class="st">&quot;E&quot;</span>;<span class="st">&quot;H&quot;</span>] |&gt; <span class="dt">List</span>.iter (insert root);
 
   pre_order_traversal root;
-  print_newline ();
+  <span class="dt">print_newline</span> ();
   in_order_traversal root
-  print_newline ();
+  <span class="dt">print_newline</span> ();
   print_spiral root</code></pre></div>]]></description>
     <pubDate>Mon, 18 Jul 2016 00:00:00 UT</pubDate>
     <guid>http://hyegar.com/2016/07/18/imperative-traversal-ocaml/index.html</guid>
@@ -504,9 +581,9 @@ Did say: Hello World</code></pre>
 <span class="op">}</span></code></pre></div>
 <p>Our OCaml version will be:</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">class</span> <span class="kw">type</span> [&#39;data] tree_node = <span class="kw">object</span>
-  <span class="kw">method</span> value : &#39;data Js<span class="kw">.</span>prop
-  <span class="kw">method</span> left : &#39;data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>prop
-  <span class="kw">method</span> right : &#39;data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>prop
+  <span class="kw">method</span> value : &#39;data Js.prop
+  <span class="kw">method</span> left : &#39;data tree_node Js.t Js.prop
+  <span class="kw">method</span> right : &#39;data tree_node Js.t Js.prop
 <span class="kw">end</span></code></pre></div>
 <p>Note that there is a small thing about typing the nullability of the left, right fields, I will return to this at the end of the blog post and it was done for convenience.</p>
 <p>So explanations:</p>
@@ -518,15 +595,15 @@ Did say: Hello World</code></pre>
 </ol>
 <p>Now we need to provide a way to make this object.</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> __hidden__ =
-  Js<span class="kw">.</span>Unsafe<span class="kw">.</span>pure_js_expr <span class="st">&quot;function TreeNode(value) {</span><span class="ch">\</span>
+  Js.Unsafe.pure_js_expr <span class="st">&quot;function TreeNode(value) {</span><span class="ch">\</span>
 <span class="st">                          this.value = value; </span><span class="ch">\</span>
 <span class="st">                          this.left = this.right = null;}&quot;</span></code></pre></div>
 <p>This is the JavaScript we’ll be using, essentially. Do note that the field names match up, this is important. Now we provide a constructor function:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> node : (&#39;data -&gt; &#39;data tree_node Js<span class="kw">.</span>t) Js<span class="kw">.</span>constr = __hidden__</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> node : (&#39;data -&gt; &#39;data tree_node Js.t) Js.constr = __hidden__</code></pre></div>
 <p>This <code>node</code> constructor says that its a special JavaScript constructor that will invoke <code>__hidden__</code> with <code>new</code> and such that it expects one argument. An example is:</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> root = <span class="kw">new</span>%js node <span class="st">&quot;Hello&quot;</span></code></pre></div>
 <p>We can also make specialized constructors,</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> node_from_int : (<span class="dt">int</span> -&gt; <span class="dt">int</span> tree_node Js<span class="kw">.</span>t) Js<span class="kw">.</span>constr = __hidden__</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> node_from_int : (<span class="dt">int</span> -&gt; <span class="dt">int</span> tree_node Js.t) Js.constr = __hidden__</code></pre></div>
 <p>and a simple usage:</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> () =
   <span class="kw">let</span> root = <span class="kw">new</span>%js node <span class="st">&quot;Hello&quot;</span> <span class="kw">in</span>
@@ -535,10 +612,10 @@ Did say: Hello World</code></pre>
 
   <span class="co">(* Note that this just prints the raw object representation of the</span>
 <span class="co">  field value *)</span>
-  Firebug<span class="kw">.</span>console##log root##.left##.left##.value;
+  Firebug.console##log root##.left##.left##.value;
 
   <span class="co">(* This shows the value as expected *)</span>
-  print_endline root##.left##.left##.value</code></pre></div>
+  <span class="dt">print_endline</span> root##.left##.left##.value</code></pre></div>
 <p>You can compile and run it on node with: (Assuming file name is <code>trees_in_js.ml</code>)</p>
 <pre class="shell"><code>$ ocamlfind ocamlc -package js_of_ocaml.ppx -linkpkg trees_in_js.ml
 $ js_of_ocaml a.out -o T.js
@@ -549,44 +626,44 @@ Grand Kid</code></pre>
 <h1 id="depth-first-search-level-order-traversal-complete-examples">Depth First Search, Level order traversal complete examples</h1>
 <p>Now here’s an example of a preorder depth first search and level order traversal.</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">class</span> <span class="kw">type</span> [&#39;data] tree_node = <span class="kw">object</span>
-  <span class="kw">method</span> value : &#39;data Js<span class="kw">.</span>prop
-  <span class="kw">method</span> left : &#39;data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>prop
-  <span class="kw">method</span> right : &#39;data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>prop
+  <span class="kw">method</span> value : &#39;data Js.prop
+  <span class="kw">method</span> left : &#39;data tree_node Js.t Js.prop
+  <span class="kw">method</span> right : &#39;data tree_node Js.t Js.prop
 <span class="kw">end</span>
 
-<span class="kw">let</span> node : (&#39;data -&gt; &#39;data tree_node Js<span class="kw">.</span>t) Js<span class="kw">.</span>constr = __hidden__
+<span class="kw">let</span> node : (&#39;data -&gt; &#39;data tree_node Js.t) Js.constr = __hidden__
 
 <span class="kw">let</span> depth_first_search starting_node =
-  <span class="kw">let</span> stack = Stack<span class="kw">.</span>create () <span class="kw">in</span>
-  Stack<span class="kw">.</span>push starting_node stack;
-  <span class="kw">while</span> not (Stack<span class="kw">.</span>is_empty stack) <span class="kw">do</span>
-    <span class="kw">let</span> iter_node = Stack<span class="kw">.</span>pop stack <span class="kw">in</span>
+  <span class="kw">let</span> stack = <span class="dt">Stack</span>.create () <span class="kw">in</span>
+  <span class="dt">Stack</span>.push starting_node stack;
+  <span class="kw">while</span> <span class="dt">not</span> (<span class="dt">Stack</span>.is_empty stack) <span class="kw">do</span>
+    <span class="kw">let</span> iter_node = <span class="dt">Stack</span>.pop stack <span class="kw">in</span>
 
-    Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s &quot;</span> iter_node##.value
-    |&gt; print_string;
+    <span class="dt">Printf</span>.sprintf <span class="st">&quot;%s &quot;</span> iter_node##.value
+    |&gt; <span class="dt">print_string</span>;
 
-    <span class="kw">if</span> Js<span class="kw">.</span>Opt<span class="kw">.</span>return iter_node##.right |&gt; Js<span class="kw">.</span>Opt<span class="kw">.</span>test
-    <span class="kw">then</span> Stack<span class="kw">.</span>push iter_node##.right stack;
+    <span class="kw">if</span> Js.Opt.return iter_node##.right |&gt; Js.Opt.test
+    <span class="kw">then</span> <span class="dt">Stack</span>.push iter_node##.right stack;
 
-    <span class="kw">if</span> Js<span class="kw">.</span>Opt<span class="kw">.</span>return iter_node##.left |&gt; Js<span class="kw">.</span>Opt<span class="kw">.</span>test
-    <span class="kw">then</span> Stack<span class="kw">.</span>push iter_node##.left stack
+    <span class="kw">if</span> Js.Opt.return iter_node##.left |&gt; Js.Opt.test
+    <span class="kw">then</span> <span class="dt">Stack</span>.push iter_node##.left stack
 
   <span class="kw">done</span>
 
 <span class="kw">let</span> level_order starting_node =
-  <span class="kw">let</span> q = Queue<span class="kw">.</span>create () <span class="kw">in</span>
-  Queue<span class="kw">.</span>add starting_node q;
+  <span class="kw">let</span> q = <span class="dt">Queue</span>.create () <span class="kw">in</span>
+  <span class="dt">Queue</span>.add starting_node q;
 
-  <span class="kw">while</span> not (Queue<span class="kw">.</span>is_empty q) <span class="kw">do</span>
-    <span class="kw">let</span> pop = Queue<span class="kw">.</span>pop q <span class="kw">in</span>
-    Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s &quot;</span> pop##.value
-    |&gt; print_string;
+  <span class="kw">while</span> <span class="dt">not</span> (<span class="dt">Queue</span>.is_empty q) <span class="kw">do</span>
+    <span class="kw">let</span> pop = <span class="dt">Queue</span>.pop q <span class="kw">in</span>
+    <span class="dt">Printf</span>.sprintf <span class="st">&quot;%s &quot;</span> pop##.value
+    |&gt; <span class="dt">print_string</span>;
 
-    <span class="kw">if</span> Js<span class="kw">.</span>Opt<span class="kw">.</span>(return pop##.left |&gt; test)
-    <span class="kw">then</span> Queue<span class="kw">.</span>push pop##.left q;
+    <span class="kw">if</span> Js.Opt.(return pop##.left |&gt; test)
+    <span class="kw">then</span> <span class="dt">Queue</span>.push pop##.left q;
 
-    <span class="kw">if</span> Js<span class="kw">.</span>Opt<span class="kw">.</span>(return pop##.right |&gt; test)
-    <span class="kw">then</span> Queue<span class="kw">.</span>push pop##.right q
+    <span class="kw">if</span> Js.Opt.(return pop##.right |&gt; test)
+    <span class="kw">then</span> <span class="dt">Queue</span>.push pop##.right q
 
   <span class="kw">done</span>
 
@@ -601,25 +678,25 @@ Grand Kid</code></pre>
   root##.left##.right##.right := <span class="kw">new</span>%js node <span class="st">&quot;E&quot;</span>;
   root##.right##.right##.left := <span class="kw">new</span>%js node <span class="st">&quot;H&quot;</span>;
 
-  depth_first_search root |&gt; print_newline;
-  level_order root |&gt; print_newline</code></pre></div>
+  depth_first_search root |&gt; <span class="dt">print_newline</span>;
+  level_order root |&gt; <span class="dt">print_newline</span></code></pre></div>
 <p>and compile it just like given earlier in the blog post. Shameless plug, you can also turn it into an executable with a feature I added to the <code>js_of_ocaml</code> compiler,</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">$ ocamlfind ocamlc -package js_of_ocaml.ppx -linkpkg trees_in_js.ml
-$ js_of_ocaml --custom-header=&#39;#!/usr/bin/env node&#39; a.out -o T<span class="kw">.</span>js
-$ chmod +x T<span class="kw">.</span>js
-$ /T<span class="kw">.</span>js</code></pre></div>
+$ js_of_ocaml --custom-header=&#39;#!/usr/bin/env node&#39; a.out -o T.js
+$ chmod +x T.js
+$ /T.js</code></pre></div>
 <p>Yay, we used the resources of two programming languages standard libaries in one program!</p>
 <p>Now we can return to why the typing of the <code>class type</code> matters. The fully correct typing of <code>tree_node</code> is:</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">class</span> <span class="kw">type</span> [&#39;data] tree_node = <span class="kw">object</span>
-  <span class="kw">method</span> value : &#39;data Js<span class="kw">.</span>prop
-  <span class="kw">method</span> left : &#39;data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>Opt<span class="kw">.</span>t Js<span class="kw">.</span>prop
-  <span class="kw">method</span> right : &#39;data tree_node Js<span class="kw">.</span>t Js<span class="kw">.</span>Opt<span class="kw">.</span>t Js<span class="kw">.</span>prop
+  <span class="kw">method</span> value : &#39;data Js.prop
+  <span class="kw">method</span> left : &#39;data tree_node Js.t Js.Opt.t Js.prop
+  <span class="kw">method</span> right : &#39;data tree_node Js.t Js.Opt.t Js.prop
 <span class="kw">end</span></code></pre></div>
 <p>Notice the addition of <code>Js.Opt.t</code>. Since the <code>left</code>, <code>right</code> are nullable, we should capture that in the OCaml API, this however does force us to use <code>Js.Opt</code> and so we’d have to do things like:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">root##.left := <span class="kw">new</span>%js node <span class="st">&quot;Left side&quot;</span> |&gt; Js<span class="kw">.</span>Opt<span class="kw">.</span>return;</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">root##.left := <span class="kw">new</span>%js node <span class="st">&quot;Left side&quot;</span> |&gt; Js.Opt.return;</code></pre></div>
 <p>When trying to set the field, etc. But since we didn’t expose that nullability of the field in the type signature, the <code>depth_first_search</code> code needs to check if the field is indeed <code>null</code>, which would have been otherwise forced by the type system had we used <code>Js.Opt</code>, aka:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">if</span> Js<span class="kw">.</span>Opt<span class="kw">.</span>return iter_node##.right |&gt; Js<span class="kw">.</span>Opt<span class="kw">.</span>test
-<span class="kw">then</span> Stack<span class="kw">.</span>push iter_node##.right stack;</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">if</span> Js.Opt.return iter_node##.right |&gt; Js.Opt.test
+<span class="kw">then</span> <span class="dt">Stack</span>.push iter_node##.right stack;</code></pre></div>
 <p>These are tradeoffs that you can make in your own usage.</p>
 <p>I hope this makes it easier for you to use OCaml, JavaScript together.</p>]]></description>
     <pubDate>Sun, 17 Jul 2016 00:00:00 UT</pubDate>
@@ -636,20 +713,20 @@ $ /T<span class="kw">.</span>js</code></pre></div>
 <p>A common complaint about OCaml is the lack of true parallelism, about the single threadedness of the runtime. This is true but its not like <code>OCaml</code> programmers don’t have solutions some solutions. Here’s an easy example that you can instantly use in your coding.</p>
 <h1 id="setup">Setup</h1>
 <p>First we will need some way to verify that our system threads are actually working, we’ll use some math equation to purposefully cause CPU load. Here’s the <code>Sieve Of Eratosthenes</code> Algorithm that I copied from <a href="http://www.scriptol.com/programming/sieve.php#ocaml">here</a>.</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">open</span> List
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">open</span> <span class="dt">List</span>
 
-<span class="kw">type</span> integer = <span class="dt">Int</span> <span class="kw">of</span> <span class="dt">int</span>
-<span class="kw">let</span> number_two = <span class="dt">Int</span>(<span class="dv">2</span>)
-<span class="kw">let</span> number_zero = <span class="dt">Int</span>(<span class="dv">0</span>)
-<span class="kw">let</span> is_less_than_two (<span class="dt">Int</span> n) = n &lt; <span class="dv">2</span>
-<span class="kw">let</span> incr (<span class="dt">Int</span> n) = <span class="dt">Int</span>(n + <span class="dv">1</span>)
-<span class="kw">let</span> decr (<span class="dt">Int</span> n) = <span class="dt">Int</span>(n - <span class="dv">1</span>)
-<span class="kw">let</span> is_number_zero (<span class="dt">Int</span> n) = n = <span class="dv">0</span>
+<span class="kw">type</span> integer = Int <span class="kw">of</span> <span class="dt">int</span>
+<span class="kw">let</span> number_two = Int(<span class="dv">2</span>)
+<span class="kw">let</span> number_zero = Int(<span class="dv">0</span>)
+<span class="kw">let</span> is_less_than_two (Int n) = n &lt; <span class="dv">2</span>
+<span class="kw">let</span> <span class="dt">incr</span> (Int n) = Int(n + <span class="dv">1</span>)
+<span class="kw">let</span> <span class="dt">decr</span> (Int n) = Int(n - <span class="dv">1</span>)
+<span class="kw">let</span> is_number_zero (Int n) = n = <span class="dv">0</span>
 
 <span class="kw">let</span> iota n =
   <span class="kw">let</span> <span class="kw">rec</span> loop curr counter =
     <span class="kw">if</span> is_less_than_two counter <span class="kw">then</span> []
-    <span class="kw">else</span> curr::(loop (incr curr) (decr counter))
+    <span class="kw">else</span> curr::(loop (<span class="dt">incr</span> curr) (<span class="dt">decr</span> counter))
   <span class="kw">in</span>
   loop number_two n
 
@@ -659,42 +736,42 @@ $ /T<span class="kw">.</span>js</code></pre></div>
     | car::cdr <span class="kw">when</span> is_number_zero car -&gt;
       car::(choose_pivot cdr)
     | car::cdr -&gt;
-      car::(choose_pivot (do_sieve car (decr car) cdr))
+      car::(choose_pivot (do_sieve car (<span class="dt">decr</span> car) cdr))
 
   <span class="kw">and</span> do_sieve step current lst =
     <span class="kw">match</span> lst <span class="kw">with</span>
     | [] -&gt; []
     | car::cdr -&gt;
       <span class="kw">if</span> is_number_zero current
-      <span class="kw">then</span> number_zero::(do_sieve step (decr step) cdr)
-      <span class="kw">else</span> car::(do_sieve step (decr current) cdr)
+      <span class="kw">then</span> number_zero::(do_sieve step (<span class="dt">decr</span> step) cdr)
+      <span class="kw">else</span> car::(do_sieve step (<span class="dt">decr</span> current) cdr)
   <span class="kw">in</span>
   choose_pivot lst
 
 <span class="kw">let</span> is_prime n =
   <span class="kw">match</span> rev (sieve (iota n)) <span class="kw">with</span>
-    x::_ -&gt; not (is_number_zero x)</code></pre></div>
+    x::_ -&gt; <span class="dt">not</span> (is_number_zero x)</code></pre></div>
 <p>Now our <code>Lwt</code>, <code>Lwt_preemptive</code> code:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">open</span> Lwt<span class="kw">.</span>Infix
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">open</span> Lwt.Infix
 
 <span class="kw">let</span> do_example port =
-  <span class="kw">let</span> address = Unix<span class="kw">.</span>(<span class="dt">ADDR_INET</span> (inet_addr_loopback, port)) <span class="kw">in</span>
-  Lwt_io<span class="kw">.</span>establish_server address (<span class="kw">fun</span> (tcp_in, tcp_out) -&gt;
-      () |&gt; Lwt_preemptive<span class="kw">.</span>detach (<span class="kw">fun</span> () -&gt;
+  <span class="kw">let</span> address = Unix.(ADDR_INET (inet_addr_loopback, port)) <span class="kw">in</span>
+  Lwt_io.establish_server address (<span class="kw">fun</span> (tcp_in, tcp_out) -&gt;
+      () |&gt; Lwt_preemptive.detach (<span class="kw">fun</span> () -&gt;
           <span class="kw">while</span> <span class="kw">true</span> <span class="kw">do</span>
-            ignore (is_prime (<span class="dt">Int</span> port))
+            <span class="dt">ignore</span> (is_prime (Int port))
           <span class="kw">done</span>
         )
-      |&gt; Lwt<span class="kw">.</span>ignore_result
+      |&gt; Lwt.ignore_result
     )
-  |&gt; ignore |&gt; Lwt<span class="kw">.</span>return
+  |&gt; <span class="dt">ignore</span> |&gt; Lwt.return
 
 <span class="kw">let</span> () =
-  <span class="kw">let</span> <span class="kw">rec</span> forever () = fst (Lwt<span class="kw">.</span>wait ()) &gt;&gt;= forever <span class="kw">in</span>
-  Lwt_preemptive<span class="kw">.</span>init <span class="dv">5</span> <span class="dv">10</span> ignore;
+  <span class="kw">let</span> <span class="kw">rec</span> forever () = <span class="dt">fst</span> (Lwt.wait ()) &gt;&gt;= forever <span class="kw">in</span>
+  Lwt_preemptive.init <span class="dv">5</span> <span class="dv">10</span> <span class="dt">ignore</span>;
   ([<span class="dv">2000</span>; <span class="dv">2001</span>; <span class="dv">2002</span>; <span class="dv">2003</span>; <span class="dv">2004</span>]
-   |&gt; Lwt_list<span class="kw">.</span>iter_p do_example &gt;&gt;= forever)
-  |&gt; Lwt_main<span class="kw">.</span>run</code></pre></div>
+   |&gt; Lwt_list.iter_p do_example &gt;&gt;= forever)
+  |&gt; Lwt_main.run</code></pre></div>
 <p>The code that runs inside the callback to <code>Lwt_io.establish_server</code> uses <code>Lwt_preemptive.detach</code>, this creates a new system thread whenever there is something that connects on ports <code>[2000; 2001; 2002; 2003; 2004]</code>. You don’t have to call <code>Lwt_preemptive.init</code> since detach will do it anyway, but I am doing it to ensure that at least 5 threads are made with 10 being the max.</p>
 <p>We compile it with:</p>
 <pre class="shell"><code>$ ocamlfind ocamlopt -thread -package lwt.unix,lwt.preemptive test_case.ml -linkpkg -o TEST_CASE</code></pre>
@@ -711,33 +788,33 @@ $ /T<span class="kw">.</span>js</code></pre></div>
     <description><![CDATA[<p>I wanted to use a timeout in OCaml for some shell coding but I didn’t want to introduce a big dependency on <code>Lwt</code>. After some googling I found <a href="https://www.reddit.com/r/ocaml/comments/3qapbv/question_about_writing_a_timeout_function_and_the/">this</a></p>
 <p>Here’s my take on the timeout function, basically its the same but I push everything into the timeout function itself and use labeled args along a callback for when the timeout goes off.</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> timeout ?(on_timeout = <span class="kw">fun</span> () -&gt; ()) ~arg ~timeout ~default_value f =
-  <span class="kw">let</span> <span class="ot">module</span> Wrapper = <span class="kw">struct</span> <span class="kw">exception</span> <span class="dt">Timeout</span> <span class="kw">end</span> <span class="kw">in</span>
-  <span class="kw">let</span> sigalrm_handler = Sys<span class="kw">.</span><span class="dt">Signal_handle</span> (<span class="kw">fun</span> _ -&gt; raise Wrapper<span class="kw">.</span><span class="dt">Timeout</span>) <span class="kw">in</span>
-  <span class="kw">let</span> old_behavior = Sys<span class="kw">.</span>signal Sys<span class="kw">.</span>sigalrm sigalrm_handler <span class="kw">in</span>
-  <span class="kw">let</span> reset_sigalrm () = Sys<span class="kw">.</span>set_signal Sys<span class="kw">.</span>sigalrm old_behavior <span class="kw">in</span>
-  ignore (Unix<span class="kw">.</span>alarm timeout);
+  <span class="kw">let</span> <span class="kw">module</span> Wrapper = <span class="kw">struct</span> <span class="kw">exception</span> Timeout <span class="kw">end</span> <span class="kw">in</span>
+  <span class="kw">let</span> sigalrm_handler = <span class="dt">Sys</span>.Signal_handle (<span class="kw">fun</span> _ -&gt; <span class="dt">raise</span> Wrapper.Timeout) <span class="kw">in</span>
+  <span class="kw">let</span> old_behavior = <span class="dt">Sys</span>.signal <span class="dt">Sys</span>.sigalrm sigalrm_handler <span class="kw">in</span>
+  <span class="kw">let</span> reset_sigalrm () = <span class="dt">Sys</span>.set_signal <span class="dt">Sys</span>.sigalrm old_behavior <span class="kw">in</span>
+  <span class="dt">ignore</span> (Unix.alarm timeout);
   <span class="kw">try</span>
     <span class="kw">let</span> res = f arg <span class="kw">in</span>
     reset_sigalrm ();
     res
   <span class="kw">with</span> exc -&gt;
     reset_sigalrm ();
-    <span class="kw">if</span> exc = Wrapper<span class="kw">.</span><span class="dt">Timeout</span>
+    <span class="kw">if</span> exc = Wrapper.Timeout
     <span class="kw">then</span> (on_timeout (); default_value)
-    <span class="kw">else</span> raise exc</code></pre></div>
+    <span class="kw">else</span> <span class="dt">raise</span> exc</code></pre></div>
 <p>and you can can use it like so:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">Sys<span class="kw">.</span>command
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="dt">Sys</span>.command
 |&gt; timeout 
    ~arg:<span class="st">&quot;sleep 3&quot;</span> 
    ~timeout:<span class="dv">2</span> 
    ~default_value:(<span class="dv">-1</span>) 
-   ~on_timeout:(<span class="kw">fun</span> () -&gt; print_endline <span class="st">&quot;func timed out&quot;</span>)</code></pre></div>
+   ~on_timeout:(<span class="kw">fun</span> () -&gt; <span class="dt">print_endline</span> <span class="st">&quot;func timed out&quot;</span>)</code></pre></div>
 <p>You might notice that your wrapped function only gets one arg, so how can we use this timeout wrapper on functions that take more than one argument? By currying and using a dummy arg of unit.</p>
 <p>Example:</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> () =
   <span class="kw">let</span> partialed first second third () = first + second + third <span class="kw">in</span>
   timeout ~arg:() ~timeout:<span class="dv">4</span> ~default_value:(<span class="dv">-1</span>) (partialed <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>)
-  |&gt; ignore</code></pre></div>
+  |&gt; <span class="dt">ignore</span></code></pre></div>
 <p>I’ve added this to my <code>podge</code> library found <a href="http://github.com/fxfactorial/podge">here</a>, a collection of useful utility functions.</p>]]></description>
     <pubDate>Tue, 22 Mar 2016 00:00:00 UT</pubDate>
     <guid>http://hyegar.com/2016/03/22/simple-timeouts/index.html</guid>
@@ -785,85 +862,6 @@ libxl: error: libxl_create.c:1022:domcreate_rebuild_done: cannot
 </ol>]]></description>
     <pubDate>Tue, 15 Mar 2016 00:00:00 UT</pubDate>
     <guid>http://hyegar.com/2016/03/15/building-xen-arm-from-source/index.html</guid>
-    <dc:creator>Edgar Aroutiounian</dc:creator>
-</item>
-<item>
-    <title>A Domain Generating Algorithm in OCaml</title>
-    <link>http://hyegar.com/2016/03/07/dga-padcrypt-ocaml/index.html</link>
-    <description><![CDATA[<p>Scrolling through twitter I saw someone mention something about the padcrypt <a href="https://en.wikipedia.org/wiki/Domain_generation_algorithm">dga</a>. Basically it generates random ish domain names.</p>
-<p>Here’s an <code>OCaml</code> reimplementation of the Python code written <a href="http://johannesbader.ch/2016/03/the-dga-of-padcrypt/">here</a>.</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">module</span> D = CalendarLib<span class="kw">.</span><span class="dt">Date</span>
-
-<span class="kw">let</span> tlds = [|<span class="st">&quot;com&quot;</span>;<span class="st">&quot;co.uk&quot;</span>; <span class="st">&quot;de&quot;</span>;<span class="st">&quot;org&quot;</span>;<span class="st">&quot;net&quot;</span>;<span class="st">&quot;eu&quot;</span>;<span class="st">&quot;info&quot;</span>;<span class="st">&quot;online&quot;</span>;
-            <span class="st">&quot;co&quot;</span>; <span class="st">&quot;cc&quot;</span>; <span class="st">&quot;website&quot;</span>|]
-
-<span class="kw">let</span> tlds_count = Array<span class="kw">.</span>length tlds
-<span class="kw">let</span> nr_domains = <span class="dv">24</span> * <span class="dv">3</span>
-<span class="kw">let</span> digit_mapping = <span class="st">&quot;abcdnfolmk&quot;</span>
-
-<span class="kw">let</span> seed_string ~date i =
-  Printf<span class="kw">.</span>sprintf <span class="st">&quot;%d-%d-%d|%d&quot;</span>
-    (D<span class="kw">.</span>day_of_month date)
-    (D<span class="kw">.</span>month date |&gt; D<span class="kw">.</span>int_of_month)
-    (D<span class="kw">.</span>year date)
-    i
-
-<span class="kw">let</span> domain_generate date =
-  <span class="kw">let</span> <span class="kw">rec</span> helper count accum =
-    <span class="kw">if</span> count = nr_domains <span class="kw">then</span> accum
-    <span class="kw">else</span> seed_string ~date count :: helper (count + <span class="dv">1</span>) accum
-  <span class="kw">in</span>
-  helper <span class="dv">0</span> []
-
-<span class="kw">let</span> () =
-  Nocrypto_entropy_unix<span class="kw">.</span>initialize ();
-  CalendarLib<span class="kw">.</span>Date<span class="kw">.</span>today ()
-  |&gt; domain_generate
-  |&gt; List<span class="kw">.</span>iter <span class="kw">begin</span> <span class="kw">fun</span> date_stamp -&gt;
-    <span class="kw">let</span> hashed =
-      (Cstruct<span class="kw">.</span>of_string date_stamp)
-      |&gt; Nocrypto<span class="kw">.</span>Hash<span class="kw">.</span>digest <span class="dt">`SHA256</span>
-      |&gt; Hex<span class="kw">.</span>of_cstruct |&gt; <span class="kw">function</span> <span class="dt">`Hex</span> s -&gt; s
-    <span class="kw">in</span>
-    <span class="kw">let</span> domain =
-      String<span class="kw">.</span>sub hashed <span class="dv">3</span> <span class="dv">16</span>
-      |&gt; Stringext<span class="kw">.</span>to_list
-      |&gt; List<span class="kw">.</span>map
-        (<span class="kw">function</span> <span class="ch">&#39;0&#39;</span>..<span class="ch">&#39;9&#39;</span> <span class="kw">as</span> hh -&gt;
-          Char<span class="kw">.</span>code hh - <span class="dv">48</span> |&gt; String<span class="kw">.</span>get digit_mapping
-                | o -&gt; o)
-      |&gt; Stringext<span class="kw">.</span>of_list
-    <span class="kw">in</span>
-    <span class="kw">let</span> tld_index =
-      String<span class="kw">.</span>get hashed (String<span class="kw">.</span>length hashed - <span class="dv">1</span>)
-      |&gt; Printf<span class="kw">.</span>sprintf <span class="st">&quot;0x%c&quot;</span>
-      |&gt; int_of_string
-      |&gt; <span class="kw">fun</span> tld -&gt; <span class="kw">if</span> tld &gt;= tlds_count <span class="kw">then</span> <span class="dv">0</span> <span class="kw">else</span> tld
-    <span class="kw">in</span>
-    Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s.%s&quot;</span> domain (Array<span class="kw">.</span>get tlds tld_index)
-    |&gt; print_endline
-  <span class="kw">end</span></code></pre></div>
-<p>You can build it with a simple <code>Makefile</code> like this:</p>
-<div class="sourceCode"><pre class="sourceCode makefile"><code class="sourceCode makefile"><span class="dv">all:</span>
-	ocamlfind ocamlopt main.ml <span class="ch">\</span>
-	<span class="ch">-</span><span class="fu">package nocrypto.unix,calendar,hex,stringext </span><span class="ch">\</span>
-<span class="fu">	-linkpkg -o Dga</span></code></pre></div>
-<p>and here’s a sample output:</p>
-<pre class="text"><code>&gt; ./Dga 
-...
-abbdddmfllkbamco.com
-fbfknncbfcbbmlde.website
-flcfcbaocdmbfbmb.website
-mkaakfkaoocealda.com
-doabakblkbaffmnd.cc
-llacffaobdcodbca.com
-fcdebfefakffamco.co
-dbbbenbaalcbkbnl.com
-dkomadcbodnamfbb.com
-aanamlbblmaefofc.org</code></pre>
-<p>For reference the github repo is <a href="https://github.com/fxfactorial/dga-padcrypt-ocaml">here</a>.</p>]]></description>
-    <pubDate>Mon, 07 Mar 2016 00:00:00 UT</pubDate>
-    <guid>http://hyegar.com/2016/03/07/dga-padcrypt-ocaml/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 

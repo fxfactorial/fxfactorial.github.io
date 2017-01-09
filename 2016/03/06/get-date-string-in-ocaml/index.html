@@ -50,12 +50,12 @@
 <p>You do could it like this:</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="co">(* Assume this is code.ml *)</span>
 <span class="kw">let</span> time_now () =
-  Unix<span class="kw">.</span>(
+  Unix.(
     <span class="kw">let</span> localtime = localtime (time ()) <span class="kw">in</span>
-    Printf<span class="kw">.</span>sprintf <span class="st">&quot;[%02u:%02u:%02u]&quot;</span>
+    <span class="dt">Printf</span>.sprintf <span class="st">&quot;[%02u:%02u:%02u]&quot;</span>
       localtime.tm_hour localtime.tm_min localtime.tm_sec)
 	  
-<span class="kw">let</span> () = time_now () |&gt; print_endline</code></pre></div>
+<span class="kw">let</span> () = time_now () |&gt; <span class="dt">print_endline</span></code></pre></div>
 <p>This will require you to link the <code>unix</code> package against your program, for example:</p>
 <pre class="shell"><code>$ ocamlfind ocamlopt -package unix -linkpkg code.ml -o Time_now</code></pre>
 <h1 id="higher-level-way-crypto-example">Higher level way + Crypto example</h1>
@@ -65,16 +65,16 @@
 <pre class="shell"><code>$ opam install nocrypto</code></pre>
 <p>and the code:</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="co">(* Assume this is code.ml *)</span>
-<span class="ot">module</span> D = CalendarLib<span class="kw">.</span><span class="dt">Date</span>
+<span class="kw">module</span> D = CalendarLib.Date
 
 <span class="kw">let</span> nr_domains = <span class="dv">24</span>
 
 <span class="kw">let</span> seed_string ~date i =
-  Printf<span class="kw">.</span>sprintf
+  <span class="dt">Printf</span>.sprintf
     <span class="st">&quot;%d-%d-%d:%d&quot;</span>
-    (D<span class="kw">.</span>day_of_month date)
-    (D<span class="kw">.</span>month date |&gt; D<span class="kw">.</span>int_of_month)
-    (D<span class="kw">.</span>year date)
+    (D.day_of_month date)
+    (D.month date |&gt; D.int_of_month)
+    (D.year date)
     i
 
 <span class="kw">let</span> domain_generate date =
@@ -85,12 +85,12 @@
   helper <span class="dv">0</span> []
 
 <span class="kw">let</span> () =
-  Nocrypto_entropy_unix<span class="kw">.</span>initialize ();
-  CalendarLib<span class="kw">.</span>Date<span class="kw">.</span>today ()
+  Nocrypto_entropy_unix.initialize ();
+  CalendarLib.Date.today ()
   |&gt; domain_generate
-  |&gt; List<span class="kw">.</span>iter <span class="kw">begin</span> <span class="kw">fun</span> date_stamp -&gt;
-    Nocrypto<span class="kw">.</span>Hash<span class="kw">.</span>digest <span class="dt">`SHA256</span> (Cstruct<span class="kw">.</span>of_string date_stamp)
-    |&gt; Cstruct<span class="kw">.</span>to_string |&gt; print_endline
+  |&gt; <span class="dt">List</span>.iter <span class="kw">begin</span> <span class="kw">fun</span> date_stamp -&gt;
+    Nocrypto.Hash.digest `SHA256 (Cstruct.of_string date_stamp)
+    |&gt; Cstruct.to_string |&gt; <span class="dt">print_endline</span>
   <span class="kw">end</span></code></pre></div>
 <p>and compiling with:</p>
 <pre class="shell"><code>$ ocamlfind ocamlopt -package calendar,nocrypto.unix -linkpkg code.ml -o Ex</code></pre>

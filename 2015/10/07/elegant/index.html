@@ -47,11 +47,11 @@
     </header>
     <p>I love elegant code, code that just flows and lets you “see” how the data moves through execution. As part of my <a href="https://github.com/fxfactorial/brozip">brozip</a> application, I wanted to give the feature of recursively compressing or decompressing a directory. So I just wrote exactly what came to mind and came up with this</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> <span class="kw">rec</span> walk_and_action action node =
-  <span class="kw">if</span> Sys<span class="kw">.</span>is_directory node
-  <span class="kw">then</span> (Sys<span class="kw">.</span>readdir node
-        |&gt; Array<span class="kw">.</span>to_list
-        |&gt; List<span class="kw">.</span>map (Filename<span class="kw">.</span>concat node)
-        |&gt; Lwt_list<span class="kw">.</span>iter_p (walk_and_action action))
+  <span class="kw">if</span> <span class="dt">Sys</span>.is_directory node
+  <span class="kw">then</span> (<span class="dt">Sys</span>.readdir node
+        |&gt; <span class="dt">Array</span>.to_list
+        |&gt; <span class="dt">List</span>.map (<span class="dt">Filename</span>.concat node)
+        |&gt; Lwt_list.iter_p (walk_and_action action))
   <span class="kw">else</span> action node</code></pre></div>
 <p>Where <code>action</code> has type: <code>string -&gt; unit Lwt.t</code> (a function that takes a <code>string</code> and returns <code>unit Lwt.t</code>) and <code>node</code> is just a <code>string</code> for the file name. Translating the code into English, we first check if the file name represents a directory, if its a directory then we</p>
 <blockquote>

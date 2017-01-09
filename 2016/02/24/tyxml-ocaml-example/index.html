@@ -51,7 +51,7 @@
 <p>Let’s start by installing <code>tyxml</code> itself, we can do that with:</p>
 <pre class="shell"><code>$ opam install tyxml</code></pre>
 <p>And here’s the OCaml code:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">open</span> Html5<span class="kw">.</span>M
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">open</span> Html5.M
 
 <span class="kw">let</span> this_title = title (pcdata <span class="st">&quot;Your Cool Web Page&quot;</span>)
 
@@ -96,25 +96,25 @@
      common_footer]
 
 <span class="kw">let</span> main_script =
-  script ~a:[a_src (Xml<span class="kw">.</span>uri_of_string <span class="st">&quot;main.js&quot;</span>)] (pcdata <span class="st">&quot;&quot;</span>)
+  script ~a:[a_src (Xml.uri_of_string <span class="st">&quot;main.js&quot;</span>)] (pcdata <span class="st">&quot;&quot;</span>)
 
 <span class="kw">let</span> home_page_doc =
   html (head this_title
-          [link ~rel:[<span class="dt">`Stylesheet</span>] ~href:<span class="st">&quot;home.css&quot;</span> ();])
+          [link ~rel:[`Stylesheet] ~href:<span class="st">&quot;home.css&quot;</span> ();])
     (body [image_box; content_box; main_script])
 
 <span class="kw">let</span> pages = [(<span class="st">&quot;index.html&quot;</span>, home_page_doc)]
 
 <span class="kw">let</span> () =
-  List<span class="kw">.</span>iter <span class="kw">begin</span> <span class="kw">fun</span> (page_name, a_page) -&gt;
-    Printf<span class="kw">.</span>sprintf <span class="st">&quot;Generating: %s&quot;</span> page_name |&gt; print_endline;
-    <span class="kw">let</span> file_handle = open_out page_name <span class="kw">in</span>
-    Html5<span class="kw">.</span>P<span class="kw">.</span>print (output_string file_handle) a_page;
-    close_out file_handle;
-    <span class="kw">match</span> Sys<span class="kw">.</span>command (Printf<span class="kw">.</span>sprintf <span class="st">&quot;tidy -im -ashtml %s&quot;</span> page_name) <span class="kw">with</span>
+  <span class="dt">List</span>.iter <span class="kw">begin</span> <span class="kw">fun</span> (page_name, a_page) -&gt;
+    <span class="dt">Printf</span>.sprintf <span class="st">&quot;Generating: %s&quot;</span> page_name |&gt; <span class="dt">print_endline</span>;
+    <span class="kw">let</span> file_handle = <span class="dt">open_out</span> page_name <span class="kw">in</span>
+    Html5.P.print (<span class="dt">output_string</span> file_handle) a_page;
+    <span class="dt">close_out</span> file_handle;
+    <span class="kw">match</span> <span class="dt">Sys</span>.command (<span class="dt">Printf</span>.sprintf <span class="st">&quot;tidy -im -ashtml %s&quot;</span> page_name) <span class="kw">with</span>
     | <span class="dv">0</span> -&gt; ()
     | c -&gt;
-      print_endline <span class="st">&quot;You don't have tidy, no pretty printing of html&quot;</span>
+      <span class="dt">print_endline</span> <span class="st">&quot;You don't have tidy, no pretty printing of html&quot;</span>
   <span class="kw">end</span>
     pages</code></pre></div>
 <p>Notice the example include a script tag usage and CSS usage. This is using just <code>tyxml</code> and the <code>stdlib</code>.</p>

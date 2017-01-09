@@ -42,6 +42,87 @@
       <article>
     <header>
         <h1>
+            <a href="./2017/01/08/variants-in-cpp/" title="Permalink">
+                variants in C++14 without boost
+            </a>
+        </h1>
+        <span class="post-date">January  8, 2017</span> in 
+        <span class="post-tags"><a href="./tags/variants/">variants</a>, <a href="./tags/C%2B%2B/">C++</a>, <a href="./tags/C%2B%2B14/">C++14</a></span>
+    </header>
+    <h1 id="variants-in-their-native-land">Variants in their native land</h1>
+<p>One of the best parts of functional programming are <code>Algebraic Data Types</code>, also known as <code>Sum</code> types, also known as <code>variants</code>. They help you make more type safe programs, self-documenting code.</p>
+<p>Here are some examples in <code>OCaml</code></p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">type</span> 'a <span class="dt">option</span> = <span class="dt">Some</span> <span class="kw">of</span> 'a | <span class="dt">None</span></code></pre></div>
+<p>This is the famous option type of functional programming. A fun thing about option is that its also a Monad, so <code>&gt;&gt;=</code> aka <code>bind</code> is easily defined as:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> ( &gt;&gt;= ) x f = <span class="kw">match</span> x <span class="kw">with</span> <span class="dt">Some</span> h -&gt; f h | _ -&gt; <span class="dt">None</span></code></pre></div>
+<p>Another example recently added to the OCaml standard library is the result type.</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">type</span> ('success, 'failure) result = Ok <span class="kw">of</span> 'success | Error <span class="kw">of</span> 'failure</code></pre></div>
+<p>The things prefixed with <code>'</code> are called type variables, they let you write generic code from the getgo. We only need one for <code>option</code> but we need two different ones for result so that the type of the <code>Ok</code> variant need not be the same as the type of the <code>Error</code> variant.</p>
+<p>Once you get an <code>result</code> value, you can pattern match on it:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> process_result = <span class="kw">function</span> 
+  | Ok r -&gt; <span class="co">(* Do something with r *)</span>
+  | Error reason -&gt; <span class="co">(* Do something with the error *)</span></code></pre></div>
+<h1 id="variants-in-c">variants in C++</h1>
+<p>In <code>C++</code> variants are not first class citizens of the language, so they need to be provided by a library. In modern <code>C++</code> our options are <code>C++17</code>’s <code>std::variant</code>, <code>boost::variant</code> or someone’s own rolled version.</p>
+<p>I don’t want the <code>boost</code> dependency and I can’t use <code>C++17</code> so I looked for a library implementation. I found one by <a href="https://github.com/mapbox/variant">mapbox</a> and it fit my usecase perfectly; its a header only template library and I like the API provided. Here’s my implementation of <code>option</code> using the <code>mapbox</code> variant library.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="co">// Let's assume this file is named optional.hpp</span>
+<span class="pp">#pragma once</span>
+
+<span class="pp">#include </span><span class="im">&lt;mapbox/variant.hpp&gt;</span>
+
+<span class="kw">namespace</span> optional {
+  <span class="kw">struct</span> None { };
+  <span class="kw">template</span>&lt;<span class="kw">typename</span> T&gt;
+  <span class="kw">struct</span> Some { T payload; };
+
+  <span class="kw">template</span>&lt;<span class="kw">typename</span> T&gt;
+  <span class="kw">struct</span> Optional : mapbox::util::variant&lt;None, Some&lt;T&gt;&gt; {
+    <span class="kw">using</span> Base = mapbox::util::variant&lt;None, Some&lt;T&gt;&gt;;
+    <span class="kw">using</span> Base::Base;
+  };
+
+  <span class="co">// These two are helper functions, like std::make_unique, etc.</span>
+  <span class="kw">template</span>&lt;<span class="kw">typename</span> T&gt;
+  <span class="kw">auto</span> some(T x)  { <span class="cf">return</span> Optional&lt;T&gt;{Some&lt;T&gt;{x}}; }
+
+  <span class="kw">template</span>&lt;<span class="kw">typename</span> T&gt;
+  <span class="kw">auto</span> none(<span class="dt">void</span>) { <span class="cf">return</span> Optional&lt;T&gt;{None{}}; }
+
+}</code></pre></div>
+<p>And here’s an example usage:</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="co">// Let's assume this file is named main.cpp</span>
+<span class="pp">#include </span><span class="im">&lt;string&gt;</span>
+<span class="pp">#include </span><span class="im">&lt;iostream&gt;</span>
+
+<span class="pp">#include </span><span class="im">&quot;optional.hpp&quot;</span>
+
+<span class="co">// This lets just make std::string just by adding a suffix of 's'</span>
+<span class="co">// to things that otherwise look like char *</span>
+<span class="kw">using</span> <span class="kw">namespace</span> <span class="bu">std::</span>literals<span class="bu">::</span>string_literals;
+
+<span class="co">// Pretend that this is something that could fail.</span>
+<span class="kw">auto</span> file_contents(<span class="dt">void</span>) {
+  <span class="cf">return</span> optional::some(<span class="st">&quot;some file contents&quot;</span>s);
+}
+
+<span class="dt">int</span> main(<span class="dt">void</span>)
+{
+  file_contents()
+    .match(
+  	   [](optional::None) {
+  	     <span class="bu">std::</span>cout &lt;&lt; <span class="st">&quot;Check if file existed</span><span class="sc">\n</span><span class="st">&quot;</span>;
+  	   },
+  	   [](<span class="kw">auto</span> some) {
+  	     <span class="bu">std::</span>cout &lt;&lt; <span class="st">&quot;File contents: &quot;</span> &lt;&lt; some.payload;
+  	   });
+}</code></pre></div>
+<p>and you can easily compile it with, assuming that you added mapbox/variant.hpp to your compiler’s include search path…</p>
+<pre class="shell"><code>$ clang++ -std=c++14 main.cpp</code></pre>
+<p>Happy coding.</p>
+</article>
+<article>
+    <header>
+        <h1>
             <a href="./2016/12/23/async-promises-node/" title="Permalink">
                 node's async, await, Promises.
             </a>
@@ -123,27 +204,27 @@
 <h2 id="example">Example</h2>
 <p>We’re going to provide a pretty meaty example, we’ll make a custom object in C++ code, then we’ll use it from a <code>JavaScript</code> script. Imagine we want to expose a <code>File</code> like object, JS the language itself has no notion of a File, so it will need support from the C/C++ level; you can imagine this as the objects that say <code>[native code]</code>.</p>
 <p>Here’s the code, afterwards is a detailed breakdown (The <code>R</code> C++ feature confuses the syntax highlighter)</p>
-<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="ot">#include &lt;string&gt;</span>
-<span class="ot">#include &lt;iostream&gt;</span>
-<span class="ot">#include &lt;JavaScriptCore/JavaScriptCore.h&gt;</span>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="pp">#include </span><span class="im">&lt;string&gt;</span>
+<span class="pp">#include </span><span class="im">&lt;iostream&gt;</span>
+<span class="pp">#include </span><span class="im">&lt;JavaScriptCore/JavaScriptCore.h&gt;</span>
 
-std::string getcwd_string(<span class="dt">void</span>)
+<span class="bu">std::</span>string getcwd_string(<span class="dt">void</span>)
 {
    <span class="dt">char</span> buff[PATH_MAX];
    getcwd(buff, PATH_MAX);
-   std::string cwd(buff);
-   <span class="kw">return</span> cwd;
+   <span class="bu">std::</span>string cwd(buff);
+   <span class="cf">return</span> cwd;
 }
 
-<span class="dt">const</span> <span class="dt">char</span>*
+<span class="at">const</span> <span class="dt">char</span>*
 jsvalue_to_utf8_string(JSGlobalContextRef ctx, JSValueRef v)
 {
   JSStringRef valueAsString = JSValueToStringCopy(ctx, v, NULL);
-  size_t jsSize = JSStringGetMaximumUTF8CStringSize(valueAsString);
+  <span class="dt">size_t</span> jsSize = JSStringGetMaximumUTF8CStringSize(valueAsString);
   <span class="dt">char</span>* jsBuffer = (<span class="dt">char</span>*)malloc(jsSize);
   JSStringGetUTF8CString(valueAsString, jsBuffer, jsSize);
   JSStringRelease(valueAsString);
-  <span class="kw">return</span> jsBuffer;
+  <span class="cf">return</span> jsBuffer;
 }
 
 <span class="dt">void</span> run_example(<span class="dt">void</span>)
@@ -166,7 +247,7 @@ jsvalue_to_utf8_string(JSGlobalContextRef ctx, JSValueRef v)
 			file_name,
 			kJSPropertyAttributeNone,
 			<span class="kw">nullptr</span>);
-    <span class="kw">return</span> example_obj;
+    <span class="cf">return</span> example_obj;
   };
 
   <span class="kw">auto</span> ctx = JSGlobalContextCreate(<span class="kw">nullptr</span>);
@@ -180,7 +261,7 @@ jsvalue_to_utf8_string(JSGlobalContextRef ctx, JSValueRef v)
   <span class="co">// 			nullptr);</span>
 
   <span class="co">// std::cout &lt;&lt; jsvalue_to_utf8_string(ctx, property_check) &lt;&lt; std::endl;</span>
-  std::string code_to_eval = <span class="st">R&quot;(</span>
+  <span class="bu">std::</span>string code_to_eval = <span class="st">R&quot;(</span>
 <span class="st">const example_code = new File;</span>
 <span class="st">example_code.cwdName;</span>
 <span class="st">)&quot;;</span>
@@ -345,16 +426,16 @@ bundle.js:23096 Logic continued</code></pre>
     </header>
     <p><em>If you like this and other posts of mine, then reach out to me at edgar.factorial@gmail.com, I’m looking for remote contract work.</em></p>
 <p>Let’s say we have a C binary given to us and there’s a C function in it that we want to call. For example, say we have this code, assume it is called <code>inject_me.c</code>:</p>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;stdio.h&gt;</span>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span>
 
 <span class="dt">int</span> test_function(<span class="dt">char</span> *some_word)
 {
-  <span class="kw">return</span> printf(<span class="st">&quot;Did say: %s</span><span class="ch">\n</span><span class="st">&quot;</span>, some_word);
+  <span class="cf">return</span> printf(<span class="st">&quot;Did say: %s</span><span class="sc">\n</span><span class="st">&quot;</span>, some_word);
 }
 
 <span class="dt">int</span> main (<span class="dt">int</span> argc, <span class="dt">char</span> **argv)
 {
-  <span class="kw">return</span> test_function(<span class="st">&quot;Hello World&quot;</span>);
+  <span class="cf">return</span> test_function(<span class="st">&quot;Hello World&quot;</span>);
 }</code></pre></div>
 <p>and we want to call the function <code>test_function</code> by ourselves. To do that we need to find the location of the function in the binary. We can do that by disassembling the binary, I used to use command line tools for that but now I’m using <code>hopper</code>. (Hopper is an AMAZING program). Once we disassemble it, we find the function in memory:</p>
 <div class="figure">
@@ -362,11 +443,11 @@ bundle.js:23096 Logic continued</code></pre>
 
 </div>
 <p>Notice that I highlighted the actual location of: <code>0x100000f20</code>. Now we can inject it with this code, assume it is called <code>inject.c</code></p>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;stdio.h&gt;</span>
-<span class="ot">#include &lt;string.h&gt;</span>
-<span class="ot">#include &lt;mach-o/dyld.h&gt;</span>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span>
+<span class="pp">#include </span><span class="im">&lt;string.h&gt;</span>
+<span class="pp">#include </span><span class="im">&lt;mach-o/dyld.h&gt;</span>
 
-<span class="ot">#define SPOT 0x100000f20</span>
+<span class="pp">#define SPOT 0x100000f20</span>
 
 <span class="kw">typedef</span> <span class="dt">int</span> pull_it(<span class="dt">char</span> *);
 
@@ -379,17 +460,17 @@ __attribute__((constructor))
   <span class="dt">uint32_t</span> size = <span class="kw">sizeof</span>(path);
   _NSGetExecutablePath(path, &amp;size);
   
-  <span class="kw">for</span> (<span class="dt">uint32_t</span> i = <span class="dv">0</span>; i &lt; _dyld_image_count(); i++) {
-    <span class="kw">if</span> (strcmp(_dyld_get_image_name(i), path) == <span class="dv">0</span>) {
-      intptr_t slide = _dyld_get_image_vmaddr_slide(i);
+  <span class="cf">for</span> (<span class="dt">uint32_t</span> i = <span class="dv">0</span>; i &lt; _dyld_image_count(); i++) {
+    <span class="cf">if</span> (strcmp(_dyld_get_image_name(i), path) == <span class="dv">0</span>) {
+      <span class="dt">intptr_t</span> slide = _dyld_get_image_vmaddr_slide(i);
 
-      pulled = (pull_it*)(intptr_t)(slide + SPOT);
-      printf(<span class="st">&quot;slide: %lu</span><span class="ch">\n</span><span class="st">&quot;</span>, slide);
-      pulled(<span class="st">&quot;Please work</span><span class="ch">\n</span><span class="st">&quot;</span>);
+      pulled = (pull_it*)(<span class="dt">intptr_t</span>)(slide + SPOT);
+      printf(<span class="st">&quot;slide: %lu</span><span class="sc">\n</span><span class="st">&quot;</span>, slide);
+      pulled(<span class="st">&quot;Please work</span><span class="sc">\n</span><span class="st">&quot;</span>);
     }
   }
 
-  printf(<span class="st">&quot;This ran before the actual program</span><span class="ch">\n</span><span class="st">&quot;</span>);
+  printf(<span class="st">&quot;This ran before the actual program</span><span class="sc">\n</span><span class="st">&quot;</span>);
 }</code></pre></div>
 <ol style="list-style-type: decimal">
 <li><p>The <code>__attribute__((constructor))</code> calls the wrapped function before <code>main</code> goes off.</p></li>
@@ -421,127 +502,6 @@ Did say: Please work
 This ran before the actual program
 Did say: Hello World</code></pre>
 <p>Yay, it works. BTW, this works for jailbroken iOS as well.</p>
-</article>
-<article>
-    <header>
-        <h1>
-            <a href="./2016/07/18/imperative-traversal-ocaml/" title="Permalink">
-                Imperatively traverse binary trees in OCaml, print zigzag
-            </a>
-        </h1>
-        <span class="post-date">July 18, 2016</span> in 
-        <span class="post-tags"><a href="./tags/ocaml/">ocaml</a>, <a href="./tags/trees/">trees</a>, <a href="./tags/traversal/">traversal</a>, <a href="./tags/in_order/">in_order</a>, <a href="./tags/post_order/">post_order</a>, <a href="./tags/zigzag/">zigzag</a></span>
-    </header>
-    <p>OCaml tree examples tend to be defined with algebraic data types and tend to be functional examples. Here are two imperative tree traversals, a pre-order and in-order. I’m still trying to work out a nice post-order imperative solution in OCaml so if you have one then please tweet it at me: <span class="citation">@edgararout</span></p>
-<p>EDIT: I’ve added a zigzag function procedure as well. This question came up recently at an interview and I messed it up. The point is to print the tree in a zigzag pattern.</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">type</span> 'a node = {<span class="kw">mutable</span> data: 'a;
-                <span class="kw">mutable</span> left : 'a node <span class="dt">option</span>;
-                <span class="kw">mutable</span> right: 'a node <span class="dt">option</span>; }
-
-<span class="kw">let</span> new_node data = {data; left = <span class="dt">None</span>; right = <span class="dt">None</span>;}
-
-<span class="kw">let</span> insert tree new_data =
-  <span class="kw">let</span> <span class="ot">module</span> Wrapper = <span class="kw">struct</span> <span class="kw">exception</span> <span class="dt">Stop_loop</span> <span class="kw">end</span> <span class="kw">in</span>
-  <span class="kw">let</span> iter = <span class="dt">ref</span> tree <span class="kw">in</span>
-  <span class="kw">try</span>
-    <span class="kw">while</span> <span class="kw">true</span> <span class="kw">do</span>
-      <span class="kw">if</span> new_data &lt; !iter.data
-      <span class="kw">then</span> <span class="kw">match</span> !iter.left <span class="kw">with</span>
-        | <span class="dt">None</span> -&gt;
-          !iter.left &lt;- <span class="dt">Some</span> (new_node new_data);
-          raise Wrapper<span class="kw">.</span><span class="dt">Stop_loop</span>
-        | <span class="dt">Some</span> left_tree -&gt; iter := left_tree
-      <span class="kw">else</span> <span class="kw">if</span> new_data &gt; !iter.data
-      <span class="kw">then</span> <span class="kw">match</span> !iter.right <span class="kw">with</span>
-        | <span class="dt">None</span> -&gt;
-          !iter.right &lt;- <span class="dt">Some</span> (new_node new_data);
-          raise Wrapper<span class="kw">.</span><span class="dt">Stop_loop</span>
-        | <span class="dt">Some</span> right_tree -&gt; iter := right_tree
-    <span class="kw">done</span>
-  <span class="kw">with</span> Wrapper<span class="kw">.</span><span class="dt">Stop_loop</span> -&gt; ()
-
-<span class="kw">let</span> pre_order_traversal tree =
-  <span class="kw">let</span> s = Stack<span class="kw">.</span>create () <span class="kw">in</span>
-  Stack<span class="kw">.</span>push tree s;
-  <span class="kw">while</span> not (Stack<span class="kw">.</span>is_empty s) <span class="kw">do</span>
-    <span class="kw">let</span> iter_node = Stack<span class="kw">.</span>pop s <span class="kw">in</span>
-
-    Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s &quot;</span> iter_node.data
-    |&gt; print_string;
-
-    (<span class="kw">match</span> iter_node.right <span class="kw">with</span>
-       <span class="dt">None</span> -&gt; ()
-     | <span class="dt">Some</span> right -&gt; Stack<span class="kw">.</span>push right s);
-
-    (<span class="kw">match</span> iter_node.left <span class="kw">with</span>
-       <span class="dt">None</span> -&gt; ()
-     | <span class="dt">Some</span> left -&gt; Stack<span class="kw">.</span>push left s)
-  <span class="kw">done</span>
-
-<span class="kw">let</span> in_order_traversal tree =
-  <span class="kw">let</span> <span class="ot">module</span> W = <span class="kw">struct</span> <span class="kw">exception</span> <span class="dt">Stop_loop</span> <span class="kw">end</span> <span class="kw">in</span>
-  <span class="kw">let</span> visited_stack = Stack<span class="kw">.</span>create () <span class="kw">in</span>
-  <span class="kw">let</span> iter_node = <span class="dt">ref</span> (<span class="dt">Some</span> tree) <span class="kw">in</span>
-  <span class="kw">try</span> <span class="kw">while</span> <span class="kw">true</span> <span class="kw">do</span>
-      <span class="co">(* Inner loop, we keep trying to go left *)</span>
-      (<span class="kw">try</span> <span class="kw">while</span> <span class="kw">true</span> <span class="kw">do</span>
-           <span class="kw">match</span> !iter_node <span class="kw">with</span>
-           | <span class="dt">None</span> -&gt; raise W<span class="kw">.</span><span class="dt">Stop_loop</span>
-           | <span class="dt">Some</span> left -&gt;
-             Stack<span class="kw">.</span>push left visited_stack;
-             iter_node := left.left
-         <span class="kw">done</span>;
-       <span class="kw">with</span> W<span class="kw">.</span><span class="dt">Stop_loop</span> -&gt; ());
-
-      <span class="co">(* If we have no more to process in the stack, then we're</span>
-<span class="co">         done *)</span>
-      <span class="kw">if</span> Stack<span class="kw">.</span>length visited_stack = <span class="dv">0</span>
-      <span class="kw">then</span> raise W<span class="kw">.</span><span class="dt">Stop_loop</span>
-      <span class="kw">else</span>
-        <span class="co">(* Here we're forced to start moving rightward *)</span>
-        <span class="kw">let</span> temp = Stack<span class="kw">.</span>pop visited_stack <span class="kw">in</span>
-        Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s &quot;</span> temp.data |&gt; print_string;
-        iter_node := temp.right
-    <span class="kw">done</span>
-  <span class="kw">with</span> W<span class="kw">.</span><span class="dt">Stop_loop</span> -&gt; ()
-
-<span class="kw">let</span> print_spiral root =
-  <span class="kw">let</span> (current, next) = Stack<span class="kw">.</span>(<span class="dt">ref</span> (create ()), <span class="dt">ref</span> (create ())) <span class="kw">in</span>
-  <span class="kw">let</span> left_to_right = <span class="dt">ref</span> <span class="kw">true</span> <span class="kw">in</span>
-
-  <span class="kw">let</span> swap a b = <span class="kw">let</span> (a_, b_) = !a, !b <span class="kw">in</span> a := b_; b := a_ <span class="kw">in</span>
-
-  Stack<span class="kw">.</span>push root !current;
-
-  <span class="kw">while</span> not (Stack<span class="kw">.</span>is_empty !current) <span class="kw">do</span>
-    <span class="kw">let</span> r = Stack<span class="kw">.</span>top !current <span class="kw">in</span>
-    Stack<span class="kw">.</span>pop !current |&gt; ignore;
-    Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s &quot;</span> r.data |&gt; print_string;
-    <span class="kw">if</span> !left_to_right <span class="kw">then</span>
-      <span class="kw">begin</span>
-        (<span class="kw">match</span> r.left <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> l -&gt; Stack<span class="kw">.</span>push l !next);
-        (<span class="kw">match</span> r.right <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> r -&gt; Stack<span class="kw">.</span>push r !next)
-      <span class="kw">end</span>
-    <span class="kw">else</span> <span class="kw">begin</span>
-      (<span class="kw">match</span> r.right <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> r -&gt; Stack<span class="kw">.</span>push r !next);
-      (<span class="kw">match</span> r.left <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> l -&gt; Stack<span class="kw">.</span>push l !next)
-    <span class="kw">end</span>;
-
-    <span class="kw">if</span> Stack<span class="kw">.</span>length !current = <span class="dv">0</span>
-    <span class="kw">then</span> (left_to_right := not !left_to_right; swap current next)
-
-  <span class="kw">done</span>
-
-<span class="kw">let</span> () =
-  <span class="kw">let</span> root = new_node <span class="st">&quot;F&quot;</span> <span class="kw">in</span>
-
-  [<span class="st">&quot;B&quot;</span>;<span class="st">&quot;G&quot;</span>;<span class="st">&quot;A&quot;</span>;<span class="st">&quot;D&quot;</span>;<span class="st">&quot;I&quot;</span>;<span class="st">&quot;C&quot;</span>;<span class="st">&quot;E&quot;</span>;<span class="st">&quot;H&quot;</span>] |&gt; List<span class="kw">.</span>iter (insert root);
-
-  pre_order_traversal root;
-  print_newline ();
-  in_order_traversal root
-  print_newline ();
-  print_spiral root</code></pre></div>
 </article>
 
 

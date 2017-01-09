@@ -62,7 +62,7 @@
 <li>Either the Customer or Source</li>
 </ol>
 <p>All of Stripe’s API returns JSON, so we can already sketch out our function’s signature and helper data structure, something like:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">type</span> t = { authed : Cohttp<span class="kw">.</span>Headers<span class="kw">.</span>t; 
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">type</span> t = { authed : Cohttp.Headers.t; 
            end_point : <span class="dt">string</span>; }
 
 <span class="kw">val</span> make_handle : <span class="dt">unit</span> -&gt; t
@@ -71,14 +71,14 @@
                     <span class="dt">string</span> -&gt; 
                     <span class="dt">string</span> -&gt;
                     t -&gt;  
-                    Yojson<span class="kw">.</span>Basic<span class="kw">.</span>json Lwt<span class="kw">.</span>t</code></pre></div>
+                    Yojson.Basic.json Lwt.t</code></pre></div>
 <p>Mostly straight forward, although that <code>Lwt.t</code> should look at little strange. The quick answer that that <code>create_charge</code> will give back an <code>Lwt.t</code> monad which in this case will contain a <code>json</code> object.</p>
 <p>Let’s start filling out the <code>make_handle</code> function,</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> make_handle () = 
   <span class="kw">let</span> auth_me k = 
-    <span class="kw">let</span> starter = Cohttp<span class="kw">.</span>Header<span class="kw">.</span>init () <span class="kw">in</span> 
-    Cohttp<span class="kw">.</span>Auth<span class="kw">.</span>credential_of_string (<span class="st">&quot;Bearer &quot;</span> ^ k)
-    |&gt; Cohttp<span class="kw">.</span>Header<span class="kw">.</span>add_authorization starter
+    <span class="kw">let</span> starter = Cohttp.Header.init () <span class="kw">in</span> 
+    Cohttp.Auth.credential_of_string (<span class="st">&quot;Bearer &quot;</span> ^ k)
+    |&gt; Cohttp.Header.add_authorization starter
   <span class="kw">in</span>
   {authed = auth_me <span class="st">&quot;YOUR STRIPE KEY&quot;</span>; 
    <span class="co">(** Hardcoding to the charge create path *)</span>
@@ -87,54 +87,54 @@
 <p>Now the first cut of out <code>create_charge</code> function:</p>
 <p>(<strong>META NOTE</strong> This is horrible indentation, I’m only doing it because of the sizing done in the exporting of this document and I want it to be clear what’s happening and the coloring is wrong because <sub>’</sub> can be used in a value’s name but its messing up the coding exporter)</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"> <span class="dv">1</span>  <span class="kw">let</span> create_charge amount currency source handle = 
- <span class="dv">2</span>    <span class="kw">let</span> <span class="ot">open</span> Cohttp_lwt_unix <span class="kw">in</span>
- <span class="dv">3</span>    <span class="kw">let</span> this_uri = Uri<span class="kw">.</span>of_string handle.end_point <span class="kw">in</span>
- <span class="dv">4</span>    [(<span class="st">&quot;amount&quot;</span>, string_of_int amount);
+ <span class="dv">2</span>    <span class="kw">let</span> <span class="kw">open</span> Cohttp_lwt_unix <span class="kw">in</span>
+ <span class="dv">3</span>    <span class="kw">let</span> this_uri = Uri.of_string handle.end_point <span class="kw">in</span>
+ <span class="dv">4</span>    [(<span class="st">&quot;amount&quot;</span>, <span class="dt">string_of_int</span> amount);
  <span class="dv">5</span>     (<span class="st">&quot;currency&quot;</span>, currency);]
- <span class="dv">6</span>     (<span class="st">&quot;source&quot;</span>, source)]
- <span class="dv">7</span>    |&gt; Uri<span class="kw">.</span>add_query_params' this_uri
- <span class="dv">8</span>    |&gt; Client<span class="kw">.</span>post ~headers:handle.authed &gt;&gt;= 
+ <span class="dv">6</span>     (<span class="st">&quot;source&quot;</span>, source)<span class="er">]</span>
+ <span class="dv">7</span>    |&gt; Uri.add_query_params' this_uri
+ <span class="dv">8</span>    |&gt; Client.post ~headers:handle.authed &gt;&gt;= 
  <span class="dv">9</span>       <span class="kw">fun</span> (resp, body) -&gt; 
 <span class="dv">10</span>       <span class="co">(* This can also be done more succinctly</span>
 <span class="co">11          with:</span>
 <span class="co">12          Cohttp_lwt_body.to_string body &gt;|=</span>
 <span class="co">13          Yojson.Basic.from_string  *)</span>
-<span class="dv">14</span>       Cohttp_lwt_body<span class="kw">.</span>to_string body &gt;&gt;= <span class="kw">fun</span> j -&gt; 
-<span class="dv">15</span>       Yojson<span class="kw">.</span>Basic<span class="kw">.</span>from_string j |&gt; return</code></pre></div>
+<span class="dv">14</span>       Cohttp_lwt_body.to_string body &gt;&gt;= <span class="kw">fun</span> j -&gt; 
+<span class="dv">15</span>       Yojson.Basic.from_string j |&gt; return</code></pre></div>
 <p>Okay, so what the hell is going on. Line 2 open the <code>Cohttp_lwt_unix</code> module locally to this function so that we can type <code>Client.post</code> instead of <code>Cohttp_lwt_unix.Client.post</code>. Line 3 creates a <code>uri</code> object, lines 4-6 are the query parameters we want to add to our <code>uri</code> object. The <code>|&gt;</code> symbol is a function, you can call it reverse apply, you can define it as</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> ( |&gt; ) f x = x f</code></pre></div>
 <p>but you don’t need to, it comes with OCaml. It just says take the left side as the input to the right side, aka a Unix Pipe. Now let’s see the signature of <code>Client.post</code>, its:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">val</span> post ?ctx:Cohttp_lwt_unix<span class="kw">.</span>Client<span class="kw">.</span>ctx -&gt;
-         ?body:Cohttp_lwt_body<span class="kw">.</span>t -&gt;
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">val</span> post ?ctx:Cohttp_lwt_unix.Client.ctx -&gt;
+         ?body:Cohttp_lwt_body.t -&gt;
          ?chunked:<span class="dt">bool</span> -&gt;
-         ?headers:Cohttp<span class="kw">.</span>Header<span class="kw">.</span>t -&gt;
-         Uri<span class="kw">.</span>t -&gt; 
-         (Cohttp<span class="kw">.</span>Response<span class="kw">.</span>t * Cohttp_lwt_body<span class="kw">.</span>t) Lwt<span class="kw">.</span>t</code></pre></div>
+         ?headers:Cohttp.Header.t -&gt;
+         Uri.t -&gt; 
+         (Cohttp.Response.t * Cohttp_lwt_body.t) Lwt.t</code></pre></div>
 <p>Looks big but we don’t care about most of it, in fact we could just care about the <code>Uri.t</code> parameter since the rest of the parameters, the ones with <code>?</code>, have default values but we can override them as we do on line 8’s <code>Client.post ~headers:handle.authed</code>. Now notice the final value of a call to <code>Client.post</code>, its:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">(Cohttp<span class="kw">.</span>Response<span class="kw">.</span>t * Cohttp_lwt_body<span class="kw">.</span>t) Lwt<span class="kw">.</span>t</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">(Cohttp.Response.t * Cohttp_lwt_body.t) Lwt.t</code></pre></div>
 <p>This says that <code>post</code> will give back an <code>Lwt.t</code> monad which contains a tuple of a response object and the body, again completely reasonable. The line of line 8 features the famous <code>&gt;&gt;=</code> operator, aka <code>bind</code> it’s signature is:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">val</span> ( &gt;&gt;= ) : 'a Lwt<span class="kw">.</span>t -&gt; ('a -&gt; 'b Lwt<span class="kw">.</span>t) -&gt; 'b Lwt<span class="kw">.</span>t</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">val</span> ( &gt;&gt;= ) : 'a Lwt.t -&gt; ('a -&gt; 'b Lwt.t) -&gt; 'b Lwt.t</code></pre></div>
 <p>And this says that <code>&gt;&gt;=</code> takes something wrapped in the <code>Lwt.t</code> monad on the left side and passes the unwrapped value to a function on the right side which has to return something wrapped in the <code>Lwt.t</code> monad where the two somethings can be different or the same. So in our code that right side is this anonymous function, this lambda:</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">fun</span> (resp, body) -&gt;</code></pre></div>
 <p>Now we have a handle on the http response and the body, we won’t do any error checking so let’s just look at the body with line 10’s usage of <code>Cohttp_lwt_body.to_string</code> whose signature is:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">val</span> to_string : Cohttp_lwt_body<span class="kw">.</span>t -&gt; <span class="dt">string</span> Lwt<span class="kw">.</span>t</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">val</span> to_string : Cohttp_lwt_body.t -&gt; <span class="dt">string</span> Lwt.t</code></pre></div>
 <p>Translation: Takes a body and gives back a string wrapped in a Lwt.t monad. Remember our goal is to get the body as a json object, so we could just pipe it to <code>Yojson.Basic.from_string</code> but still recall that our <code>create_charge</code> function had final value of <code>Yojson.Basic.json Lwt.t</code>, not a plain <code>Yojson.Basic.json</code> so we pipe it to the other famous monad related function, <code>return</code>. <code>return</code> really should have been called inject because it takes a plain value and “injects” it into a monad, let’s see its value here:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">val</span> return : 'a -&gt; 'a Lwt<span class="kw">.</span>t</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">val</span> return : 'a -&gt; 'a Lwt.t</code></pre></div>
 <p>We are using it to turn our plain <code>Yojson.Basic.json</code> into a <code>Yojson.Basic.json Lwt.t</code> Now let’s use this code to actually do something.</p>
 <div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> program = 
   <span class="kw">let</span> this_handle = make_handle () <span class="kw">in</span>
   <span class="kw">let</span> st = <span class="st">&quot;SOURCE_TOKEN_MENTIONED_EARLIER&quot;</span> <span class="kw">in</span>
   create_charge <span class="dv">500</span> <span class="st">&quot;usd&quot;</span> this_handle &gt;&gt;= <span class="kw">fun</span> j -&gt; 
-  Yojson<span class="kw">.</span>Basic<span class="kw">.</span>pretty_to_string j |&gt; Lwt_io<span class="kw">.</span>printl 
+  Yojson.Basic.pretty_to_string j |&gt; Lwt_io.printl 
 
 <span class="kw">let</span> () = 
-  Lwt_main<span class="kw">.</span>run program</code></pre></div>
+  Lwt_main.run program</code></pre></div>
 <p>At this point this should be understandable, our create_charge is returning a monad so we pass its output to <code>&gt;&gt;=</code>, which passes a json object to a lambda, we turn the json value to a pretty printed string and pipe it out to <code>Lwt_io.printl</code>, a <code>printf</code> for the <code>Lwt</code> library.</p>
 <h1 id="build-and-run">Build and Run</h1>
 <p>Now let’s build our program and run it, assuming all the code is in <code>code.ml</code> we invoke the OCaml toolchain as so:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">$ ocamlfind ocamlopt -linkpkg code.ml -packages lwt.unix,cohttp.lwt,yojson,uri -o <span class="dt">T</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">$ ocamlfind ocamlopt -linkpkg code.ml -packages lwt.unix,cohttp.lwt,yojson,uri -o T</code></pre></div>
 <p>assuming everything well, you should have an executable T, which will print something like:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">$ ./<span class="dt">T</span>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">$ ./T
 {
   <span class="st">&quot;object&quot;</span>: <span class="st">&quot;charge&quot;</span>,
   <span class="st">&quot;created&quot;</span>: <span class="dv">1443072037</span>,

@@ -60,9 +60,9 @@
 <p>Now the program, I’m going to assume you are familiar with Cocoa development, Objective-C.</p>
 <div class="sourceCode"><pre class="sourceCode objectivec"><code class="sourceCode objectivec"><span class="co">/* -*- objc -*- */</span>
 
-<span class="ot">#import &lt;Foundation/Foundation.h&gt;</span>
-<span class="ot">#import &lt;Webkit/WebKit.h&gt;</span>
-<span class="ot">#import &lt;iostream&gt;</span>
+<span class="pp">#import </span><span class="im">&lt;Foundation/Foundation.h&gt;</span>
+<span class="pp">#import </span><span class="im">&lt;Webkit/WebKit.h&gt;</span>
+<span class="pp">#import </span><span class="im">&lt;iostream&gt;</span>
 
 <span class="kw">@interface</span> Window_delegate : NSObject &lt;NSWindowDelegate&gt;
 <span class="kw">@end</span>
@@ -130,7 +130,7 @@
 
 <span class="dt">int</span> main(<span class="dt">int</span> argc, <span class="dt">char</span> **argv)
 {
-  std::cout &lt;&lt; <span class="st">&quot;Starting Application</span><span class="ch">\n</span><span class="st">&quot;</span>;
+  std::cout &lt;&lt; <span class="st">&quot;Starting Application</span><span class="sc">\n</span><span class="st">&quot;</span>;
   @autoreleasepool {
     start_program();
   }

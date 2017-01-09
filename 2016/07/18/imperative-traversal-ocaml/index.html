@@ -54,7 +54,7 @@
 <span class="kw">let</span> new_node data = {data; left = <span class="dt">None</span>; right = <span class="dt">None</span>;}
 
 <span class="kw">let</span> insert tree new_data =
-  <span class="kw">let</span> <span class="ot">module</span> Wrapper = <span class="kw">struct</span> <span class="kw">exception</span> <span class="dt">Stop_loop</span> <span class="kw">end</span> <span class="kw">in</span>
+  <span class="kw">let</span> <span class="kw">module</span> Wrapper = <span class="kw">struct</span> <span class="kw">exception</span> Stop_loop <span class="kw">end</span> <span class="kw">in</span>
   <span class="kw">let</span> iter = <span class="dt">ref</span> tree <span class="kw">in</span>
   <span class="kw">try</span>
     <span class="kw">while</span> <span class="kw">true</span> <span class="kw">do</span>
@@ -62,98 +62,98 @@
       <span class="kw">then</span> <span class="kw">match</span> !iter.left <span class="kw">with</span>
         | <span class="dt">None</span> -&gt;
           !iter.left &lt;- <span class="dt">Some</span> (new_node new_data);
-          raise Wrapper<span class="kw">.</span><span class="dt">Stop_loop</span>
+          <span class="dt">raise</span> Wrapper.Stop_loop
         | <span class="dt">Some</span> left_tree -&gt; iter := left_tree
       <span class="kw">else</span> <span class="kw">if</span> new_data &gt; !iter.data
       <span class="kw">then</span> <span class="kw">match</span> !iter.right <span class="kw">with</span>
         | <span class="dt">None</span> -&gt;
           !iter.right &lt;- <span class="dt">Some</span> (new_node new_data);
-          raise Wrapper<span class="kw">.</span><span class="dt">Stop_loop</span>
+          <span class="dt">raise</span> Wrapper.Stop_loop
         | <span class="dt">Some</span> right_tree -&gt; iter := right_tree
     <span class="kw">done</span>
-  <span class="kw">with</span> Wrapper<span class="kw">.</span><span class="dt">Stop_loop</span> -&gt; ()
+  <span class="kw">with</span> Wrapper.Stop_loop -&gt; ()
 
 <span class="kw">let</span> pre_order_traversal tree =
-  <span class="kw">let</span> s = Stack<span class="kw">.</span>create () <span class="kw">in</span>
-  Stack<span class="kw">.</span>push tree s;
-  <span class="kw">while</span> not (Stack<span class="kw">.</span>is_empty s) <span class="kw">do</span>
-    <span class="kw">let</span> iter_node = Stack<span class="kw">.</span>pop s <span class="kw">in</span>
+  <span class="kw">let</span> s = <span class="dt">Stack</span>.create () <span class="kw">in</span>
+  <span class="dt">Stack</span>.push tree s;
+  <span class="kw">while</span> <span class="dt">not</span> (<span class="dt">Stack</span>.is_empty s) <span class="kw">do</span>
+    <span class="kw">let</span> iter_node = <span class="dt">Stack</span>.pop s <span class="kw">in</span>
 
-    Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s &quot;</span> iter_node.data
-    |&gt; print_string;
+    <span class="dt">Printf</span>.sprintf <span class="st">&quot;%s &quot;</span> iter_node.data
+    |&gt; <span class="dt">print_string</span>;
 
     (<span class="kw">match</span> iter_node.right <span class="kw">with</span>
        <span class="dt">None</span> -&gt; ()
-     | <span class="dt">Some</span> right -&gt; Stack<span class="kw">.</span>push right s);
+     | <span class="dt">Some</span> right -&gt; <span class="dt">Stack</span>.push right s);
 
     (<span class="kw">match</span> iter_node.left <span class="kw">with</span>
        <span class="dt">None</span> -&gt; ()
-     | <span class="dt">Some</span> left -&gt; Stack<span class="kw">.</span>push left s)
+     | <span class="dt">Some</span> left -&gt; <span class="dt">Stack</span>.push left s)
   <span class="kw">done</span>
 
 <span class="kw">let</span> in_order_traversal tree =
-  <span class="kw">let</span> <span class="ot">module</span> W = <span class="kw">struct</span> <span class="kw">exception</span> <span class="dt">Stop_loop</span> <span class="kw">end</span> <span class="kw">in</span>
-  <span class="kw">let</span> visited_stack = Stack<span class="kw">.</span>create () <span class="kw">in</span>
+  <span class="kw">let</span> <span class="kw">module</span> W = <span class="kw">struct</span> <span class="kw">exception</span> Stop_loop <span class="kw">end</span> <span class="kw">in</span>
+  <span class="kw">let</span> visited_stack = <span class="dt">Stack</span>.create () <span class="kw">in</span>
   <span class="kw">let</span> iter_node = <span class="dt">ref</span> (<span class="dt">Some</span> tree) <span class="kw">in</span>
   <span class="kw">try</span> <span class="kw">while</span> <span class="kw">true</span> <span class="kw">do</span>
       <span class="co">(* Inner loop, we keep trying to go left *)</span>
       (<span class="kw">try</span> <span class="kw">while</span> <span class="kw">true</span> <span class="kw">do</span>
            <span class="kw">match</span> !iter_node <span class="kw">with</span>
-           | <span class="dt">None</span> -&gt; raise W<span class="kw">.</span><span class="dt">Stop_loop</span>
+           | <span class="dt">None</span> -&gt; <span class="dt">raise</span> W.Stop_loop
            | <span class="dt">Some</span> left -&gt;
-             Stack<span class="kw">.</span>push left visited_stack;
+             <span class="dt">Stack</span>.push left visited_stack;
              iter_node := left.left
          <span class="kw">done</span>;
-       <span class="kw">with</span> W<span class="kw">.</span><span class="dt">Stop_loop</span> -&gt; ());
+       <span class="kw">with</span> W.Stop_loop -&gt; ());
 
       <span class="co">(* If we have no more to process in the stack, then we're</span>
 <span class="co">         done *)</span>
-      <span class="kw">if</span> Stack<span class="kw">.</span>length visited_stack = <span class="dv">0</span>
-      <span class="kw">then</span> raise W<span class="kw">.</span><span class="dt">Stop_loop</span>
+      <span class="kw">if</span> <span class="dt">Stack</span>.length visited_stack = <span class="dv">0</span>
+      <span class="kw">then</span> <span class="dt">raise</span> W.Stop_loop
       <span class="kw">else</span>
         <span class="co">(* Here we're forced to start moving rightward *)</span>
-        <span class="kw">let</span> temp = Stack<span class="kw">.</span>pop visited_stack <span class="kw">in</span>
-        Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s &quot;</span> temp.data |&gt; print_string;
+        <span class="kw">let</span> temp = <span class="dt">Stack</span>.pop visited_stack <span class="kw">in</span>
+        <span class="dt">Printf</span>.sprintf <span class="st">&quot;%s &quot;</span> temp.data |&gt; <span class="dt">print_string</span>;
         iter_node := temp.right
     <span class="kw">done</span>
-  <span class="kw">with</span> W<span class="kw">.</span><span class="dt">Stop_loop</span> -&gt; ()
+  <span class="kw">with</span> W.Stop_loop -&gt; ()
 
 <span class="kw">let</span> print_spiral root =
-  <span class="kw">let</span> (current, next) = Stack<span class="kw">.</span>(<span class="dt">ref</span> (create ()), <span class="dt">ref</span> (create ())) <span class="kw">in</span>
+  <span class="kw">let</span> (current, next) = <span class="dt">Stack</span>.(<span class="dt">ref</span> (create ()), <span class="dt">ref</span> (create ())) <span class="kw">in</span>
   <span class="kw">let</span> left_to_right = <span class="dt">ref</span> <span class="kw">true</span> <span class="kw">in</span>
 
   <span class="kw">let</span> swap a b = <span class="kw">let</span> (a_, b_) = !a, !b <span class="kw">in</span> a := b_; b := a_ <span class="kw">in</span>
 
-  Stack<span class="kw">.</span>push root !current;
+  <span class="dt">Stack</span>.push root !current;
 
-  <span class="kw">while</span> not (Stack<span class="kw">.</span>is_empty !current) <span class="kw">do</span>
-    <span class="kw">let</span> r = Stack<span class="kw">.</span>top !current <span class="kw">in</span>
-    Stack<span class="kw">.</span>pop !current |&gt; ignore;
-    Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s &quot;</span> r.data |&gt; print_string;
+  <span class="kw">while</span> <span class="dt">not</span> (<span class="dt">Stack</span>.is_empty !current) <span class="kw">do</span>
+    <span class="kw">let</span> r = <span class="dt">Stack</span>.top !current <span class="kw">in</span>
+    <span class="dt">Stack</span>.pop !current |&gt; <span class="dt">ignore</span>;
+    <span class="dt">Printf</span>.sprintf <span class="st">&quot;%s &quot;</span> r.data |&gt; <span class="dt">print_string</span>;
     <span class="kw">if</span> !left_to_right <span class="kw">then</span>
       <span class="kw">begin</span>
-        (<span class="kw">match</span> r.left <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> l -&gt; Stack<span class="kw">.</span>push l !next);
-        (<span class="kw">match</span> r.right <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> r -&gt; Stack<span class="kw">.</span>push r !next)
+        (<span class="kw">match</span> r.left <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> l -&gt; <span class="dt">Stack</span>.push l !next);
+        (<span class="kw">match</span> r.right <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> r -&gt; <span class="dt">Stack</span>.push r !next)
       <span class="kw">end</span>
     <span class="kw">else</span> <span class="kw">begin</span>
-      (<span class="kw">match</span> r.right <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> r -&gt; Stack<span class="kw">.</span>push r !next);
-      (<span class="kw">match</span> r.left <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> l -&gt; Stack<span class="kw">.</span>push l !next)
+      (<span class="kw">match</span> r.right <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> r -&gt; <span class="dt">Stack</span>.push r !next);
+      (<span class="kw">match</span> r.left <span class="kw">with</span> <span class="dt">None</span> -&gt; () | <span class="dt">Some</span> l -&gt; <span class="dt">Stack</span>.push l !next)
     <span class="kw">end</span>;
 
-    <span class="kw">if</span> Stack<span class="kw">.</span>length !current = <span class="dv">0</span>
-    <span class="kw">then</span> (left_to_right := not !left_to_right; swap current next)
+    <span class="kw">if</span> <span class="dt">Stack</span>.length !current = <span class="dv">0</span>
+    <span class="kw">then</span> (left_to_right := <span class="dt">not</span> !left_to_right; swap current next)
 
   <span class="kw">done</span>
 
 <span class="kw">let</span> () =
   <span class="kw">let</span> root = new_node <span class="st">&quot;F&quot;</span> <span class="kw">in</span>
 
-  [<span class="st">&quot;B&quot;</span>;<span class="st">&quot;G&quot;</span>;<span class="st">&quot;A&quot;</span>;<span class="st">&quot;D&quot;</span>;<span class="st">&quot;I&quot;</span>;<span class="st">&quot;C&quot;</span>;<span class="st">&quot;E&quot;</span>;<span class="st">&quot;H&quot;</span>] |&gt; List<span class="kw">.</span>iter (insert root);
+  [<span class="st">&quot;B&quot;</span>;<span class="st">&quot;G&quot;</span>;<span class="st">&quot;A&quot;</span>;<span class="st">&quot;D&quot;</span>;<span class="st">&quot;I&quot;</span>;<span class="st">&quot;C&quot;</span>;<span class="st">&quot;E&quot;</span>;<span class="st">&quot;H&quot;</span>] |&gt; <span class="dt">List</span>.iter (insert root);
 
   pre_order_traversal root;
-  print_newline ();
+  <span class="dt">print_newline</span> ();
   in_order_traversal root
-  print_newline ();
+  <span class="dt">print_newline</span> ();
   print_spiral root</code></pre></div>
 </article>
 

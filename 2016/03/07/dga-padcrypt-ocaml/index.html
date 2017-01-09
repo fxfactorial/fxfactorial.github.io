@@ -47,20 +47,20 @@
     </header>
     <p>Scrolling through twitter I saw someone mention something about the padcrypt <a href="https://en.wikipedia.org/wiki/Domain_generation_algorithm">dga</a>. Basically it generates random ish domain names.</p>
 <p>Here’s an <code>OCaml</code> reimplementation of the Python code written <a href="http://johannesbader.ch/2016/03/the-dga-of-padcrypt/">here</a>.</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="ot">module</span> D = CalendarLib<span class="kw">.</span><span class="dt">Date</span>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">module</span> D = CalendarLib.Date
 
 <span class="kw">let</span> tlds = [|<span class="st">&quot;com&quot;</span>;<span class="st">&quot;co.uk&quot;</span>; <span class="st">&quot;de&quot;</span>;<span class="st">&quot;org&quot;</span>;<span class="st">&quot;net&quot;</span>;<span class="st">&quot;eu&quot;</span>;<span class="st">&quot;info&quot;</span>;<span class="st">&quot;online&quot;</span>;
             <span class="st">&quot;co&quot;</span>; <span class="st">&quot;cc&quot;</span>; <span class="st">&quot;website&quot;</span>|]
 
-<span class="kw">let</span> tlds_count = Array<span class="kw">.</span>length tlds
+<span class="kw">let</span> tlds_count = <span class="dt">Array</span>.length tlds
 <span class="kw">let</span> nr_domains = <span class="dv">24</span> * <span class="dv">3</span>
 <span class="kw">let</span> digit_mapping = <span class="st">&quot;abcdnfolmk&quot;</span>
 
 <span class="kw">let</span> seed_string ~date i =
-  Printf<span class="kw">.</span>sprintf <span class="st">&quot;%d-%d-%d|%d&quot;</span>
-    (D<span class="kw">.</span>day_of_month date)
-    (D<span class="kw">.</span>month date |&gt; D<span class="kw">.</span>int_of_month)
-    (D<span class="kw">.</span>year date)
+  <span class="dt">Printf</span>.sprintf <span class="st">&quot;%d-%d-%d|%d&quot;</span>
+    (D.day_of_month date)
+    (D.month date |&gt; D.int_of_month)
+    (D.year date)
     i
 
 <span class="kw">let</span> domain_generate date =
@@ -71,32 +71,32 @@
   helper <span class="dv">0</span> []
 
 <span class="kw">let</span> () =
-  Nocrypto_entropy_unix<span class="kw">.</span>initialize ();
-  CalendarLib<span class="kw">.</span>Date<span class="kw">.</span>today ()
+  Nocrypto_entropy_unix.initialize ();
+  CalendarLib.Date.today ()
   |&gt; domain_generate
-  |&gt; List<span class="kw">.</span>iter <span class="kw">begin</span> <span class="kw">fun</span> date_stamp -&gt;
+  |&gt; <span class="dt">List</span>.iter <span class="kw">begin</span> <span class="kw">fun</span> date_stamp -&gt;
     <span class="kw">let</span> hashed =
-      (Cstruct<span class="kw">.</span>of_string date_stamp)
-      |&gt; Nocrypto<span class="kw">.</span>Hash<span class="kw">.</span>digest <span class="dt">`SHA256</span>
-      |&gt; Hex<span class="kw">.</span>of_cstruct |&gt; <span class="kw">function</span> <span class="dt">`Hex</span> s -&gt; s
+      (Cstruct.of_string date_stamp)
+      |&gt; Nocrypto.Hash.digest `SHA256
+      |&gt; Hex.of_cstruct |&gt; <span class="kw">function</span> `Hex s -&gt; s
     <span class="kw">in</span>
     <span class="kw">let</span> domain =
-      String<span class="kw">.</span>sub hashed <span class="dv">3</span> <span class="dv">16</span>
-      |&gt; Stringext<span class="kw">.</span>to_list
-      |&gt; List<span class="kw">.</span>map
+      <span class="dt">String</span>.sub hashed <span class="dv">3</span> <span class="dv">16</span>
+      |&gt; Stringext.to_list
+      |&gt; <span class="dt">List</span>.map
         (<span class="kw">function</span> <span class="ch">'0'</span>..<span class="ch">'9'</span> <span class="kw">as</span> hh -&gt;
-          Char<span class="kw">.</span>code hh - <span class="dv">48</span> |&gt; String<span class="kw">.</span>get digit_mapping
+          <span class="dt">Char</span>.code hh - <span class="dv">48</span> |&gt; <span class="dt">String</span>.get digit_mapping
                 | o -&gt; o)
-      |&gt; Stringext<span class="kw">.</span>of_list
+      |&gt; Stringext.of_list
     <span class="kw">in</span>
     <span class="kw">let</span> tld_index =
-      String<span class="kw">.</span>get hashed (String<span class="kw">.</span>length hashed - <span class="dv">1</span>)
-      |&gt; Printf<span class="kw">.</span>sprintf <span class="st">&quot;0x%c&quot;</span>
-      |&gt; int_of_string
+      <span class="dt">String</span>.get hashed (<span class="dt">String</span>.length hashed - <span class="dv">1</span>)
+      |&gt; <span class="dt">Printf</span>.sprintf <span class="st">&quot;0x%c&quot;</span>
+      |&gt; <span class="dt">int_of_string</span>
       |&gt; <span class="kw">fun</span> tld -&gt; <span class="kw">if</span> tld &gt;= tlds_count <span class="kw">then</span> <span class="dv">0</span> <span class="kw">else</span> tld
     <span class="kw">in</span>
-    Printf<span class="kw">.</span>sprintf <span class="st">&quot;%s.%s&quot;</span> domain (Array<span class="kw">.</span>get tlds tld_index)
-    |&gt; print_endline
+    <span class="dt">Printf</span>.sprintf <span class="st">&quot;%s.%s&quot;</span> domain (<span class="dt">Array</span>.get tlds tld_index)
+    |&gt; <span class="dt">print_endline</span>
   <span class="kw">end</span></code></pre></div>
 <p>You can build it with a simple <code>Makefile</code> like this:</p>
 <div class="sourceCode"><pre class="sourceCode makefile"><code class="sourceCode makefile"><span class="dv">all:</span>
