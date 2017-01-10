@@ -7,8 +7,86 @@
         <description><![CDATA[Personal blog of Edgar Aroutiounian]]></description>
         <atom:link href="http://hyegar.com/atom.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Sun, 08 Jan 2017 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Mon, 09 Jan 2017 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Calling Google Closure programmatically</title>
+    <link>http://hyegar.com/2017/01/09/calling-google-closure-and-with-jni/index.html</link>
+    <description><![CDATA[<p>This is a pretty neat post, I’ll show you how to programmatically call <a href="https://github.com/google/closure-library">Google Closure</a> in Java. Closure is an amazing project that actually optimizes <code>JavaScript</code> rather than just minifies it. (This is pretty much one of the few times you’ll see me write Java, I think the language sucks).</p>
+<p>Its mostly a 2017 update of this <a href="http://blog.bolinfest.com/2009/11/calling-closure-compiler-from-java.html">post from 2009</a></p>
+<p>Here’s the Java</p>
+<div class="sourceCode"><pre class="sourceCode java"><code class="sourceCode java"><span class="kw">package</span><span class="im"> com.hyegar.closure;</span>
+
+<span class="kw">import</span><span class="im"> java.io.IOException;</span>
+<span class="kw">import</span><span class="im"> java.util.List;</span>
+<span class="kw">import</span><span class="im"> java.util.ArrayList;</span>
+
+<span class="kw">import</span><span class="im"> com.google.javascript.jscomp.CompilationLevel;</span>
+<span class="kw">import</span><span class="im"> com.google.javascript.jscomp.Compiler;</span>
+<span class="kw">import</span><span class="im"> com.google.javascript.jscomp.CompilerOptions;</span>
+<span class="kw">import</span><span class="im"> com.google.javascript.jscomp.SourceFile;</span>
+<span class="kw">import</span><span class="im"> com.google.javascript.jscomp.CommandLineRunner;</span>
+<span class="kw">import</span><span class="im"> com.google.javascript.jscomp.CompilerOptions.LanguageMode;</span>
+
+<span class="co">/**</span>
+<span class="co"> * An example of how to call the Closure Compiler programmatically, </span>
+<span class="co"> * this is LICENSED AS GPL-3.0.</span>
+<span class="co"> *</span>
+<span class="co"> * </span><span class="kw">@author </span><span class="co">edgar.factorial@gmail.com (Edgar Aroutiounian)</span>
+<span class="co"> */</span>
+
+<span class="kw">public</span> <span class="kw">class</span> CallCompiler {
+
+    <span class="co">/**</span>
+<span class="co">     * </span><span class="kw">@param code </span><span class="co">JavaScript source code to compile.</span>
+<span class="co">     * </span><span class="kw">@return </span><span class="co">The compiled version of the code.</span>
+<span class="co">     */</span>
+    <span class="kw">public</span> <span class="dt">static</span> <span class="bu">String</span> <span class="fu">compile</span>(<span class="bu">String</span> code) {
+	<span class="bu">Compiler</span> compiler = <span class="kw">new</span> <span class="bu">Compiler</span>();
+
+	CompilerOptions options = <span class="kw">new</span> <span class="fu">CompilerOptions</span>();
+
+	<span class="co">// See :</span>
+	<span class="co">// closure-compiler/src/com/google/javascript/jscomp/CompilerOptions.java</span>
+	<span class="co">// lines 2864-2896</span>
+	options.<span class="fu">setLanguageIn</span>(LanguageMode.<span class="fu">ECMASCRIPT_2015</span>);
+	options.<span class="fu">setLanguageOut</span>(LanguageMode.<span class="fu">ECMASCRIPT5_STRICT</span>);
+
+	CompilationLevel
+	    .<span class="fu">ADVANCED_OPTIMIZATIONS</span>
+	    .<span class="fu">setOptionsForCompilationLevel</span>(options);
+
+	<span class="bu">List</span>&lt;SourceFile&gt; list = <span class="kw">null</span>;
+
+	<span class="kw">try</span> {
+	    list =
+		CommandLineRunner
+		.<span class="fu">getBuiltinExterns</span>(CompilerOptions.<span class="fu">Environment</span>.<span class="fu">BROWSER</span>);
+	} <span class="kw">catch</span> (<span class="bu">IOException</span> e) {
+	    <span class="bu">System</span>.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;Exception raised&quot;</span>);
+	}
+
+	list.<span class="fu">add</span>(SourceFile.<span class="fu">fromCode</span>(<span class="st">&quot;input.js&quot;</span>, code));
+	compiler.<span class="fu">compile</span>(<span class="kw">new</span> <span class="bu">ArrayList</span>&lt;SourceFile&gt;(), list, options);
+	<span class="kw">return</span> compiler.<span class="fu">toSource</span>();
+    }
+
+    <span class="kw">public</span> <span class="dt">static</span> <span class="dt">void</span> <span class="fu">main</span>(<span class="bu">String</span>[] args) {
+      <span class="bu">String</span> compiled_code = <span class="fu">compile</span>(<span class="st">&quot;var a = 1 + 2; console.log(a)&quot;</span>);
+      <span class="bu">System</span>.<span class="fu">out</span>.<span class="fu">println</span>(compiled_code);
+    }
+
+}</code></pre></div>
+<p>You’ll need to have the Closure Compiler installed, on OS X this is easy with <code>brew install closure-compiler</code></p>
+<p>Then in a new directory that you can use for this build, you can copy the <code>jar</code> from <code>/usr/local/Cellar/closure-compiler/20161201/libexec</code> to where the root is of your directory, let’s call that directory <code>build</code>.</p>
+<p>Here’s a Makefile which will build, run the code.</p>
+<div class="sourceCode"><pre class="sourceCode makefile"><code class="sourceCode makefile"><span class="dv">blog_code:</span>
+	javac -Xlint:deprecation -cp ./closure-compiler-v20161201.jar:./ com/hyegar/closure/CallCompiler.java
+	java -cp ./closure-compiler-v20161201.jar:./ com.hyegar.closure.CallCompiler	</code></pre></div>]]></description>
+    <pubDate>Mon, 09 Jan 2017 00:00:00 UT</pubDate>
+    <guid>http://hyegar.com/2017/01/09/calling-google-closure-and-with-jni/index.html</guid>
+    <dc:creator>Edgar Aroutiounian</dc:creator>
+</item>
+<item>
     <title>variants in C++14 without boost</title>
     <link>http://hyegar.com/2017/01/08/variants-in-cpp/index.html</link>
     <description><![CDATA[<h1 id="variants-in-their-native-land">Variants in their native land</h1>
@@ -818,50 +896,6 @@ $ /T.js</code></pre></div>
 <p>I’ve added this to my <code>podge</code> library found <a href="http://github.com/fxfactorial/podge">here</a>, a collection of useful utility functions.</p>]]></description>
     <pubDate>Tue, 22 Mar 2016 00:00:00 UT</pubDate>
     <guid>http://hyegar.com/2016/03/22/simple-timeouts/index.html</guid>
-    <dc:creator>Edgar Aroutiounian</dc:creator>
-</item>
-<item>
-    <title>Building xen-arm-builder from source</title>
-    <link>http://hyegar.com/2016/03/15/building-xen-arm-from-source/index.html</link>
-    <description><![CDATA[<p>I’m in Morocco for the first <a href="http://marrakech2016.mirage.io/">mirageos</a> hackathon. One of the things I’ve done here is build <a href="https://github.com/mirage/xen-arm-builder">xen-arm-builder</a> from source and it was a big challenge. Here’s my general notes and pointers to help you get over this hump. I assume you know what mirageos/xen are.</p>
-<p>Much MUCH thanks to <a href="http://roscidus.com/blog/">Thomas Leonard</a> and <a href="http://somerandomidiot.com/">Mindy Preston</a> for lending me a cubieboard2 and helping me with all the debugging, compiling issues; wouldn’t have been able to do it without them.</p>
-<h1 id="machine-setup">Machine Setup</h1>
-<p>I did this on Ubuntu 15 and was deploying to a <a href="http://cubieboard.org/2013/06/19/cubieboard2-is-here/">cubieboard2</a>.</p>
-<h1 id="example-workflow">Example Workflow</h1>
-<p>Assuming that you are connecting the cubieboard2 to your laptop over a serial connection then you can get a shell on the machine with</p>
-<pre class="shell"><code>$ screen -h 10000 /dev/ttyUSB0 115200</code></pre>
-<p>Then say you are using <a href="https://github.com/mirage/mirage-skeleton">mirage-skeleton</a>, here’s an example flow.</p>
-<pre class="shell"><code>$ git clone https://github.com/mirage/mirage-skeleton
-$ cd mirage-skeleton
-$ make configure MODE=xen
-$ cd console
-$ make
-$ sudo xl create console.xe</code></pre>
-<p>Yay Unikernel on Cubieboard2!</p>
-<h1 id="troublesome-issues">Troublesome issues</h1>
-<p>I had many, many issues in building the code from source, here are some troubleshooting steps that might help you as well.</p>
-<ol start="0" style="list-style-type: decimal">
-<li>Be sure to have fast internet because building from source including making a clone of the Linux source, ouch.</li>
-<li><code>OPAMVERBOSE=1 opam &lt;anything&gt;</code> is incredibly useful.</li>
-<li>Ubuntu 15 will install a <code>gcc-5.0</code> version of the cross-compiler, be sure to do <code>make build CC=arm-linux-gnueabihf-gcc-4.8</code> instead of a plain <code>make build</code>.</li>
-<li>Be sure to <strong>not</strong> use the <code>4.02.0</code> compiler, the cubieboard2 is super slow and that OCaml compiler had a performance bug, use the <code>4.02.3</code> compiler instead.</li>
-<li>Check <code>top</code> to see some kind of xp binary, it eats the CPU and that really slows down compilation, best to kill them.</li>
-<li>Do make sure that the time on the machine is correct, otherwise you’ll have weird hanging by opam which will seem like its building but actually its just stuck on a timing issue, aka be sure to do: <code>sudo ntpdate uk.pool.ntp.org</code> before doing anything with mirage/opam/aptitude.</li>
-<li>If you get odd errors like:</li>
-</ol>
-<pre class="shell"><code>Parsing config from console.xl
-xc: error: panic: xc_dom_core.c:185: failed to open file: No such file or directory: Internal error
-libxl: error: libxl_dom.c:377:libxl__build_pv: xc_dom_kernel_file failed: No such file or directory
-libxl: error: libxl_create.c:1022:domcreate_rebuild_done: cannot
-(re-)build domain: -3</code></pre>
-<p>Then check that the libraries are correctly set in <code>/usr/lib</code>, check with</p>
-<pre class="shell"><code>$ sudo strace -e open xl create console.xl</code></pre>
-<p>and either <code>cp</code> or <code>ln</code> them correctly.</p>
-<ol start="7" style="list-style-type: decimal">
-<li>I recommend just installing all the <code>depopts</code> of all the mirage projects, there are some bugs in mirage opam files that don’t install other needed packages.</li>
-</ol>]]></description>
-    <pubDate>Tue, 15 Mar 2016 00:00:00 UT</pubDate>
-    <guid>http://hyegar.com/2016/03/15/building-xen-arm-from-source/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 

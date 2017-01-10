@@ -42,6 +42,88 @@
       <article>
     <header>
         <h1>
+            <a href="./2017/01/09/calling-google-closure-and-with-jni/" title="Permalink">
+                Calling Google Closure programmatically
+            </a>
+        </h1>
+        <span class="post-date">January  9, 2017</span> in 
+        <span class="post-tags"><a href="./tags/java/">java</a>, <a href="./tags/google%20closure/">google closure</a>, <a href="./tags/api/">api</a></span>
+    </header>
+    <p>This is a pretty neat post, I’ll show you how to programmatically call <a href="https://github.com/google/closure-library">Google Closure</a> in Java. Closure is an amazing project that actually optimizes <code>JavaScript</code> rather than just minifies it. (This is pretty much one of the few times you’ll see me write Java, I think the language sucks).</p>
+<p>Its mostly a 2017 update of this <a href="http://blog.bolinfest.com/2009/11/calling-closure-compiler-from-java.html">post from 2009</a></p>
+<p>Here’s the Java</p>
+<div class="sourceCode"><pre class="sourceCode java"><code class="sourceCode java"><span class="kw">package</span><span class="im"> com.hyegar.closure;</span>
+
+<span class="kw">import</span><span class="im"> java.io.IOException;</span>
+<span class="kw">import</span><span class="im"> java.util.List;</span>
+<span class="kw">import</span><span class="im"> java.util.ArrayList;</span>
+
+<span class="kw">import</span><span class="im"> com.google.javascript.jscomp.CompilationLevel;</span>
+<span class="kw">import</span><span class="im"> com.google.javascript.jscomp.Compiler;</span>
+<span class="kw">import</span><span class="im"> com.google.javascript.jscomp.CompilerOptions;</span>
+<span class="kw">import</span><span class="im"> com.google.javascript.jscomp.SourceFile;</span>
+<span class="kw">import</span><span class="im"> com.google.javascript.jscomp.CommandLineRunner;</span>
+<span class="kw">import</span><span class="im"> com.google.javascript.jscomp.CompilerOptions.LanguageMode;</span>
+
+<span class="co">/**</span>
+<span class="co"> * An example of how to call the Closure Compiler programmatically, </span>
+<span class="co"> * this is LICENSED AS GPL-3.0.</span>
+<span class="co"> *</span>
+<span class="co"> * </span><span class="kw">@author </span><span class="co">edgar.factorial@gmail.com (Edgar Aroutiounian)</span>
+<span class="co"> */</span>
+
+<span class="kw">public</span> <span class="kw">class</span> CallCompiler {
+
+    <span class="co">/**</span>
+<span class="co">     * </span><span class="kw">@param code </span><span class="co">JavaScript source code to compile.</span>
+<span class="co">     * </span><span class="kw">@return </span><span class="co">The compiled version of the code.</span>
+<span class="co">     */</span>
+    <span class="kw">public</span> <span class="dt">static</span> <span class="bu">String</span> <span class="fu">compile</span>(<span class="bu">String</span> code) {
+	<span class="bu">Compiler</span> compiler = <span class="kw">new</span> <span class="bu">Compiler</span>();
+
+	CompilerOptions options = <span class="kw">new</span> <span class="fu">CompilerOptions</span>();
+
+	<span class="co">// See :</span>
+	<span class="co">// closure-compiler/src/com/google/javascript/jscomp/CompilerOptions.java</span>
+	<span class="co">// lines 2864-2896</span>
+	options.<span class="fu">setLanguageIn</span>(LanguageMode.<span class="fu">ECMASCRIPT_2015</span>);
+	options.<span class="fu">setLanguageOut</span>(LanguageMode.<span class="fu">ECMASCRIPT5_STRICT</span>);
+
+	CompilationLevel
+	    .<span class="fu">ADVANCED_OPTIMIZATIONS</span>
+	    .<span class="fu">setOptionsForCompilationLevel</span>(options);
+
+	<span class="bu">List</span>&lt;SourceFile&gt; list = <span class="kw">null</span>;
+
+	<span class="kw">try</span> {
+	    list =
+		CommandLineRunner
+		.<span class="fu">getBuiltinExterns</span>(CompilerOptions.<span class="fu">Environment</span>.<span class="fu">BROWSER</span>);
+	} <span class="kw">catch</span> (<span class="bu">IOException</span> e) {
+	    <span class="bu">System</span>.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;Exception raised&quot;</span>);
+	}
+
+	list.<span class="fu">add</span>(SourceFile.<span class="fu">fromCode</span>(<span class="st">&quot;input.js&quot;</span>, code));
+	compiler.<span class="fu">compile</span>(<span class="kw">new</span> <span class="bu">ArrayList</span>&lt;SourceFile&gt;(), list, options);
+	<span class="kw">return</span> compiler.<span class="fu">toSource</span>();
+    }
+
+    <span class="kw">public</span> <span class="dt">static</span> <span class="dt">void</span> <span class="fu">main</span>(<span class="bu">String</span>[] args) {
+      <span class="bu">String</span> compiled_code = <span class="fu">compile</span>(<span class="st">&quot;var a = 1 + 2; console.log(a)&quot;</span>);
+      <span class="bu">System</span>.<span class="fu">out</span>.<span class="fu">println</span>(compiled_code);
+    }
+
+}</code></pre></div>
+<p>You’ll need to have the Closure Compiler installed, on OS X this is easy with <code>brew install closure-compiler</code></p>
+<p>Then in a new directory that you can use for this build, you can copy the <code>jar</code> from <code>/usr/local/Cellar/closure-compiler/20161201/libexec</code> to where the root is of your directory, let’s call that directory <code>build</code>.</p>
+<p>Here’s a Makefile which will build, run the code.</p>
+<div class="sourceCode"><pre class="sourceCode makefile"><code class="sourceCode makefile"><span class="dv">blog_code:</span>
+	javac -Xlint:deprecation -cp ./closure-compiler-v20161201.jar:./ com/hyegar/closure/CallCompiler.java
+	java -cp ./closure-compiler-v20161201.jar:./ com.hyegar.closure.CallCompiler	</code></pre></div>
+</article>
+<article>
+    <header>
+        <h1>
             <a href="./2017/01/08/variants-in-cpp/" title="Permalink">
                 variants in C++14 without boost
             </a>
@@ -413,95 +495,6 @@ bundle.js:23095 Exception raised: TypeError: Failed to fetch(…)
 bundle.js:23096 Logic continued</code></pre>
 <p>Yay, things worked.</p>
 <p>See the repo <a href="https://github.com/fxfactorial/react-example-with-async-await-babel">here</a> for the full <code>package.json</code></p>
-</article>
-<article>
-    <header>
-        <h1>
-            <a href="./2016/08/31/grabbing-function-location/" title="Permalink">
-                Calling a C function from within a binary on OS X/iOS
-            </a>
-        </h1>
-        <span class="post-date">August 31, 2016</span> in 
-        <span class="post-tags"><a href="./tags/c/">c</a>, <a href="./tags/osx/">osx</a>, <a href="./tags/code%20injection/">code injection</a>, <a href="./tags/binary/">binary</a>, <a href="./tags/hopper/">hopper</a></span>
-    </header>
-    <p><em>If you like this and other posts of mine, then reach out to me at edgar.factorial@gmail.com, I’m looking for remote contract work.</em></p>
-<p>Let’s say we have a C binary given to us and there’s a C function in it that we want to call. For example, say we have this code, assume it is called <code>inject_me.c</code>:</p>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span>
-
-<span class="dt">int</span> test_function(<span class="dt">char</span> *some_word)
-{
-  <span class="cf">return</span> printf(<span class="st">&quot;Did say: %s</span><span class="sc">\n</span><span class="st">&quot;</span>, some_word);
-}
-
-<span class="dt">int</span> main (<span class="dt">int</span> argc, <span class="dt">char</span> **argv)
-{
-  <span class="cf">return</span> test_function(<span class="st">&quot;Hello World&quot;</span>);
-}</code></pre></div>
-<p>and we want to call the function <code>test_function</code> by ourselves. To do that we need to find the location of the function in the binary. We can do that by disassembling the binary, I used to use command line tools for that but now I’m using <code>hopper</code>. (Hopper is an AMAZING program). Once we disassemble it, we find the function in memory:</p>
-<div class="figure">
-<img src="./images/found_test_function.png" />
-
-</div>
-<p>Notice that I highlighted the actual location of: <code>0x100000f20</code>. Now we can inject it with this code, assume it is called <code>inject.c</code></p>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span>
-<span class="pp">#include </span><span class="im">&lt;string.h&gt;</span>
-<span class="pp">#include </span><span class="im">&lt;mach-o/dyld.h&gt;</span>
-
-<span class="pp">#define SPOT 0x100000f20</span>
-
-<span class="kw">typedef</span> <span class="dt">int</span> pull_it(<span class="dt">char</span> *);
-
-<span class="dt">static</span> pull_it *pulled = NULL;
-
-__attribute__((constructor))
-<span class="dt">void</span> example_injection()
-{
-  <span class="dt">char</span> path[<span class="dv">1024</span>];
-  <span class="dt">uint32_t</span> size = <span class="kw">sizeof</span>(path);
-  _NSGetExecutablePath(path, &amp;size);
-  
-  <span class="cf">for</span> (<span class="dt">uint32_t</span> i = <span class="dv">0</span>; i &lt; _dyld_image_count(); i++) {
-    <span class="cf">if</span> (strcmp(_dyld_get_image_name(i), path) == <span class="dv">0</span>) {
-      <span class="dt">intptr_t</span> slide = _dyld_get_image_vmaddr_slide(i);
-
-      pulled = (pull_it*)(<span class="dt">intptr_t</span>)(slide + SPOT);
-      printf(<span class="st">&quot;slide: %lu</span><span class="sc">\n</span><span class="st">&quot;</span>, slide);
-      pulled(<span class="st">&quot;Please work</span><span class="sc">\n</span><span class="st">&quot;</span>);
-    }
-  }
-
-  printf(<span class="st">&quot;This ran before the actual program</span><span class="sc">\n</span><span class="st">&quot;</span>);
-}</code></pre></div>
-<ol style="list-style-type: decimal">
-<li><p>The <code>__attribute__((constructor))</code> calls the wrapped function before <code>main</code> goes off.</p></li>
-<li><p>The slide is needed because: (I found this on some Apple mailing list and don’t remember from where anymore)</p></li>
-</ol>
-<pre><code>Q: Can someone enlighten me as to what the virtual memory slide amount
-is ? (this parameter is returned by _dyld_get_image_vmaddr_slide for
-instance)
-
-A: The shared libraries are prebound to an initial base address but
-when the shared library gets loaded dyld can &quot;slide&quot; the library to a
-new base address, this is where the virtual memory slide comes from.</code></pre>
-<p>Build both with this <code>Makefile</code></p>
-<div class="sourceCode"><pre class="sourceCode makefile"><code class="sourceCode makefile"><span class="dt">osx_clang </span><span class="ch">:=</span><span class="st"> </span><span class="ch">$(</span><span class="kw">shell</span><span class="st"> xcrun --sdk macosx --find clang</span><span class="ch">)</span>
-<span class="dt">osx_sdk </span><span class="ch">:=</span><span class="st"> </span><span class="ch">$(</span><span class="kw">shell</span><span class="st"> xcrun --sdk macosx --show-sdk-path</span><span class="ch">)</span>
-<span class="dt">c_flags </span><span class="ch">:=</span><span class="st"> -std=c11</span>
-
-<span class="dv">inject_me:</span><span class="dt">inject_me.c</span>
-	<span class="ch">@${</span><span class="dt">osx_clang</span><span class="ch">}</span><span class="fu"> -isysroot </span><span class="ch">${</span><span class="dt">osx_sdk</span><span class="ch">}</span><span class="fu"> </span><span class="ch">${</span><span class="dt">c_flags</span><span class="ch">}</span><span class="fu"> </span><span class="ch">$&lt;</span><span class="fu"> -o </span><span class="ch">$@</span>
-
-<span class="dv">code_injection:</span><span class="dt">inject_me</span>
-	<span class="ch">@${</span><span class="dt">osx_clang</span><span class="ch">}</span><span class="fu"> -isysroot </span><span class="ch">${</span><span class="dt">osx_sdk</span><span class="ch">}</span><span class="fu"> </span><span class="ch">${</span><span class="dt">c_flags</span><span class="ch">}</span><span class="fu"> inject.c -dynamiclib -o </span><span class="ch">$@</span><span class="fu">.dylib</span></code></pre></div>
-<p>Now we can invoke it like so:</p>
-<pre class="shell"><code>$ make code_injection
-$ DYLD_INSERT_LIBRARIES=code_injection.dylib ./inject_me
-slide: 125042688
-Did say: Please work
-
-This ran before the actual program
-Did say: Hello World</code></pre>
-<p>Yay, it works. BTW, this works for jailbroken iOS as well.</p>
 </article>
 
 
