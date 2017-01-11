@@ -10,7 +10,7 @@
         <lastBuildDate>Mon, 09 Jan 2017 00:00:00 UT</lastBuildDate>
         <item>
     <title>Calling Google Closure programmatically</title>
-    <link>http://hyegar.com/2017/01/09/calling-google-closure-and-with-jni/index.html</link>
+    <link>http://hyegar.com/2017/01/09/calling-google-closure/index.html</link>
     <description><![CDATA[<p>This is a pretty neat post, I’ll show you how to programmatically call <a href="https://github.com/google/closure-library">Google Closure</a> in Java. Closure is an amazing project that actually optimizes <code>JavaScript</code> rather than just minifies it. (This is pretty much one of the few times you’ll see me write Java, I think the language sucks).</p>
 <p>Its mostly a 2017 update of this <a href="http://blog.bolinfest.com/2009/11/calling-closure-compiler-from-java.html">post from 2009</a></p>
 <p>Here’s the Java</p>
@@ -83,7 +83,7 @@
 	javac -Xlint:deprecation -cp ./closure-compiler-v20161201.jar:./ com/hyegar/closure/CallCompiler.java
 	java -cp ./closure-compiler-v20161201.jar:./ com.hyegar.closure.CallCompiler	</code></pre></div>]]></description>
     <pubDate>Mon, 09 Jan 2017 00:00:00 UT</pubDate>
-    <guid>http://hyegar.com/2017/01/09/calling-google-closure-and-with-jni/index.html</guid>
+    <guid>http://hyegar.com/2017/01/09/calling-google-closure/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 <item>
