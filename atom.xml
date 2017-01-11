@@ -7,8 +7,71 @@
         <description><![CDATA[Personal blog of Edgar Aroutiounian]]></description>
         <atom:link href="http://hyegar.com/atom.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Mon, 09 Jan 2017 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Tue, 10 Jan 2017 00:00:00 UT</lastBuildDate>
         <item>
+    <title>let binding in OCaml class definition</title>
+    <link>http://hyegar.com/2017/01/10/small-ocaml-object-annoyance/index.html</link>
+    <description><![CDATA[<p>I like the <code>object</code> layer in OCaml but here’s one quirk of the language that sometimes I forget about and it can bite you…like I just got bit in my <code>OCaml</code> <a href="https://github.com/fxfactorial/ocaml-java-scriptengine">bindings</a> to <code>Java</code>’s <code>ScriptEngine</code>. (Let’s you evaluate <code>JavaScript</code> in <code>OCaml</code> using the JVM)</p>
+<p>OCaml lets you define an object like so:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">class</span> thing = <span class="kw">object</span>
+  <span class="kw">method</span> speak = <span class="dt">print_endline</span> <span class="st">&quot;Hello&quot;</span>
+<span class="kw">end</span>
+
+<span class="kw">let</span> () = (<span class="kw">new</span> thing)#speak</code></pre></div>
+<p>Note that <code>method</code>s don’t need arguments, they will always go off when you call them.</p>
+<p>and you can also have fields</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">class</span> thing = <span class="kw">object</span>
+  <span class="kw">val</span> coder = <span class="st">&quot;coder&quot;</span>
+  <span class="kw">val</span> <span class="kw">mutable</span> name = <span class="st">&quot;Edgar&quot;</span>
+
+  <span class="kw">method</span> speak = <span class="dt">print_endline</span> (name ^ coder)
+  <span class="kw">method</span> set_name s = name &lt;- s
+<span class="kw">end</span>
+
+<span class="kw">let</span> () = 
+  <span class="kw">let</span> p = <span class="kw">new</span> thing <span class="kw">in</span>
+  p#speak;
+  p#set_name <span class="st">&quot;Gohar&quot;</span>;
+  p#speak</code></pre></div>
+<p>Notice that we can also make fields <code>mutable</code> and they are private by default.</p>
+<p>Now here’s one situation you might encounter:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">class</span> compute = <span class="kw">object</span>
+  <span class="kw">val</span> first_field = Other_module.init ()
+  <span class="kw">val</span> second_field = Some_module.use_it first_field
+<span class="kw">end</span></code></pre></div>
+<p>This won’t work though because you can’t use one field in another field.</p>
+<p>One solution might be:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">
+<span class="kw">class</span> compute = 
+
+  <span class="kw">let</span> first_field = Other_module.init () <span class="kw">in</span>
+  <span class="kw">let</span> second_field = Some_module.use_it first_field <span class="kw">in</span>
+  <span class="kw">object</span>
+    <span class="kw">val</span> first = first_field
+    <span class="kw">val</span> second = second_field
+  <span class="kw">end</span></code></pre></div>
+<p>Now question, are <code>first_field</code> and <code>second_field</code> created each time a new instance of <code>compute</code> is made?</p>
+<p>…</p>
+<p>The answer is no and this might be counter intuitive to some, at least it was to me and I sometimes forget this.</p>
+<p>Verify it with:</p>
+<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">class</span> thing =
+  <span class="kw">let</span> foo = <span class="dv">1</span> + <span class="dv">2</span> <span class="kw">in</span>
+  <span class="kw">let</span> () = <span class="dt">print_endline</span> <span class="st">&quot;I was called&quot;</span> <span class="kw">in</span>
+  <span class="kw">object</span>
+
+  <span class="kw">end</span>
+
+
+<span class="kw">let</span> () =
+  <span class="kw">let</span> a = <span class="kw">new</span> thing <span class="kw">in</span>
+  <span class="kw">let</span> b = <span class="kw">new</span> thing <span class="kw">in</span>
+  ()</code></pre></div>
+<p>And see how many times <code>I was called</code> is printed to the screen; hence be aware of this when you use objects in OCaml.</p>]]></description>
+    <pubDate>Tue, 10 Jan 2017 00:00:00 UT</pubDate>
+    <guid>http://hyegar.com/2017/01/10/small-ocaml-object-annoyance/index.html</guid>
+    <dc:creator>Edgar Aroutiounian</dc:creator>
+</item>
+<item>
     <title>Calling Google Closure programmatically</title>
     <link>http://hyegar.com/2017/01/09/calling-google-closure/index.html</link>
     <description><![CDATA[<p>This is a pretty neat post, I’ll show you how to programmatically call <a href="https://github.com/google/closure-library">Google Closure</a> in Java. Closure is an amazing project that actually optimizes <code>JavaScript</code> rather than just minifies it. (This is pretty much one of the few times you’ll see me write Java, I think the language sucks).</p>
@@ -858,44 +921,6 @@ $ /T.js</code></pre></div>
 <p>Success! Real system threads.</p>]]></description>
     <pubDate>Sat, 21 May 2016 00:00:00 UT</pubDate>
     <guid>http://hyegar.com/2016/05/21/using-lwt-preemptive/index.html</guid>
-    <dc:creator>Edgar Aroutiounian</dc:creator>
-</item>
-<item>
-    <title>Simple timeout usage</title>
-    <link>http://hyegar.com/2016/03/22/simple-timeouts/index.html</link>
-    <description><![CDATA[<p>I wanted to use a timeout in OCaml for some shell coding but I didn’t want to introduce a big dependency on <code>Lwt</code>. After some googling I found <a href="https://www.reddit.com/r/ocaml/comments/3qapbv/question_about_writing_a_timeout_function_and_the/">this</a></p>
-<p>Here’s my take on the timeout function, basically its the same but I push everything into the timeout function itself and use labeled args along a callback for when the timeout goes off.</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> timeout ?(on_timeout = <span class="kw">fun</span> () -&gt; ()) ~arg ~timeout ~default_value f =
-  <span class="kw">let</span> <span class="kw">module</span> Wrapper = <span class="kw">struct</span> <span class="kw">exception</span> Timeout <span class="kw">end</span> <span class="kw">in</span>
-  <span class="kw">let</span> sigalrm_handler = <span class="dt">Sys</span>.Signal_handle (<span class="kw">fun</span> _ -&gt; <span class="dt">raise</span> Wrapper.Timeout) <span class="kw">in</span>
-  <span class="kw">let</span> old_behavior = <span class="dt">Sys</span>.signal <span class="dt">Sys</span>.sigalrm sigalrm_handler <span class="kw">in</span>
-  <span class="kw">let</span> reset_sigalrm () = <span class="dt">Sys</span>.set_signal <span class="dt">Sys</span>.sigalrm old_behavior <span class="kw">in</span>
-  <span class="dt">ignore</span> (Unix.alarm timeout);
-  <span class="kw">try</span>
-    <span class="kw">let</span> res = f arg <span class="kw">in</span>
-    reset_sigalrm ();
-    res
-  <span class="kw">with</span> exc -&gt;
-    reset_sigalrm ();
-    <span class="kw">if</span> exc = Wrapper.Timeout
-    <span class="kw">then</span> (on_timeout (); default_value)
-    <span class="kw">else</span> <span class="dt">raise</span> exc</code></pre></div>
-<p>and you can can use it like so:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="dt">Sys</span>.command
-|&gt; timeout 
-   ~arg:<span class="st">&quot;sleep 3&quot;</span> 
-   ~timeout:<span class="dv">2</span> 
-   ~default_value:(<span class="dv">-1</span>) 
-   ~on_timeout:(<span class="kw">fun</span> () -&gt; <span class="dt">print_endline</span> <span class="st">&quot;func timed out&quot;</span>)</code></pre></div>
-<p>You might notice that your wrapped function only gets one arg, so how can we use this timeout wrapper on functions that take more than one argument? By currying and using a dummy arg of unit.</p>
-<p>Example:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> () =
-  <span class="kw">let</span> partialed first second third () = first + second + third <span class="kw">in</span>
-  timeout ~arg:() ~timeout:<span class="dv">4</span> ~default_value:(<span class="dv">-1</span>) (partialed <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>)
-  |&gt; <span class="dt">ignore</span></code></pre></div>
-<p>I’ve added this to my <code>podge</code> library found <a href="http://github.com/fxfactorial/podge">here</a>, a collection of useful utility functions.</p>]]></description>
-    <pubDate>Tue, 22 Mar 2016 00:00:00 UT</pubDate>
-    <guid>http://hyegar.com/2016/03/22/simple-timeouts/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 
