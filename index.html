@@ -42,6 +42,188 @@
       <article>
     <header>
         <h1>
+            <a href="./2017/02/12/excellence-security-culture-armenia/" title="Permalink">
+                Hacks, cracks, dev culture and Armenia's development in tech 🇦🇲
+            </a>
+        </h1>
+        <span class="post-date">February 12, 2017</span> in 
+        <span class="post-tags"><a href="./tags/armenia/">armenia</a>, <a href="./tags/security/">security</a>, <a href="./tags/development/">development</a>, <a href="./tags/economics/">economics</a></span>
+    </header>
+    <h3 id="audience">Audience</h3>
+<hr />
+<p>This post is intended for both technical and non-technical people; its for people interested in the development of programmers, cultures of professionalism, security, and the development of Armenia as a tech power. Along the way I will show some security vulnerabilities of well-known sites in Armenia, non-technical people will be able to follow along as everything will be explained. I will also introduce the concept of a bug bounty exchange.</p>
+<p>A glossary of technical terms follows the post, might be worth while to read through those terms first.</p>
+<p><strong>I want to emphasis that the point of this blog post is not to shame or make fun of any individual or company, rather it is meant to bring attention to the tech industry, culture in Armenia and what can be done to further it to a higher average level of excellence and professionalism.</strong></p>
+<h3 id="problem">Problem</h3>
+<hr />
+<p>Specifically, with respect to Armenia, much has been said about the tech as a shining example of an honest and rapidly growing industry. However, in my view much of that has been pushed by people who frankly are little connected to the tech industry writ tech itself. There are not enough voices heard from the down in the trenches folks who can provide a truly informed voice.</p>
+<p>Armenia’s geopolitical situation being what it is makes the tech industry arguably of high interest to national security as:</p>
+<ol style="list-style-type: decimal">
+<li>A robust engine of sustained, organic economic growth. A nation cannot wage wars or devote high levels of resources to its military without a resilient economy. A strong economy lets us negotiate with our enemies from a position of strength.</li>
+<li>As a nursery and pipeline for cyber-security. Armenians are disproportionality effective in every domain, the digital realm amplifies that 100X.</li>
+</ol>
+<p>For the development of countries, it is better to see a country of makers and not outsourcers. Why? Because making products, like Uber, Facebook, etc, is what makes the biggest bucks of all and is best able to utilize the Armenian people’s creative talents. Working as outsourcing tends to make decent but soulless products, and such products are made by programmers who simply don’t care about what they’re making beyond the salary paid. (Hardly eudaimonia)</p>
+<p>With that, Armenia has a lot of outsourcing but the product scene is coming along nicely although we haven’t even seen our first largish failure yet.</p>
+<p>Here are two intertwined things I see in the Armenian tech scene that need more attention &amp; sustained improvement.</p>
+<div style="display: inline-flex;justify-content: center;width: 100%;">
+<table>
+<thead>
+<tr class="header">
+<th>Problem</th>
+<th align="center">Fixable</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Hacker, developer culture lagging</td>
+<td align="center"><strong>Yes</strong></td>
+<td>Invest more in people</td>
+</tr>
+<tr class="even">
+<td>Cyber-security</td>
+<td align="center"><strong>Yes</strong></td>
+<td>Invest more in people</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>What do I mean by developer culture? In a way, it’s like professionalism in other fields which is characterized by devotion to your craft, not cutting corners, doing things the right way even when it takes longer and deeply learning the tools of your craft. Sometimes in Armenian culture people like to cut corners, this is a fact. Examples include cutting corners in Gyumri’s apartment construction which led to worse outcomes in the 1988 earthquake to the elevator in my building whose buttons were always off by one. There’s an implicit acceptance of a shrugging your shoulders quality work and it is reflected in the tech industry as well.</p>
+<h3 id="examples-of-shortcoming">Examples of shortcoming</h3>
+<hr />
+<p>Now let’s look at a few examples of the manifestations of these shortcomings. I will now show you three examples of live web vulnerabilities of three sites in Armenia, each of which was told that a problem existed but didn’t pursue a fix initially although one has been fixed. All three of them are the result of similar entry level mistakes.</p>
+<p>I found out about these exploits after first posting in the Facebook iterate chatroom about bots attacking <a href="https://silicondzor.com">silicondzor.com</a></p>
+<div style="display: inline-flex;justify-content: center;width: 100%;">
+<div class="figure">
+<img src="./images/bots.png" />
+
+</div>
+</div>
+<p>This image is from a server log for <code>silicondzor.com</code>. See the line <code>GET /.git/ HTTP/1.1</code>? That’s a bot checking if it can get our entire git repo, all our source code. After posting that, <code>Sparik Hayrapetyan</code> reached out to me and reported some Armenian sites that were vulnerable to this very exploit!</p>
+<p>I verified some of those site and here are how damning it is…</p>
+<p>Say we have three websites each ending in a <code>.am</code> TLD:</p>
+<p><em>(the creator field is from attributes given on the public facing sites)</em></p>
+<div style="display: inline-flex;justify-content: center;width: 100%;">
+<table>
+<thead>
+<tr class="header">
+<th>Site</th>
+<th align="center">Subject matter</th>
+<th>exploit</th>
+<th>creator</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>siteA</td>
+<td align="center">auction</td>
+<td>Full git repo, found credentials</td>
+<td><a href="http://voodoo.pro/en" class="uri">http://voodoo.pro/en</a></td>
+</tr>
+<tr class="even">
+<td>siteB</td>
+<td align="center">car rental</td>
+<td>Full git repo, found credentials</td>
+<td>sitemax</td>
+</tr>
+<tr class="odd">
+<td>siteC</td>
+<td align="center">reading materials</td>
+<td>Full git repo</td>
+<td><a href="https://www.studio-one.am" class="uri">https://www.studio-one.am</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>What does it mean to have the full git repo? It means to have the entire history of the source code from beginning to end.</p>
+<p>Verification pics:</p>
+<h3 id="sitea-the-auction-site">SiteA – the auction site</h3>
+<p>First about the programmer culture, this particular code base uses PHP. A programming language known to be inherently defective in security and one that is usally avoided for new projects in Silicon Valley.</p>
+<div style="display: inline-flex;justify-content: center;width: 100%;">
+<div class="figure">
+<img src="./images/generated-code-site-a.png" />
+
+</div>
+</div>
+<p>Not only are they using PHP, they are also using an IDE to <strong>generate</strong> PHP code.</p>
+<p>Another bad practice they have their passwords in the source code. Hint: this is never a good idea. Since as an auction site they are handling all kinds of credit cards and other sensitive information and now any attacker, including me potentially have access to it all. (Programmers: A better solution is to use environment variables)</p>
+<div style="display: inline-flex;justify-content: center;width: 100%;">
+<div class="figure">
+<img src="./images/credentials-site-a.png" />
+
+</div>
+</div>
+SiteA also exposed their <strong>SQL</strong> on the public website
+<div style="display: inline-flex;justify-content: center;width: 100%;">
+<div class="figure">
+<img src="./images/sql-dumped.png" />
+
+</div>
+</div>
+<h3 id="siteb-car-rental-site">SiteB – Car rental site</h3>
+<p>The car rental site required a little bit more work to reconstruct the original git repo. Thankfully using tools like <a href="https://github.com/internetwache/GitTools">GitTools</a> makes the process painless and after some searching through the source code I found this goodie. These are credentials to the database which being a car rental site also probably contains some nice credit card numbers, accounts.</p>
+<div style="display: inline-flex;justify-content: center;width: 100%;">
+<div class="figure">
+<img src="./images/site-b-mysql-creds.png" />
+
+</div>
+</div>
+<h3 id="sitec-reading-materials">SiteC – Reading materials</h3>
+<p>I didn’t dig too deeply in this repo but here’s an example structure. The indentation means hierarchy of directories and files, things ending in <code>.php</code> are source code files.</p>
+<div style="display: inline-flex;justify-content: center;width: 100%;">
+<div class="figure">
+<img src="./images/site-c.png" />
+
+</div>
+</div>
+<p>Studio-One proudly boasts of its clients including <code>AmeriaBank</code> and the <code>National Assembly of RA</code>. How much do you want to bet that they do similar sloppy coding across all these projects?</p>
+<div style="display: inline-flex;justify-content: center;width: 100%;">
+<div class="figure">
+<img src="./images/site-c-boast.png" />
+
+</div>
+</div>
+<p>Again this exploit was rather simple, it was a rookie mistake.</p>
+<h3 id="bug-bounties">Bug Bounties</h3>
+<p>Now as I mentioned Sparik first reported exploits to the respective site owners but amazingly some didn’t even reply or simply asked him leave his email address, the de facto equivalent of “Don’t call us, we’ll call you”. Amazingly Sparik wasn’t compensated at all or recognized! I reached out as well but only one replied and has since fixed the mistakes.</p>
+<p>Many other companies would have paid him under a system called a <code>bug bounty</code>. This is when companies pay whoever finds exploits on their website/app/program under a structured disclosure method. The idea is that it is better for the company to pay to know about the exploit, fix it, and move on rather than have the exploit end up on the black market and then hit them out in the wild. An example of this is the Target hacking, that cost over $100 Million in damages. Facebook has been running their bug bounty since 2011 with great success, some payouts reach $40,000 which is still substantially less than what can happen when someone malicious literally has all the passwords to your databases and computers. To my knowledge, there are no companies in Armenia that run a bug bounty.</p>
+<h3 id="mitigation">Mitigation</h3>
+<p>How can we mitigate these kinds of exploits? Well in a way its simple but also hard &amp; vague; we do it by:</p>
+<ol style="list-style-type: decimal">
+<li><p>Promoting a culture of people open about knowledge, about promoting collerboration. This particular exploit is talked about in just about every other InfoSec meetup in San Francisco and is well known but in Armenia a seemingly prominent firm is repeatedly making it. Practically speaking this means more meetups. A check on <a href="https://silicondzor.com">silicondzor.com</a> shows 53 events in Feburary for Armenia, that number needs to be higher and a higher percentage needs to be programmers talking to other programmers, not fluff sessions about Marketing/Startups. The meetups should lean toward being workshops with hands on examples and live coding.</p></li>
+<li><p>Sponsoring bug bounties, especially starting with Government &amp; military websites.</p></li>
+<li><p>Having more events like the recent <a href="https://www.facebook.com/events/642338025891387">Capture the Flag</a> which literally included the exploit used in this blog post.</p></li>
+<li><p>Promoting a culture of professionalism &amp; respect for programmers. Programmers are not respected as crafts people in Armenia.</p></li>
+<li><p>Collective funding of talent. The entire Armenian tech industry needs to be willing to spend some money on the collective pool of talent. This means like non-trivial prizes for hackathon, paid bug bounties, paid trainings Armenian culture in general does not promote doing things for free, or helping someone without expecting something in return implicitly.</p></li>
+<li><p>Promoting and funding projects that protect critical internet infrastructure for Armenia, like <a href="https://www.trusted-introducer.org/directory/teams/cert-am.html">CERT-AM</a></p></li>
+</ol>
+<p>Keep in mind that many of these are happening one way or another, I am merely enumerating some for record. Because I believe in <strong>doing</strong> and not merely speaking, I will be creating a public bug bounty exchange for all of Armenia, it will be listed on <a href="https://silicondzor.com">silicondzor.com</a>. Once it is up, I encourage all companies, not just tech companies, to post on the bug bounty exchange with offers of payment for successful examples of exploits.</p>
+<h3 id="parting">Parting</h3>
+<p>(While writing this post a new story broke out of crackers attacking Armenian banks, <a href="http://hetq.am/eng/news/75680/hackers-infiltrate-computer-system-of-bank-in-armenia-steal-$273000.html">Hackers Infiltrate Computer System of Bank in Armenia; Steal $273,000</a>, I think you could see the connections of what I’m trying to say; forget criminals for a moment and now imagine a nation-state determined to destroy us.)</p>
+<p>There is a lot of hype and excitement for tech in Armenia and it holds a huge promise, but we must grow our industry, talent correctly. In addition, because the topic is Armenia, we must keep in mind about security as cyber-security is increasingly the first line of attack and defense in war. Would our enemies be so kind as to tell us about exploits on our banking sites? Or perhaps military sites or other critical government? What about the electrical system or other critical infrastructure that is increasingly connected to the internet. How effective are <code>Iskanders</code> when someone hacks and reprograms them mid-flight? These questions show the level to which tech, economy and national security are all interrelated in Armenia and the level of responsibility the tech industry has to Armenia.</p>
+<h3 id="glossary">Glossary</h3>
+<p>Note:</p>
+<ol style="list-style-type: decimal">
+<li>Non-technical people, you should probably start learning the jargon.</li>
+<li>Technical people, these are loose definition meant for intuition rather than accuracy.</li>
+</ol>
+<p><strong>source code</strong>: The original code of a program, written by a programmer. This can be publicably available or private, usually when its private then it has things like passwords written in it.</p>
+<p><strong>exploit</strong>: A mistake in the source code which then lets another person use that mistake to cause a program to do something other than originally intended. I.E. if I find an exploit in the ATM machine, then maybe I can get it to spit out money.</p>
+<p><strong>InfoSec</strong>: Short for information security, its a subfield of programming culture and include a focus on security.</p>
+<p><strong>cracker</strong>: A professional hacker who attacks programs, products for money usually.</p>
+<p><strong>pentest</strong>: Short for penetration testing, its when you pay a infosec professional to attack your product as if they were a cracker.</p>
+<p><strong>DDoS</strong>: This is when someone abuses whatever service you are providing by overwhelming you with too many requests for that service thereby bringing the whole system down.</p>
+<p><strong>git</strong>: A program used by programmers to help them keep track of all the source code they write, down to the detail of which line of code was written by whom, when.</p>
+<p><strong>repo</strong>: A directory on the hard drive of a computer created by the git program. It contains all the source code and whatever else the programmers decided to keep track of in the project.</p>
+<p><strong>commit</strong>: Something created by git that is like a collection of saves of source code. Think of it like a record in time of how the source code look like.</p>
+<p><strong>TLD</strong>: Top level domain, basically the <code>.com</code> or <code>.am</code> part of a website name.</p>
+<p><strong>IDE</strong>: A program that some programmers use to help them make new programs, think of it like a fancy word processor with auto completion.</p>
+<p><strong>SQL</strong>: A programming language designed for databases. If I know your SQL then I know how your data is organized, stored, and what I should be looking for once I get into your system.</p>
+<p><strong>bots</strong>: Computer programs designed to do boring, repetitive things. In this post it refers to programs designed to search the web for simple, rookie level exploits.</p>
+</article>
+<article>
+    <header>
+        <h1>
             <a href="./2017/01/10/small-ocaml-object-annoyance/" title="Permalink">
                 let binding in OCaml class definition
             </a>
@@ -337,120 +519,6 @@
 <p>I’m turning on native <code>async</code>, <code>await</code> with <code>--harmony_async_await</code>, so my final invocation is:</p>
 <pre><code>$ node --harmony_async_await test.js</code></pre>
 <p>You can get all the code as one script <a href="https://gist.github.com/fxfactorial/60edd7c3c8948754d21dbc9f517e37ee">here</a></p>
-</article>
-<article>
-    <header>
-        <h1>
-            <a href="./2016/11/03/using-javascriptcore/" title="Permalink">
-                Using JavaScriptCore with examples
-            </a>
-        </h1>
-        <span class="post-date">November  3, 2016</span> in 
-        <span class="post-tags"><a href="./tags/javascriptcore/">javascriptcore</a>, <a href="./tags/javascript/">javascript</a></span>
-    </header>
-    <h2 id="motivation">Motivation</h2>
-<p>I like mixing languages and I especially like <code>OCaml</code>, <code>JavaScript</code>. Lately I’ve been writing <code>OCaml</code> bindings to <code>JavaScriptCore</code>, JSC is what underpins Safari both iOS and desktop variants, and ReactNative. When you’re writing bindings, you kinda need to know the <code>C/C++</code> library that you’re binding to.</p>
-<h2 id="example">Example</h2>
-<p>We’re going to provide a pretty meaty example, we’ll make a custom object in C++ code, then we’ll use it from a <code>JavaScript</code> script. Imagine we want to expose a <code>File</code> like object, JS the language itself has no notion of a File, so it will need support from the C/C++ level; you can imagine this as the objects that say <code>[native code]</code>.</p>
-<p>Here’s the code, afterwards is a detailed breakdown (The <code>R</code> C++ feature confuses the syntax highlighter)</p>
-<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="pp">#include </span><span class="im">&lt;string&gt;</span>
-<span class="pp">#include </span><span class="im">&lt;iostream&gt;</span>
-<span class="pp">#include </span><span class="im">&lt;JavaScriptCore/JavaScriptCore.h&gt;</span>
-
-<span class="bu">std::</span>string getcwd_string(<span class="dt">void</span>)
-{
-   <span class="dt">char</span> buff[PATH_MAX];
-   getcwd(buff, PATH_MAX);
-   <span class="bu">std::</span>string cwd(buff);
-   <span class="cf">return</span> cwd;
-}
-
-<span class="at">const</span> <span class="dt">char</span>*
-jsvalue_to_utf8_string(JSGlobalContextRef ctx, JSValueRef v)
-{
-  JSStringRef valueAsString = JSValueToStringCopy(ctx, v, NULL);
-  <span class="dt">size_t</span> jsSize = JSStringGetMaximumUTF8CStringSize(valueAsString);
-  <span class="dt">char</span>* jsBuffer = (<span class="dt">char</span>*)malloc(jsSize);
-  JSStringGetUTF8CString(valueAsString, jsBuffer, jsSize);
-  JSStringRelease(valueAsString);
-  <span class="cf">return</span> jsBuffer;
-}
-
-<span class="dt">void</span> run_example(<span class="dt">void</span>)
-{
-  JSClassDefinition definition = kJSClassDefinitionEmpty;
-  definition.className = <span class="st">&quot;File&quot;</span>;
-  definition.callAsConstructor = [](<span class="kw">auto</span> ctx,
-				    <span class="kw">auto</span> object,
-				    <span class="kw">auto</span> argumentCount,
-				    <span class="kw">auto</span> arguments[],
-				    <span class="kw">auto</span> *exception) -&gt; JSObjectRef {
-    <span class="kw">auto</span> file_name =
-    JSValueMakeString(ctx, JSStringCreateWithUTF8CString(getcwd_string().c_str()));
-    <span class="kw">auto</span> prop_name = JSStringCreateWithUTF8CString(<span class="st">&quot;cwdName&quot;</span>);
-    <span class="kw">auto</span> example_obj = JSObjectMake(ctx, <span class="kw">nullptr</span>, <span class="kw">nullptr</span>);
-
-    JSObjectSetProperty(ctx,
-			example_obj,
-			prop_name,
-			file_name,
-			kJSPropertyAttributeNone,
-			<span class="kw">nullptr</span>);
-    <span class="cf">return</span> example_obj;
-  };
-
-  <span class="kw">auto</span> ctx = JSGlobalContextCreate(<span class="kw">nullptr</span>);
-  <span class="kw">auto</span> js_example_class = JSClassCreate(&amp;definition);
-  <span class="kw">auto</span> example_obj = JSObjectMake(ctx, js_example_class, <span class="kw">nullptr</span>);
-  <span class="co">// auto called_result = JSObjectCallAsConstructor(ctx, example_obj, 0, nullptr, nullptr);</span>
-  <span class="co">// auto property_check =</span>
-  <span class="co">//   JSObjectGetProperty(ctx,</span>
-  <span class="co">// 			called_result,</span>
-  <span class="co">// 			JSStringCreateWithUTF8CString(&quot;cwdName&quot;),</span>
-  <span class="co">// 			nullptr);</span>
-
-  <span class="co">// std::cout &lt;&lt; jsvalue_to_utf8_string(ctx, property_check) &lt;&lt; std::endl;</span>
-  <span class="bu">std::</span>string code_to_eval = <span class="st">R&quot;(</span>
-<span class="st">const example_code = new File;</span>
-<span class="st">example_code.cwdName;</span>
-<span class="st">)&quot;;</span>
-<span class="st">  JSValueRef exn;</span>
-
-<span class="st">  auto global_object = JSContextGetGlobalObject(ctx);</span>
-<span class="st">  JSObjectSetProperty(ctx,</span>
-<span class="st">		      global_object,</span>
-<span class="st">		      JSStringCreateWithUTF8CString(&quot;File&quot;),</span>
-<span class="st">		      example_obj,</span>
-<span class="st">		      kJSPropertyAttributeNone,</span>
-<span class="st">		      nullptr);</span>
-
-<span class="st">  auto sanity_check =</span>
-<span class="st">    JSEvaluateScript(ctx,</span>
-<span class="st">		     JSStringCreateWithUTF8CString(code_to_eval.c_str()),</span>
-<span class="st">		     nullptr,</span>
-<span class="st">		     nullptr,</span>
-<span class="st">		     1,</span>
-<span class="st">		     &amp;exn);</span>
-<span class="st">  if (exn)</span>
-<span class="st">    std::cout &lt;&lt; jsvalue_to_utf8_string(ctx, exn) &lt;&lt; std::endl;</span>
-
-<span class="st">  std::cout &lt;&lt; jsvalue_to_utf8_string(ctx, sanity_check) &lt;&lt; std::endl;</span>
-<span class="st">}</span>
-
-<span class="st">int main(int argc, char **argv)</span>
-<span class="st">{</span>
-<span class="st">  run_example();</span>
-<span class="st">  return 0;</span>
-<span class="st">}</span></code></pre></div>
-<p>compile with, should work just fine on Linux as well, but using:</p>
-<p><code>libjavascriptcoregtk-4.0</code> instead of the <code>-framework JavaScriptCore</code></p>
-<pre class="shell"><code>$ clang++ -framework JavaScriptCore -std=c++14 jsc_examples.cpp -oF </code></pre>
-<h2 id="explanations">Explanations</h2>
-<p>The real meat of the code starts at <code>run_example</code>. We start by creating a <code>JSClassDefinition</code>, this creates a template that lets us control all the behavior of our custom object. Then we provide an implementation for what code ought to be run when our custom object will created with <code>new</code>, notice using <code>C++14</code>’s nice ability to use <code>auto</code> for the parameter names, also notice that we explicitly have to give back the return type of <code>JSObjectRef</code>, you get a bit spoiled by the <code>OCaml</code> type system. Then we create a <code>JavaScript</code> object, set the property <code>cwdName</code> and return that new object from the constructor call.</p>
-<p>Then we need to make a global context, this is like the environment that your JavaScript runs in and we grab the global object out of it, like <code>window</code> in the browser. (The commented out code is if you wanted to call the constructor and get the result directly in code)</p>
-<p>We set the class object as a property to the global, aka like doing <code>window.d3 = //d3's code</code>. Then we evaluate a script, some fun trival all your <code>&lt;script&gt;</code> tags actually have a return value, its the last value.</p>
-<p>Tada.</p>
-<p>FWIW I’m doing the OCaml bindings <a href="https://github.com/fxfactorial/ocaml-javascriptcore">here</a> github stars appreciated :)</p>
 </article>
 
 
