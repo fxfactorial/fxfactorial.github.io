@@ -7,8 +7,71 @@
         <description><![CDATA[Personal blog of Edgar Aroutiounian]]></description>
         <atom:link href="http://hyegar.com/atom.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Sun, 12 Feb 2017 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Sun, 12 Mar 2017 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Practical Armenia, my experience - Part one</title>
+    <link>http://hyegar.com/2017/03/12/my-practical-armenia/index.html</link>
+    <description><![CDATA[<h1 id="motivations">Motivations</h1>
+<p>My friend Vartan Marashlyan from Repat Armenia asked me to write some blog posts about what I thought would be practical to the Professional Armenian diapsora writ large. I’m writing this in the hopes that it will dispel nonsensical, toxic myths about Armenia and inspire many more talented young professionals in the Armenian world wide Diaspora to give Armenia a chance.</p>
+<h1 id="about-me">About me</h1>
+<p>I don’t want to waste too much time talking about myself so I will keep it brief. My name is Edgar Aroutiounian, I’m a 27 year old Armenian-American and I was born in T’bilisi. In 1993 my family immigrated to the United States and I was raised in New York City then spent teenage years in Florida, started adult life back in NYC and finally moving to San Francisco for a neat career opportunity.</p>
+<p>Growing up I spoke Russian at home, no Armenian, I was never taught it. Career wise I am a polygot programmer, which means I work comfortably in multiple domains, programming languages. Basically if it involves programming, I can do it.</p>
+<p>During Mid-2016 I decided to drop everything and move to Armenia.</p>
+<h2 id="going-to-armenia-the-build-up">Going to Armenia, the build up</h2>
+<p>In late 2015 I read <code>My Brother's Road</code>, a book about one of my childhood heroes, Monte Melkonian. The book started something in me that I didn’t realize at the time would push me over the Atlantic. At the time I working at a San Francisco startup, living in Oakland; my job was to reverse engineer <code>iOS</code>. By April 2016 I had left that startup and was being courted by <code>Facebook</code>, and <code>Google</code>. Funny story, I have actually hung up Google twice out of nervousness during the second stage programmer phone interview (I choked).</p>
+<p>April 2016 was of course the Four-day war in <code>Artsakh</code> when Azerbaijan attacked our homeland, that bothered me greatly. Around that time my personal life was falling apart as well, I lost my closest person, and that was entirely my fault; I am still recovering from that. Then in mid July the Sasna Tsrer crisis happened and I read what the war heroes said, I realized that the previous generation had given up so much to establish Armenia &amp; Artsakh as independent entities but now the State was faltering, stagnating and going nowhere fast. Our enemies also knew this and so did the native population, (30% of the Armenian native population has physically left Armenia). So I decided to stop everything and go to Armenia, I decided that on a Tuesday, told my then girlfriend that I would pay for her airplane ticket to come with me. By Thursday I had bought the tickets and by that following Sunday I was in Yerevan, that was <code>August 1st 2016</code>.</p>
+<p>(Actually I didn’t even have housing before landing, I secured it on AirBnb right in front of the gate as the connection flight from Doha to Yerevan was boarding).</p>
+<h2 id="landing-in-armenia">Landing in Armenia</h2>
+<p>I don’t actually have any blood relatives in Armenia so no one met me at the airport and I was subsequently ripped off by my first taxi driver in the country, I didn’t have an intuition yet about dram values. My first place, the AirBnb, was in Erebuni and was decent. I had always read that the Caucasus region was known for its hospitality so I figured I could basically wing it, and by it I mean literally everything. On day three in the country I attended a movie screening at <code>AUA</code>, the American University of Armenia, and after the movie was over I made an announcement about who I was and what I was doing. Truth be told I didn’t know what I was doing but I did say that I was a programmer from San Francisco and I wanted to help the country become better in whatever way I could. Afterward some students came up to me and I started making friends, one of whom later got me a hookup for renting an Apartment from his extended family. With housing secured I could focus on work.</p>
+<pre><code>PRO-TIP: You need to be talking to as many people as possible but also
+filter out the negative people.</code></pre>
+<pre><code>MISCONCEPTION: Armenia/Yerevan is a dangerous place where you have to
+pay mafia people for everything and anything.
+
+REALITY: Completely bullshit. Yerevan is incredibly safe and I never
+had to deal with any shady people. Oakland, CA is more dangerous than
+Yerevan, Yerevan doesn&#39;t have LA style drive bys or NYC style random beatings.</code></pre>
+<h2 id="establishing-myself">Establishing myself</h2>
+<p>Up to that time I didn’t have Facebook, ironic as I was interviewing with them in <code>Menlo Park, CA</code>, but I soon realized that Armenia lives on Facebook so I had to make an account. I started talking to many people, as many as I could and that meant meeting many people in coffee shops, basically two people a day for about three weeks.</p>
+<pre><code>PRO-TIP: Respect yourself and worth. Many people will see you as a
+goldmine or bag of money. Respectfully listen and say you will get
+back with an answer, always be professional.</code></pre>
+<p>Initially I set up roots in <code>Impact Hub</code>, but left within two weeks after I realized that their visions did not align with mine. I have strong opinions and I think that <code>NGOs</code> in general have failed Armenia and that business, profit making, employing people is the smartest way to build the country up ASAP. Being a programmer, I started looking for more serious directly involved tech people and started thinking about what I was missing.</p>
+<pre><code>PRO-TIP: Don&#39;t waste any time if visions don&#39;t align, move on.</code></pre>
+<p>Around the end of August I came up with the idea of a hackerspace, a place where programmers could meet up and exchange ideas, work on projects together. Nothing of the sort existed at the time and I started networking to find willing hosts.</p>
+<pre><code>PRO-TIP: You need to know more than just English to get anything
+serious done, Russian does great.</code></pre>
+<p>I started with the usual suspects, <code>AUA</code>, <code>TUMO</code>, etc but was greeted with basically the same replies of “Oh that’s a great idea” but when push came to shove, aka providing a physical place &amp; computers, then everyone became suddenly shy. <code>TUMO</code> especially surprised me in their rejection as at the time the entire upper two floors were completely empty.</p>
+<pre><code>PRO-TIP: Never get discouraged.</code></pre>
+<p>I also met with many Armenian local tech companies, but then backed out of relationships with some of them once I realized that they wanted me to be effectively a free trainer for their workers, teaching specifically their technologies and not the idealogical freedom that I needed.</p>
+<pre><code>PRO-TIP: Cultural pressure to do what people what you to do is much
+more powerful in Armenia than in America.</code></pre>
+<p>Eventually I met the right people at the Innovative Solution &amp; Technologies Center, ISTC, and they took a chance on the idea, the very day of being given the green light I started the first coding working shops.</p>
+<pre><code>REALITY: Any diaspora Armenian doing useful things in Armenia will be
+warmly greeted, accepted. People know its odd for someone to leave
+wealth for Armenia, you will be appreciated especially if you&#39;re from
+tech since its basically the most important and growing industry. I
+have never NOT ONCE ever felt like a stranger in Armenia, always loved.</code></pre>
+<h2 id="tech-scene-resources">Tech scene, resources</h2>
+<pre><code>MISCONCEPTION: Armenia is broke, nothing works, everything is old.
+
+REALITY: My internet speed in Yerevan was faster that what I got in
+Silicon Valley. Physical infrastructure is pretty good, the metro
+system is limited to basically the center of Yerevan but its cheap,
+like 20 cents a ride. People have the latest iPhones, iMacs...lack of
+physical tech is not a problem.</code></pre>
+<p>The tech scene is doing well and everyone is in a way pinning their hopes on it, however what its lacking at the moment are people with real industry experience who are also willing to share that knowledge.</p>
+<pre><code>PRO-TIP: You need to always be maintaining your relationships,
+otherwise they decaying.</code></pre>
+<h2 id="professionalism">Professionalism</h2>
+<p>Armenia is still developing in this aspect, so expect everyone to be late at least 15 minutes to everything. The general pace of things is a noticably slower than what a New Yorker or SF techie might be used to, example: its rare for people to walk up the escalator or to use the left side as passing…which for a New Yorker like me…is maddening. Although I am happy to not have to do the <code>PATH WTC</code> train commute, that sucked.</p>
+<pre><code>PRO-TIP: Don&#39;t lower your standards but be cognizant of cultural diffferences.</code></pre>
+<p>This is it for now, tweet me at for feedback <a href="https://twitter.com/EdgarArout">Էդգար</a>.</p>]]></description>
+    <pubDate>Sun, 12 Mar 2017 00:00:00 UT</pubDate>
+    <guid>http://hyegar.com/2017/03/12/my-practical-armenia/index.html</guid>
+    <dc:creator>Edgar Aroutiounian</dc:creator>
+</item>
+<item>
     <title>Hacks, cracks, dev culture and Armenia's development in tech 🇦🇲</title>
     <link>http://hyegar.com/2017/02/12/excellence-security-culture-armenia/index.html</link>
     <description><![CDATA[<h3 id="audience">Audience</h3>
@@ -886,140 +949,6 @@ Did say: Hello World</code></pre>
   print_spiral root</code></pre></div>]]></description>
     <pubDate>Mon, 18 Jul 2016 00:00:00 UT</pubDate>
     <guid>http://hyegar.com/2016/07/18/imperative-traversal-ocaml/index.html</guid>
-    <dc:creator>Edgar Aroutiounian</dc:creator>
-</item>
-<item>
-    <title>Intermediate js_of_ocaml</title>
-    <link>http://hyegar.com/2016/07/17/js-of-ocaml-usage/index.html</link>
-    <description><![CDATA[<p>This post is mainly aimed at intermediate level users of <code>js_of_ocaml</code>, the <code>OCaml</code> to <code>JavaScript</code> compiler and at improving the sad state of documentation for <code>js_of_ocaml</code>. (Plus I’m interviewing for jobs, hire me!, and wanted to use both OCaml, JavaScript while preparing for interviews)</p>
-<h1 id="ocaml-typing-of-javascript-uses-ppx">OCaml typing of JavaScript (Uses PPX)</h1>
-<p>Say we want to express some algorithms in OCaml but using JavaScript as the runtime execution language/environment. Let’s start with our main data structure, a tree node.</p>
-<div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">function</span> <span class="at">TreeNode</span>(value) <span class="op">{</span>
-  <span class="kw">this</span>.<span class="at">value</span> <span class="op">=</span> value<span class="op">;</span>
-  <span class="kw">this</span>.<span class="at">left</span> <span class="op">=</span> <span class="kw">this</span>.<span class="at">right</span> <span class="op">=</span> <span class="kw">null</span><span class="op">;</span>
-<span class="op">}</span></code></pre></div>
-<p>Our OCaml version will be:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">class</span> <span class="kw">type</span> [&#39;data] tree_node = <span class="kw">object</span>
-  <span class="kw">method</span> value : &#39;data Js.prop
-  <span class="kw">method</span> left : &#39;data tree_node Js.t Js.prop
-  <span class="kw">method</span> right : &#39;data tree_node Js.t Js.prop
-<span class="kw">end</span></code></pre></div>
-<p>Note that there is a small thing about typing the nullability of the left, right fields, I will return to this at the end of the blog post and it was done for convenience.</p>
-<p>So explanations:</p>
-<ol start="0" style="list-style-type: decimal">
-<li>We are creating a <code>class type</code>, this just describes the object, how we describe it is key.</li>
-<li>The <code>'data</code> is a type variable and lets us use any kind of type for the value in this node.</li>
-<li>OCaml objects only expose methods to the outside world, so properties need <code>Js.prop</code>, this lets us read and write to this field. We can control it to be read only by instead using <code>Js.readonly_prop</code> or even write only with <code>Js.writeonly_prop</code>.</li>
-<li>Methods <code>left</code>, <code>right</code> are also properties. Read the signature from right to left, aka <code>left</code> is a JavaScript read or write property which has a JavaScript object typed as <code>tree_node</code> and parameterized with the <code>'data</code> type variable. Aka tree_nodes of <code>string</code> or <code>int</code> or whatever the type of <code>'data</code> is.</li>
-</ol>
-<p>Now we need to provide a way to make this object.</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> __hidden__ =
-  Js.Unsafe.pure_js_expr <span class="st">&quot;function TreeNode(value) {</span><span class="ch">\</span>
-<span class="st">                          this.value = value; </span><span class="ch">\</span>
-<span class="st">                          this.left = this.right = null;}&quot;</span></code></pre></div>
-<p>This is the JavaScript we’ll be using, essentially. Do note that the field names match up, this is important. Now we provide a constructor function:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> node : (&#39;data -&gt; &#39;data tree_node Js.t) Js.constr = __hidden__</code></pre></div>
-<p>This <code>node</code> constructor says that its a special JavaScript constructor that will invoke <code>__hidden__</code> with <code>new</code> and such that it expects one argument. An example is:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> root = <span class="kw">new</span>%js node <span class="st">&quot;Hello&quot;</span></code></pre></div>
-<p>We can also make specialized constructors,</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> node_from_int : (<span class="dt">int</span> -&gt; <span class="dt">int</span> tree_node Js.t) Js.constr = __hidden__</code></pre></div>
-<p>and a simple usage:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">let</span> () =
-  <span class="kw">let</span> root = <span class="kw">new</span>%js node <span class="st">&quot;Hello&quot;</span> <span class="kw">in</span>
-  root##.left := <span class="kw">new</span>%js node <span class="st">&quot;Left side&quot;</span>;
-  root##.left##.left := <span class="kw">new</span>%js node <span class="st">&quot;Grand Kid&quot;</span>;
-
-  <span class="co">(* Note that this just prints the raw object representation of the</span>
-<span class="co">  field value *)</span>
-  Firebug.console##log root##.left##.left##.value;
-
-  <span class="co">(* This shows the value as expected *)</span>
-  <span class="dt">print_endline</span> root##.left##.left##.value</code></pre></div>
-<p>You can compile and run it on node with: (Assuming file name is <code>trees_in_js.ml</code>)</p>
-<pre class="shell"><code>$ ocamlfind ocamlc -package js_of_ocaml.ppx -linkpkg trees_in_js.ml
-$ js_of_ocaml a.out -o T.js
-$ node T.js</code></pre>
-<p>And you should get something like the following printed out:</p>
-<pre class="shell"><code>h { t: 0, c: &#39;Grand Kid&#39;, l: 9 }
-Grand Kid</code></pre>
-<h1 id="depth-first-search-level-order-traversal-complete-examples">Depth First Search, Level order traversal complete examples</h1>
-<p>Now here’s an example of a preorder depth first search and level order traversal.</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">class</span> <span class="kw">type</span> [&#39;data] tree_node = <span class="kw">object</span>
-  <span class="kw">method</span> value : &#39;data Js.prop
-  <span class="kw">method</span> left : &#39;data tree_node Js.t Js.prop
-  <span class="kw">method</span> right : &#39;data tree_node Js.t Js.prop
-<span class="kw">end</span>
-
-<span class="kw">let</span> node : (&#39;data -&gt; &#39;data tree_node Js.t) Js.constr = __hidden__
-
-<span class="kw">let</span> depth_first_search starting_node =
-  <span class="kw">let</span> stack = <span class="dt">Stack</span>.create () <span class="kw">in</span>
-  <span class="dt">Stack</span>.push starting_node stack;
-  <span class="kw">while</span> <span class="dt">not</span> (<span class="dt">Stack</span>.is_empty stack) <span class="kw">do</span>
-    <span class="kw">let</span> iter_node = <span class="dt">Stack</span>.pop stack <span class="kw">in</span>
-
-    <span class="dt">Printf</span>.sprintf <span class="st">&quot;%s &quot;</span> iter_node##.value
-    |&gt; <span class="dt">print_string</span>;
-
-    <span class="kw">if</span> Js.Opt.return iter_node##.right |&gt; Js.Opt.test
-    <span class="kw">then</span> <span class="dt">Stack</span>.push iter_node##.right stack;
-
-    <span class="kw">if</span> Js.Opt.return iter_node##.left |&gt; Js.Opt.test
-    <span class="kw">then</span> <span class="dt">Stack</span>.push iter_node##.left stack
-
-  <span class="kw">done</span>
-
-<span class="kw">let</span> level_order starting_node =
-  <span class="kw">let</span> q = <span class="dt">Queue</span>.create () <span class="kw">in</span>
-  <span class="dt">Queue</span>.add starting_node q;
-
-  <span class="kw">while</span> <span class="dt">not</span> (<span class="dt">Queue</span>.is_empty q) <span class="kw">do</span>
-    <span class="kw">let</span> pop = <span class="dt">Queue</span>.pop q <span class="kw">in</span>
-    <span class="dt">Printf</span>.sprintf <span class="st">&quot;%s &quot;</span> pop##.value
-    |&gt; <span class="dt">print_string</span>;
-
-    <span class="kw">if</span> Js.Opt.(return pop##.left |&gt; test)
-    <span class="kw">then</span> <span class="dt">Queue</span>.push pop##.left q;
-
-    <span class="kw">if</span> Js.Opt.(return pop##.right |&gt; test)
-    <span class="kw">then</span> <span class="dt">Queue</span>.push pop##.right q
-
-  <span class="kw">done</span>
-
-<span class="kw">let</span> () =
-  <span class="kw">let</span> root = <span class="kw">new</span>%js node <span class="st">&quot;F&quot;</span> <span class="kw">in</span>
-  root##.left := <span class="kw">new</span>%js node <span class="st">&quot;B&quot;</span>;
-  root##.right := <span class="kw">new</span>%js node <span class="st">&quot;G&quot;</span>;
-  root##.right##.right := <span class="kw">new</span>%js node <span class="st">&quot;I&quot;</span>;
-  root##.left##.left := <span class="kw">new</span>%js node <span class="st">&quot;A&quot;</span>;
-  root##.left##.right := <span class="kw">new</span>%js node <span class="st">&quot;D&quot;</span>;
-  root##.left##.right##.left := <span class="kw">new</span>%js node <span class="st">&quot;C&quot;</span>;
-  root##.left##.right##.right := <span class="kw">new</span>%js node <span class="st">&quot;E&quot;</span>;
-  root##.right##.right##.left := <span class="kw">new</span>%js node <span class="st">&quot;H&quot;</span>;
-
-  depth_first_search root |&gt; <span class="dt">print_newline</span>;
-  level_order root |&gt; <span class="dt">print_newline</span></code></pre></div>
-<p>and compile it just like given earlier in the blog post. Shameless plug, you can also turn it into an executable with a feature I added to the <code>js_of_ocaml</code> compiler,</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">$ ocamlfind ocamlc -package js_of_ocaml.ppx -linkpkg trees_in_js.ml
-$ js_of_ocaml --custom-header=&#39;#!/usr/bin/env node&#39; a.out -o T.js
-$ chmod +x T.js
-$ /T.js</code></pre></div>
-<p>Yay, we used the resources of two programming languages standard libaries in one program!</p>
-<p>Now we can return to why the typing of the <code>class type</code> matters. The fully correct typing of <code>tree_node</code> is:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">class</span> <span class="kw">type</span> [&#39;data] tree_node = <span class="kw">object</span>
-  <span class="kw">method</span> value : &#39;data Js.prop
-  <span class="kw">method</span> left : &#39;data tree_node Js.t Js.Opt.t Js.prop
-  <span class="kw">method</span> right : &#39;data tree_node Js.t Js.Opt.t Js.prop
-<span class="kw">end</span></code></pre></div>
-<p>Notice the addition of <code>Js.Opt.t</code>. Since the <code>left</code>, <code>right</code> are nullable, we should capture that in the OCaml API, this however does force us to use <code>Js.Opt</code> and so we’d have to do things like:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml">root##.left := <span class="kw">new</span>%js node <span class="st">&quot;Left side&quot;</span> |&gt; Js.Opt.return;</code></pre></div>
-<p>When trying to set the field, etc. But since we didn’t expose that nullability of the field in the type signature, the <code>depth_first_search</code> code needs to check if the field is indeed <code>null</code>, which would have been otherwise forced by the type system had we used <code>Js.Opt</code>, aka:</p>
-<div class="sourceCode"><pre class="sourceCode ocaml"><code class="sourceCode ocaml"><span class="kw">if</span> Js.Opt.return iter_node##.right |&gt; Js.Opt.test
-<span class="kw">then</span> <span class="dt">Stack</span>.push iter_node##.right stack;</code></pre></div>
-<p>These are tradeoffs that you can make in your own usage.</p>
-<p>I hope this makes it easier for you to use OCaml, JavaScript together.</p>]]></description>
-    <pubDate>Sun, 17 Jul 2016 00:00:00 UT</pubDate>
-    <guid>http://hyegar.com/2016/07/17/js-of-ocaml-usage/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 
