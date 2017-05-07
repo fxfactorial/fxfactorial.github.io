@@ -7,8 +7,35 @@
         <description><![CDATA[Personal blog of Edgar Aroutiounian]]></description>
         <atom:link href="http://hyegar.com/atom.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Tue, 14 Mar 2017 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Sun, 07 May 2017 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Tech growth in Armenia, state of the industry</title>
+    <link>http://hyegar.com/2017/05/07/tech-kicking-into-high-gear/index.html</link>
+    <description><![CDATA[<p>The tech industry in Armenia is generating a lot of hype but much of it is written from the non-technical perspective so its mostly fluff and smoke. This short post is intended as a overview of the state of the industry in 2017, what technologies are hot, and what kinds of things you can expect if you move here.</p>
+<p><strong>NOTE: Usual disclaimers, this is my point of view, intuitions, etc etc</strong></p>
+<h1 id="technologies-and-getting-work">Technologies and Getting work</h1>
+<p>Armenia is surprisingly ahead of our many neighbors in the tech stack of many businesses, for example compared to Lebanon we are more advanced. There’s still a lot of <code>PHP</code> and <code>Java</code> jobs but Armenia is picking up in using more modern and hot technologies like <code>React</code>, <code>ReactNative</code> and <code>nodejs</code> (I’d like to think I had something to do with that). Startups are starting to use those cooler technologies, older boring companies will be using the usual boring, soul-sucking enterprise tech.</p>
+<div style="display:flex; justify-content:center">
+<blockquote class="twitter-tweet" data-lang="en">
+<p lang="en" dir="ltr">
+Funny how marketing uses “enterprise software” as a selling point, but to programmers this means something else. (i.e rubbish software)
+</p>
+— Stephen Diehl (<span class="citation">@smdiehl</span>) <a href="https://twitter.com/smdiehl/status/860904655257313280">May 6, 2017</a>
+</blockquote>
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+</div>
+<p>Now if you are talented and can demonstrate that preferably with public code on <code>github</code>, then you can get a job in 10 minutes so in that respect its like the Bay Area. Most of the companies aren’t large enough to justify having positions like Project Manager so programmers will have an easier time getting a job. If you can’t get a job as a programmer then it means you aren’t good enough yet so take it as an opportunity to improve yourself and learn something more relevant.</p>
+<p>There’s also some <code>C++</code> work but you’ll probably only want to deal with the good C++ places, aka the game developer studios; they are pretty good and at least know what <code>C++11</code> is.</p>
+<h1 id="problems">Problems</h1>
+<p>The industry does suffer from a lack of experienced, ‘senior’ talent. The tech industry is especially subject to the problems of emigration as people are easily poached once they reach mid-level experience and technical ability. In my opinion what passes for ‘senior’ level person in Armenia is really mid-level or less in the Bay Area and its not because the people are stupid but mostly because the people with the greatest potential physically up and leave the country. This has massive ripple effects as that knowledge is never passed down to others and companies cannot expand their workforce or quality of their code.</p>
+<p>The plus side is that if you’re an programmer with real industry experience then you have a big chance to make an impact in a company that would take a bit longer than back home.</p>
+<h1 id="places-to-hang-out">Places to hang out</h1>
+<p>The country is starting to have regular tech events, so you can expect at least two cool tech events each week. These will be mostly at <a href="http://istc.am/en/">ISTC</a>, <a href="http://iteratehackerspace.com">iterate hackerspace</a> and at <a href="http://www.micarmenia.am">MICArmenia</a></p>]]></description>
+    <pubDate>Sun, 07 May 2017 00:00:00 UT</pubDate>
+    <guid>http://hyegar.com/2017/05/07/tech-kicking-into-high-gear/index.html</guid>
+    <dc:creator>Edgar Aroutiounian</dc:creator>
+</item>
+<item>
     <title>Practical Armenia, my experience - Part two</title>
     <link>http://hyegar.com/2017/03/14/my-practical-armenia-part-two/index.html</link>
     <description><![CDATA[<p>This is part two from the my first <a href="./2017-03-12-my-practical-armenia">post</a>.</p>
@@ -834,91 +861,6 @@ bundle.js:23096 Logic continued</code></pre>
 <p>See the repo <a href="https://github.com/fxfactorial/react-example-with-async-await-babel">here</a> for the full <code>package.json</code></p>]]></description>
     <pubDate>Tue, 20 Sep 2016 00:00:00 UT</pubDate>
     <guid>http://hyegar.com/2016/09/20/webdev-setup/index.html</guid>
-    <dc:creator>Edgar Aroutiounian</dc:creator>
-</item>
-<item>
-    <title>Calling a C function from within a binary on OS X/iOS</title>
-    <link>http://hyegar.com/2016/08/31/grabbing-function-location/index.html</link>
-    <description><![CDATA[<p><em>If you like this and other posts of mine, then reach out to me at edgar.factorial@gmail.com, I’m looking for remote contract work.</em></p>
-<p>Let’s say we have a C binary given to us and there’s a C function in it that we want to call. For example, say we have this code, assume it is called <code>inject_me.c</code>:</p>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span>
-
-<span class="dt">int</span> test_function(<span class="dt">char</span> *some_word)
-{
-  <span class="cf">return</span> printf(<span class="st">&quot;Did say: %s</span><span class="sc">\n</span><span class="st">&quot;</span>, some_word);
-}
-
-<span class="dt">int</span> main (<span class="dt">int</span> argc, <span class="dt">char</span> **argv)
-{
-  <span class="cf">return</span> test_function(<span class="st">&quot;Hello World&quot;</span>);
-}</code></pre></div>
-<p>and we want to call the function <code>test_function</code> by ourselves. To do that we need to find the location of the function in the binary. We can do that by disassembling the binary, I used to use command line tools for that but now I’m using <code>hopper</code>. (Hopper is an AMAZING program). Once we disassemble it, we find the function in memory:</p>
-<div class="figure">
-<img src="/images/found_test_function.png" />
-
-</div>
-<p>Notice that I highlighted the actual location of: <code>0x100000f20</code>. Now we can inject it with this code, assume it is called <code>inject.c</code></p>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span>
-<span class="pp">#include </span><span class="im">&lt;string.h&gt;</span>
-<span class="pp">#include </span><span class="im">&lt;mach-o/dyld.h&gt;</span>
-
-<span class="pp">#define SPOT 0x100000f20</span>
-
-<span class="kw">typedef</span> <span class="dt">int</span> pull_it(<span class="dt">char</span> *);
-
-<span class="dt">static</span> pull_it *pulled = NULL;
-
-__attribute__((constructor))
-<span class="dt">void</span> example_injection()
-{
-  <span class="dt">char</span> path[<span class="dv">1024</span>];
-  <span class="dt">uint32_t</span> size = <span class="kw">sizeof</span>(path);
-  _NSGetExecutablePath(path, &amp;size);
-  
-  <span class="cf">for</span> (<span class="dt">uint32_t</span> i = <span class="dv">0</span>; i &lt; _dyld_image_count(); i++) {
-    <span class="cf">if</span> (strcmp(_dyld_get_image_name(i), path) == <span class="dv">0</span>) {
-      <span class="dt">intptr_t</span> slide = _dyld_get_image_vmaddr_slide(i);
-
-      pulled = (pull_it*)(<span class="dt">intptr_t</span>)(slide + SPOT);
-      printf(<span class="st">&quot;slide: %lu</span><span class="sc">\n</span><span class="st">&quot;</span>, slide);
-      pulled(<span class="st">&quot;Please work</span><span class="sc">\n</span><span class="st">&quot;</span>);
-    }
-  }
-
-  printf(<span class="st">&quot;This ran before the actual program</span><span class="sc">\n</span><span class="st">&quot;</span>);
-}</code></pre></div>
-<ol style="list-style-type: decimal">
-<li><p>The <code>__attribute__((constructor))</code> calls the wrapped function before <code>main</code> goes off.</p></li>
-<li><p>The slide is needed because: (I found this on some Apple mailing list and don’t remember from where anymore)</p></li>
-</ol>
-<pre><code>Q: Can someone enlighten me as to what the virtual memory slide amount
-is ? (this parameter is returned by _dyld_get_image_vmaddr_slide for
-instance)
-
-A: The shared libraries are prebound to an initial base address but
-when the shared library gets loaded dyld can &quot;slide&quot; the library to a
-new base address, this is where the virtual memory slide comes from.</code></pre>
-<p>Build both with this <code>Makefile</code></p>
-<div class="sourceCode"><pre class="sourceCode makefile"><code class="sourceCode makefile"><span class="dt">osx_clang </span><span class="ch">:=</span><span class="st"> </span><span class="ch">$(</span><span class="kw">shell</span><span class="st"> xcrun --sdk macosx --find clang</span><span class="ch">)</span>
-<span class="dt">osx_sdk </span><span class="ch">:=</span><span class="st"> </span><span class="ch">$(</span><span class="kw">shell</span><span class="st"> xcrun --sdk macosx --show-sdk-path</span><span class="ch">)</span>
-<span class="dt">c_flags </span><span class="ch">:=</span><span class="st"> -std=c11</span>
-
-<span class="dv">inject_me:</span><span class="dt">inject_me.c</span>
-	<span class="ch">@${</span><span class="dt">osx_clang</span><span class="ch">}</span><span class="fu"> -isysroot </span><span class="ch">${</span><span class="dt">osx_sdk</span><span class="ch">}</span><span class="fu"> </span><span class="ch">${</span><span class="dt">c_flags</span><span class="ch">}</span><span class="fu"> </span><span class="ch">$&lt;</span><span class="fu"> -o </span><span class="ch">$@</span>
-
-<span class="dv">code_injection:</span><span class="dt">inject_me</span>
-	<span class="ch">@${</span><span class="dt">osx_clang</span><span class="ch">}</span><span class="fu"> -isysroot </span><span class="ch">${</span><span class="dt">osx_sdk</span><span class="ch">}</span><span class="fu"> </span><span class="ch">${</span><span class="dt">c_flags</span><span class="ch">}</span><span class="fu"> inject.c -dynamiclib -o </span><span class="ch">$@</span><span class="fu">.dylib</span></code></pre></div>
-<p>Now we can invoke it like so:</p>
-<pre class="shell"><code>$ make code_injection
-$ DYLD_INSERT_LIBRARIES=code_injection.dylib ./inject_me
-slide: 125042688
-Did say: Please work
-
-This ran before the actual program
-Did say: Hello World</code></pre>
-<p>Yay, it works. BTW, this works for jailbroken iOS as well.</p>]]></description>
-    <pubDate>Wed, 31 Aug 2016 00:00:00 UT</pubDate>
-    <guid>http://hyegar.com/2016/08/31/grabbing-function-location/index.html</guid>
     <dc:creator>Edgar Aroutiounian</dc:creator>
 </item>
 

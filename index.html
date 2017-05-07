@@ -42,6 +42,37 @@
       <article>
     <header>
         <h1>
+            <a href="./2017/05/07/tech-kicking-into-high-gear/" title="Permalink">
+                Tech growth in Armenia, state of the industry
+            </a>
+        </h1>
+        <span class="post-date">May  7, 2017</span> in 
+        <span class="post-tags"><a href="./tags/armenia/">armenia</a>, <a href="./tags/tech/">tech</a>, <a href="./tags/growth/">growth</a></span>
+    </header>
+    <p>The tech industry in Armenia is generating a lot of hype but much of it is written from the non-technical perspective so its mostly fluff and smoke. This short post is intended as a overview of the state of the industry in 2017, what technologies are hot, and what kinds of things you can expect if you move here.</p>
+<p><strong>NOTE: Usual disclaimers, this is my point of view, intuitions, etc etc</strong></p>
+<h1 id="technologies-and-getting-work">Technologies and Getting work</h1>
+<p>Armenia is surprisingly ahead of our many neighbors in the tech stack of many businesses, for example compared to Lebanon we are more advanced. There’s still a lot of <code>PHP</code> and <code>Java</code> jobs but Armenia is picking up in using more modern and hot technologies like <code>React</code>, <code>ReactNative</code> and <code>nodejs</code> (I’d like to think I had something to do with that). Startups are starting to use those cooler technologies, older boring companies will be using the usual boring, soul-sucking enterprise tech.</p>
+<div style="display:flex; justify-content:center">
+<blockquote class="twitter-tweet" data-lang="en">
+<p lang="en" dir="ltr">
+Funny how marketing uses “enterprise software” as a selling point, but to programmers this means something else. (i.e rubbish software)
+</p>
+— Stephen Diehl (<span class="citation">@smdiehl</span>) <a href="https://twitter.com/smdiehl/status/860904655257313280">May 6, 2017</a>
+</blockquote>
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+</div>
+<p>Now if you are talented and can demonstrate that preferably with public code on <code>github</code>, then you can get a job in 10 minutes so in that respect its like the Bay Area. Most of the companies aren’t large enough to justify having positions like Project Manager so programmers will have an easier time getting a job. If you can’t get a job as a programmer then it means you aren’t good enough yet so take it as an opportunity to improve yourself and learn something more relevant.</p>
+<p>There’s also some <code>C++</code> work but you’ll probably only want to deal with the good C++ places, aka the game developer studios; they are pretty good and at least know what <code>C++11</code> is.</p>
+<h1 id="problems">Problems</h1>
+<p>The industry does suffer from a lack of experienced, ‘senior’ talent. The tech industry is especially subject to the problems of emigration as people are easily poached once they reach mid-level experience and technical ability. In my opinion what passes for ‘senior’ level person in Armenia is really mid-level or less in the Bay Area and its not because the people are stupid but mostly because the people with the greatest potential physically up and leave the country. This has massive ripple effects as that knowledge is never passed down to others and companies cannot expand their workforce or quality of their code.</p>
+<p>The plus side is that if you’re an programmer with real industry experience then you have a big chance to make an impact in a company that would take a bit longer than back home.</p>
+<h1 id="places-to-hang-out">Places to hang out</h1>
+<p>The country is starting to have regular tech events, so you can expect at least two cool tech events each week. These will be mostly at <a href="http://istc.am/en/">ISTC</a>, <a href="http://iteratehackerspace.com">iterate hackerspace</a> and at <a href="http://www.micarmenia.am">MICArmenia</a></p>
+</article>
+<article>
+    <header>
+        <h1>
             <a href="./2017/03/14/my-practical-armenia-part-two/" title="Permalink">
                 Practical Armenia, my experience - Part two
             </a>
@@ -445,88 +476,6 @@ SiteA also exposed their <strong>SQL</strong> on the public website
   <span class="kw">let</span> b = <span class="kw">new</span> thing <span class="kw">in</span>
   ()</code></pre></div>
 <p>And see how many times <code>I was called</code> is printed to the screen; hence be aware of this when you use objects in OCaml.</p>
-</article>
-<article>
-    <header>
-        <h1>
-            <a href="./2017/01/09/calling-google-closure/" title="Permalink">
-                Calling Google Closure programmatically
-            </a>
-        </h1>
-        <span class="post-date">January  9, 2017</span> in 
-        <span class="post-tags"><a href="./tags/java/">java</a>, <a href="./tags/google%20closure/">google closure</a>, <a href="./tags/api/">api</a></span>
-    </header>
-    <p>This is a pretty neat post, I’ll show you how to programmatically call <a href="https://github.com/google/closure-library">Google Closure</a> in Java. Closure is an amazing project that actually optimizes <code>JavaScript</code> rather than just minifies it. (This is pretty much one of the few times you’ll see me write Java, I think the language sucks).</p>
-<p>Its mostly a 2017 update of this <a href="http://blog.bolinfest.com/2009/11/calling-closure-compiler-from-java.html">post from 2009</a></p>
-<p>Here’s the Java</p>
-<div class="sourceCode"><pre class="sourceCode java"><code class="sourceCode java"><span class="kw">package</span><span class="im"> com.hyegar.closure;</span>
-
-<span class="kw">import</span><span class="im"> java.io.IOException;</span>
-<span class="kw">import</span><span class="im"> java.util.List;</span>
-<span class="kw">import</span><span class="im"> java.util.ArrayList;</span>
-
-<span class="kw">import</span><span class="im"> com.google.javascript.jscomp.CompilationLevel;</span>
-<span class="kw">import</span><span class="im"> com.google.javascript.jscomp.Compiler;</span>
-<span class="kw">import</span><span class="im"> com.google.javascript.jscomp.CompilerOptions;</span>
-<span class="kw">import</span><span class="im"> com.google.javascript.jscomp.SourceFile;</span>
-<span class="kw">import</span><span class="im"> com.google.javascript.jscomp.CommandLineRunner;</span>
-<span class="kw">import</span><span class="im"> com.google.javascript.jscomp.CompilerOptions.LanguageMode;</span>
-
-<span class="co">/**</span>
-<span class="co"> * An example of how to call the Closure Compiler programmatically, </span>
-<span class="co"> * this is LICENSED AS GPL-3.0.</span>
-<span class="co"> *</span>
-<span class="co"> * </span><span class="kw">@author </span><span class="co">edgar.factorial@gmail.com (Edgar Aroutiounian)</span>
-<span class="co"> */</span>
-
-<span class="kw">public</span> <span class="kw">class</span> CallCompiler {
-
-    <span class="co">/**</span>
-<span class="co">     * </span><span class="kw">@param code </span><span class="co">JavaScript source code to compile.</span>
-<span class="co">     * </span><span class="kw">@return </span><span class="co">The compiled version of the code.</span>
-<span class="co">     */</span>
-    <span class="kw">public</span> <span class="dt">static</span> <span class="bu">String</span> <span class="fu">compile</span>(<span class="bu">String</span> code) {
-	<span class="bu">Compiler</span> compiler = <span class="kw">new</span> <span class="bu">Compiler</span>();
-
-	CompilerOptions options = <span class="kw">new</span> <span class="fu">CompilerOptions</span>();
-
-	<span class="co">// See :</span>
-	<span class="co">// closure-compiler/src/com/google/javascript/jscomp/CompilerOptions.java</span>
-	<span class="co">// lines 2864-2896</span>
-	options.<span class="fu">setLanguageIn</span>(LanguageMode.<span class="fu">ECMASCRIPT_2015</span>);
-	options.<span class="fu">setLanguageOut</span>(LanguageMode.<span class="fu">ECMASCRIPT5_STRICT</span>);
-
-	CompilationLevel
-	    .<span class="fu">ADVANCED_OPTIMIZATIONS</span>
-	    .<span class="fu">setOptionsForCompilationLevel</span>(options);
-
-	<span class="bu">List</span>&lt;SourceFile&gt; list = <span class="kw">null</span>;
-
-	<span class="kw">try</span> {
-	    list =
-		CommandLineRunner
-		.<span class="fu">getBuiltinExterns</span>(CompilerOptions.<span class="fu">Environment</span>.<span class="fu">BROWSER</span>);
-	} <span class="kw">catch</span> (<span class="bu">IOException</span> e) {
-	    <span class="bu">System</span>.<span class="fu">out</span>.<span class="fu">println</span>(<span class="st">&quot;Exception raised&quot;</span>);
-	}
-
-	list.<span class="fu">add</span>(SourceFile.<span class="fu">fromCode</span>(<span class="st">&quot;input.js&quot;</span>, code));
-	compiler.<span class="fu">compile</span>(<span class="kw">new</span> <span class="bu">ArrayList</span>&lt;SourceFile&gt;(), list, options);
-	<span class="kw">return</span> compiler.<span class="fu">toSource</span>();
-    }
-
-    <span class="kw">public</span> <span class="dt">static</span> <span class="dt">void</span> <span class="fu">main</span>(<span class="bu">String</span>[] args) {
-      <span class="bu">String</span> compiled_code = <span class="fu">compile</span>(<span class="st">&quot;var a = 1 + 2; console.log(a)&quot;</span>);
-      <span class="bu">System</span>.<span class="fu">out</span>.<span class="fu">println</span>(compiled_code);
-    }
-
-}</code></pre></div>
-<p>You’ll need to have the Closure Compiler installed, on OS X this is easy with <code>brew install closure-compiler</code></p>
-<p>Then in a new directory that you can use for this build, you can copy the <code>jar</code> from <code>/usr/local/Cellar/closure-compiler/20161201/libexec</code> to where the root is of your directory, let’s call that directory <code>build</code>.</p>
-<p>Here’s a Makefile which will build, run the code.</p>
-<div class="sourceCode"><pre class="sourceCode makefile"><code class="sourceCode makefile"><span class="dv">blog_code:</span>
-	javac -Xlint:deprecation -cp ./closure-compiler-v20161201.jar:./ com/hyegar/closure/CallCompiler.java
-	java -cp ./closure-compiler-v20161201.jar:./ com.hyegar.closure.CallCompiler	</code></pre></div>
 </article>
 
 
