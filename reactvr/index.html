@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+  <!--
+       The MIT License (MIT)
+
+       Copyright (c) 2015 Tom Panning
+
+       Permission is hereby granted, free of charge, to any person obtaining a copy
+       of this software and associated documentation files (the "Software"), to deal
+       in the Software without restriction, including without limitation the rights
+       to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+       copies of the Software, and to permit persons to whom the Software is
+       furnished to do so, subject to the following conditions:
+
+       The above copyright notice and this permission notice shall be included in
+       all copies or substantial portions of the Software.
+
+       THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+       IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+       FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+       AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+       LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+       OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+       THE SOFTWARE.
+     -->
+  <head>
+    <meta charset="utf-8">
+    <!-- https://cdnjs.com/libraries/reveal.js -->
+    <title>Introduction to ReactVR</title>
+    <meta name="author" content="Edgar Aroutiounian">
+    <meta name="apple-mobile-web-app-capable" content="yes" >
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/css/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/css/theme/sky.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="styles/default.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+     const link = document.createElement('link');
+     link.rel = 'stylesheet';
+     link.type = 'text/css';
+     const pdf_css =
+       'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/css/print/pdf.css';
+     const paper_css =
+       'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/css/print/paper.css';
+     link.href = window.location.search.match(/print-pdf/gi) ? pdf_css : paper_css;
+     document.getElementsByTagName('head')[0].appendChild(link);
+    </script>
+    <style>
+
+     pre.smaller {
+       font-size: 0.75rem;
+     }
+
+     section h4 {
+       display:flex;
+       justify-content:space-between;
+     }
+
+    </style>
+
+  </head>
+
+  <body>
+
+    <div class="reveal">
+      <!-- Any section element inside of this container is displayed as a slide -->
+      <div class="slides">
+
+	<section>
+	  <h3>Introduction to ReactVR</h3>
+	  <hr/>
+	  <p>Creating a VR experience with React</p>
+	  <p style="text-decoration:underline;">
+	    Barcamp, Yerevan <time datetime="2017-05-28">May 28, 2017</time>
+	  </p>
+	  <p>By Resquared 👋</p>
+	  <p style="font-size:2rem">Edgar Khanzadian, Robert Gevorgyan, Edgar Aroutiounian</p>
+	  <p>
+	    <meter min="0" max="100" value="0"/>
+	  </p>
+	</section>
+
+	<section>
+	  <h4>
+	    What is React <meter min="0" max="100" value="10"/>
+	  </h4>
+	  <hr/>
+	  <p>
+	    <code>React</code> is a JavaScript library released by Facebook for creating
+	    views. Since being released for web and being a massive success, it has been
+	    expanded to other domains, like Mobile (<code>ReactNative</code>)
+	  </p>
+	</section>
+
+	<section>
+	  <h4>
+	    <div>What is VR -- <code>ReactVR</code></div> <meter min="0" max="100" value="20"/>
+	  </h4>
+	  <hr/>
+	  <p>
+	    By buying Occulus, Facebook has been investing heavily in VR and
+	    AR technologies. Since React is already the best way to build UIs, it
+	    was only logical to extend React to the VR/AR level.
+	  </p>
+	  <p>
+	    ReactVR is closer to ReactNative than to React on the web as the
+	    core components come from ReactNative, like the <code>View</code>,
+	    or <code>Text</code> component
+	  </p>
+	  <p>
+	    ReactVR is built on top the abstractions of <code>three.js</code> which
+	    is itself built on top of <code>WebGL</code> which is itself a web abstraction
+	    over <code>OpenGL</code> 😳
+	  </p>
+	</section>
+
+	<section>
+	  <h4>
+	    What knowledge is needed? 💪 <meter min="0" max="100" value="30"/>
+	  </h4>
+	  <hr/>
+	  <ol>
+	    <li>
+	      ReactVR should not be your first introduction to React
+	    </li>
+	    <li>
+	      You should know JavaScript pretty well
+	    </li>
+	    <li>
+	      Helpful to come from ReactNative background as well
+	    </li>
+	    <li>
+	      Have a tiny bit of a math background, Linear algebra being the most important
+	    </li>
+	  </ol>
+	</section>
+
+	<section>
+	  <h4>Lets see some code <meter min="0" max="100" value="50"/></h4>
+	  <hr/>
+	  <p>Example, <code>.obj</code> & <code>.mtl</code> made in blender</p>
+	  <pre>
+import React from 'react';
+import {asset, Model, View} from 'react-vr';
+
+export default ({style}) =&gt; (
+  &lt;View style={style}&gt;
+  &lt;Model
+    source={{obj: asset('tree-trunk.obj'),
+             mtl: asset('tree-trunk.mtl')}}
+    lit={true}
+    style={{transform: [{scale: [0.6, 1, 0.6]}]}}
+  /&gt;
+  &lt;Model
+    source={{obj: asset('tree-crown.obj'),
+             mtl: asset('tree-crown.mtl')}}
+    lit={true}
+    style={{transform: [{translate: [0, 2.5, 0]}]}}
+  /&gt;
+  &lt;/View&gt;
+);
+	  </pre>
+	</section>
+
+	<section>
+	  <h4>Plays nicely with state management<meter min="0" max="100" value="50"/></h4>
+	  <hr/>
+	  <pre class="smaller">
+import React from 'react';
+import {AppRegistry, asset, Pano, Text, View, VrButton } from 'react-vr';
+import {observable, toJS} from 'mobx';
+import {observer} from 'mobx-react';
+import global_store from './lib/store.js';
+
+const App =
+      observer(class react_vr_housewalk extends React.Component {
+  render() {
+    const {index, button_positions, current_position} = global_store;
+    const renderPositions = button_positions.map((position, idx) =&gt; {
+      const pos = toJS(position.pos);
+      pos[0] -= current_position.pos[0];
+      pos[2] -= current_position.pos[2];
+      return (
+        &lt;VrButton
+          key={idx}
+          onClick={(e) =&gt; {
+            console.dir(e);
+            const id = e.target - 8;
+            const new_position = button_positions[id];
+            global_store.current_position = new_position;
+          }}
+          style={{
+            transform : [  {translate : pos}, {rotateX: 90} ],
+            borderRadius: 2.5,
+            backgroundColor: 'orange',
+            height: 5,
+            width: 5,
+            position: 'absolute'
+          }}
+        &gt;
+        &lt;/VrButton&gt;
+      )
+    });
+    return (
+      &lt;View&gt;
+        &lt;Pano
+          source={asset(current_position.photo)}
+          onLoad={() =&gt; global_store.loaded_pano = true}
+        /&gt;
+    );
+	  </pre>
+	</section>
+
+	<section>
+	  <h4>
+	    Problems 😨 <meter min="0" max="100" value="30"/>
+	  </h4>
+	  <hr/>
+	  <p>
+	    This is a brand spanking new technology, the React ecosystem already
+	    is known for moving fast. ReactVR, being built on top of ReactNative, moves
+	    even faster. I would not use this for production yet unless you have very
+	    strong programmers that can keep up with the latest technology on a weekly basis.
+	  </p>
+	</section>
+
+
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/lib/js/head.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/js/reveal.min.js"></script>
+    <script>
+     // Full list of configuration options available at:
+     // https://github.com/hakimel/reveal.js#configuration
+     Reveal.initialize({
+       controls: true,
+       progress: true,
+       history: true,
+       center: true,
+       transitionSpeed:'slow',
+       previewLinks:false,
+       transition: 'fade', // none/fade/slide/convex/concave/zoom
+       // Optional reveal.js plugins
+       dependencies: [
+	 { src: 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/lib/js/classList.js',
+	   condition: function() { return !document.body.classList; } },
+	 { src: 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/plugin/markdown/marked.js',
+	   condition: function() { return !!document.querySelector('[data-markdown]'); } },
+	 { src: 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/plugin/markdown/markdown.min.js',
+	   condition: function() { return !!document.querySelector('[data-markdown]'); } },
+	 { src:
+	 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/plugin/highlight/highlight.min.js',
+	   async: true,
+	   condition: function() { return !!document.querySelector( 'pre code' ); },
+	   callback: function() { hljs.initHighlightingOnLoad(); } },
+	 { src: 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/plugin/zoom-js/zoom.min.js',
+	   async: true },
+	 { src: 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/plugin/notes/notes.min.js',
+	   async: true }
+       ]
+     });
+    </script>
+  </body>
+</html>
