@@ -6,11 +6,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Resume of Edgar Aroutiounian</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <style type="text/css">
-    @import url(//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800);
-
+    @import url(https://fonts.googleapis.com/css?family=Open+Sans:400,600,700,800);
 @charset "utf-8";
 @-webkit-viewport   { width: device-width; }
 @-moz-viewport      { width: device-width; }
@@ -46,12 +45,11 @@ blockquote {
   background: #334960;
   display: inline-block;
 }
-/* 
 #photo img{
   width: 150px;
   height: 150px;
   border-radius: 50%;
-} */
+}
 #text-header h1{
   margin: 0;
   padding: 0;
@@ -306,6 +304,19 @@ a[href]:after {
 .box {
   margin-bottom: -10px;
 }
+
+blockquote,
+#education,
+#awards,
+.contact-item,
+.publication,
+.skills,
+.interests,
+.job-details,
+.job {
+  page-break-inside: avoid;
+}
+
 .col-sm-5{
   width: 40%;
   padding: 0 15px;
@@ -379,9 +390,8 @@ a[href]:after {
         <div class="col-xs-12">
           <div id="photo-header" class="text-center">
             <!-- PHOTO (AVATAR) -->
-            <!--  -->
             <div id="photo">
-              <!-- <img src="&#x2F;&#x2F;www.gravatar.com&#x2F;avatar&#x2F;2dadb39a8fbedbdb2c473a162c251b2a?s=200&amp;r=pg&amp;d=mm" alt="avatar"> -->
+
             </div>
             <div id="text-header" >
               <h1>Edgar Aroutiounian<br><span>Software engineer</span></h1>
@@ -394,11 +404,33 @@ a[href]:after {
           <!-- ABOUT ME -->
           <div class="box">
             <h2><i class="fa fa-user ico"></i> About</h2>
-            <p>Polyglot, generalist software developer with special strength in functional programming. Broad experience with mixing languages like JavaScript and OCaml, OCaml and Objective-C/C++. Driven by creative solutions, ideas. I love open-source and building things that ship.</p>
+            <p>Polyglot, fast learner, generalist software developer with special strength in functional programming. Broad experience with mixing languages like JavaScript and OCaml, OCaml and Objective-C/C++. Driven by creative solutions, ideas. I love open-source and building things that ship. Lately been focused on ReactNative powered mobile development, I also emphasize teaching and made a hackerspace in Armenia</p>
           </div>
           <!-- WORK EXPERIENCE -->
           <div class="box">
             <h2><i class= "fa fa-suitcase ico"></i> Work Experience</h2>
+              <div class="job clearfix">
+                <div class="row">
+                  <div class="details">
+                    <div class="where">Resquared LLC</div>
+                    <div class="year">April 2017 – Present</div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="job-details col-xs-11">
+                    <div class="profession">Owner</div>
+                    <div class="description">
+                      Mainly ReactNative development for paying clients, implemented Objective-C solutions when necessary as ReactNative occasionally did not expose proper APIs.
+                      <div class="highlights">Highlights</div>
+                      <ul class="list-group">
+                        <li class="list-group-item">Product Development</li>
+                        <li class="list-group-item">Client management</li>
+                        <li class="list-group-item">Clients included IBM Russia and various startups</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div class="job clearfix">
                 <div class="row">
                   <div class="details">
@@ -506,6 +538,29 @@ a[href]:after {
               <div class="job clearfix">
                 <div class="row">
                   <div class="details">
+                    <div class="where">iterate hackerspace</div>
+                    <div class="address">
+                      <a href="http:&#x2F;&#x2F;iteratehackerspace.com" target= "_blank"><i class="fa fa-globe ico"></i> http:&#x2F;&#x2F;iteratehackerspace.com</a>
+                    </div>
+                    <div class="year">September 2016 – Present</div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-xs-11 pull-right">
+                    <div class="profession">Founder</div>
+                    <div class="description">
+                      I made the first hackerspace in Yerevan, Armenia. Taught programming for free to many students, mentored and helped start the careers of many talented young people.
+                      <div class="highlights">Highlights</div>
+                      <ul class="list-group">
+                        <li class="list-group-item">Mentored many young people</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="job clearfix">
+                <div class="row">
+                  <div class="details">
                     <div class="where">OCaml meetup group of Silicon Valley</div>
                     <div class="address">
                       <a href="http:&#x2F;&#x2F;www.meetup.com&#x2F;sv-ocaml" target= "_blank"><i class="fa fa-globe ico"></i> http:&#x2F;&#x2F;www.meetup.com&#x2F;sv-ocaml</a>
@@ -536,7 +591,7 @@ a[href]:after {
             <h2><i class="fa fa-bullseye ico"></i> Contact</h2>
             <div class="contact-item">
               <div class="icon pull-left text-center"><span class="fa fa-map-marker fa-fw"></span></div>
-              
+
               <div class="title only  pull-right">Oakland, California US</div>
             </div>
             <div class="contact-item">
@@ -548,12 +603,12 @@ a[href]:after {
               <div class="title only pull-right"><a href="http:&#x2F;&#x2F;hyegar.com" target="_blank">http:&#x2F;&#x2F;hyegar.com</a></div>
             </div>
             <div class="contact-item">
-              <div class="icon pull-left text-center"><span class="fa fa-twitter-square fa-fw"></span></div>
+              <div class="icon pull-left text-center"><span class="fa fa-twitter fa-fw"></span></div>
               <div class="title pull-right">Twitter</div>
               <div class="description pull-right"><a href="http:&#x2F;&#x2F;twitter.com&#x2F;edgararout" target="_blank">edgararout</a></div>
             </div>
             <div class="contact-item">
-              <div class="icon pull-left text-center"><span class="fa fa-github-square fa-fw"></span></div>
+              <div class="icon pull-left text-center"><span class="fa fa-github fa-fw"></span></div>
               <div class="title pull-right">GitHub</div>
               <div class="description pull-right"><a href="http:&#x2F;&#x2F;github.com&#x2F;fxfactorial" target="_blank">fxfactorial</a></div>
             </div>
@@ -608,7 +663,7 @@ a[href]:after {
             <div class="skills clearfix">
               <div class="item-skills">
                   Computer Programmer
-                  
+
               </div>
               <div class="col-sm-offset-1 col-sm-12 clearfix">
                 <span class= "skill badge">OCaml</span>
@@ -623,7 +678,7 @@ a[href]:after {
             <div class="skills clearfix">
               <div class="item-skills">
                   OCaml bindings to C, C++
-                  
+
               </div>
               <div class="col-sm-offset-1 col-sm-12 clearfix">
                 <span class= "skill badge">JavaScriptCore</span>
@@ -635,7 +690,7 @@ a[href]:after {
             <div class="skills clearfix">
               <div class="item-skills">
                   OCaml bindings to JavaScript
-                  
+
               </div>
               <div class="col-sm-offset-1 col-sm-12 clearfix">
                 <span class= "skill badge">nodejs</span>
@@ -680,10 +735,6 @@ a[href]:after {
         </div>
       </div>
     </div>
-    <!-- JQUERY -->
-    <script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
-    <!-- BOOTSTRAP -->
-    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
 
   </body>
 </html>
