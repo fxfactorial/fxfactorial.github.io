@@ -6,7 +6,8 @@ import Helmet from 'react-helmet';
 import Bio from '../components/Bio';
 import { rhythm } from '../utils/typography';
 
-import 'prismjs/themes/prism-solarizedlight.css';
+// import 'prismjs/themes/prism-solarizedlight.css';
+import 'prismjs/themes/prism-tomorrow.css';
 
 class BlogIndex extends React.Component {
   render() {

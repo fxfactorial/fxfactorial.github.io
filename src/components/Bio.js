@@ -27,7 +27,13 @@ class Bio extends React.Component {
         />
         <p>
           My name is <strong>Edgar Aroutiounian</strong>, I'm an Armenian-American programmer in
-          Silicon Valley.
+          Silicon Valley. I love functional programming, OCaml old timer. Currently I work at{' '}
+          <a href={'https://expo.io'}>expo.io</a> working to make your mobile development experience
+          with ReactNative that much better.
+          <p>
+            Catch me on <a href={'https://twitter.com/@edgararout'}>twitter</a>, or on{' '}
+            <a href={'https://github.com/fxfactorial'}>github</a>
+          </p>
         </p>
       </div>
     );
