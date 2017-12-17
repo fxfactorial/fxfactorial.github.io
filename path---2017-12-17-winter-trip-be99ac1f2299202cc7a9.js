@@ -1,0 +1,2 @@
+webpackJsonp([0x87a4afed8f00],{479:function(t,e){t.exports={data:{site:{siteMetadata:{title:"Edgar Aroutiounian's website",author:"Edgar Aroutiounian"}},markdownRemark:{id:"/Users/Edgar/Repos/fxfactorial.github.io/src/pages/2017-12-17-winter-trip/index.md absPath of file >>> MarkdownRemark",html:"<p>I finally moved off the Haykll powered blog.</p>",frontmatter:{title:"My winter trip & redoing the blog",date:"December 17, 2017"}}},pathContext:{slug:"/2017-12-17-winter-trip/"}}}});
+//# sourceMappingURL=path---2017-12-17-winter-trip-be99ac1f2299202cc7a9.js.map
