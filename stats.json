@@ -1,9 +1,5 @@
 {
   "assetsByChunkName": {
-    "path---my-second-post": [
-      "path---my-second-post-451dc6a08227fc071238.js",
-      "path---my-second-post-451dc6a08227fc071238.js.map"
-    ],
     "component---src-pages-index-js": [
       "component---src-pages-index-js-d554ed4ca1863651cfaf.js",
       "component---src-pages-index-js-d554ed4ca1863651cfaf.js.map"
@@ -24,17 +20,9 @@
       "component---src-layouts-index-js-17c8cd992c028c392ffc.js",
       "component---src-layouts-index-js-17c8cd992c028c392ffc.js.map"
     ],
-    "path---hi-folks": [
-      "path---hi-folks-2ba38eb04f649e12add3.js",
-      "path---hi-folks-2ba38eb04f649e12add3.js.map"
-    ],
     "path---index": [
-      "path---index-b39a3d8a8e3418aa45a7.js",
-      "path---index-b39a3d8a8e3418aa45a7.js.map"
-    ],
-    "path---hello-world": [
-      "path---hello-world-5024e1d3a7d42419c75d.js",
-      "path---hello-world-5024e1d3a7d42419c75d.js.map"
+      "path---index-9d40ca433745f2b0bbee.js",
+      "path---index-9d40ca433745f2b0bbee.js.map"
     ],
     "path---2017-12-17-winter-trip": [
       "path---2017-12-17-winter-trip-be99ac1f2299202cc7a9.js",
@@ -51,9 +39,9 @@
       "path---offline-plugin-app-shell-fallback-a0e39f21c11f6a62c5ab.js.map"
     ],
     "app": [
-      "app-f8b1999e9318da4d4bcc.js",
+      "app-26667923e3fc6d45489a.js",
       "build-js-styles.css",
-      "app-f8b1999e9318da4d4bcc.js.map",
+      "app-26667923e3fc6d45489a.js.map",
       "build-js-styles.css.map"
     ]
   }
