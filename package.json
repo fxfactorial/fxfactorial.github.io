@@ -2,7 +2,7 @@
   "name": "gatsby-starter-blog",
   "description": "Starter Gatsby Blog",
   "version": "1.0.0",
-  "author": "Kyle Mathews <mathews.kyle@gmail.com>",
+  "author": "Edgar Aroutiounian <edgar.factorial@gmail.com>",
   "bugs": {
     "url": "https://github.com/gatsbyjs/gatsby-starter-blog/issues"
   },
@@ -43,7 +43,7 @@
   "main": "n/a",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gatsbyjs/gatsby-starter-blog.git"
+    "url": "git+https://github.com/fxfactorial/fxfactorial.github.io.git"
   },
   "scripts": {
     "dev": "gatsby develop",
