@@ -3,7 +3,7 @@ module.exports = {
     title: `Edgar Aroutiounian's website`,
     author: 'Edgar Aroutiounian',
     description: `Edgar's spot on the web`,
-    siteUrl: 'http://hyegar.com/',
+    siteUrl: 'https://hyegar.com/',
   },
   pathPrefix: '/',
   plugins: [
