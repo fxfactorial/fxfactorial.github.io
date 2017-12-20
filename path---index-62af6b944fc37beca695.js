@@ -1,2 +1,0 @@
-webpackJsonp([0x81b8806e4260],{478:function(t,e){t.exports={data:{site:{siteMetadata:{title:"Edgar Aroutiounian's website"}},allMarkdownRemark:{edges:[{node:{excerpt:"This post was orginally written on  2016-03-07  and was in OCaml Scrolling through twitter I saw someone mention something about the…",fields:{slug:"/2016-03-07-dga-padcrypt-reason/"},frontmatter:{date:"07 March, 2016",title:"A Domain Generating Algorithm in ReasonML"}}}]}},pathContext:{}}}});
-//# sourceMappingURL=path---index-62af6b944fc37beca695.js.map
