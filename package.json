@@ -23,6 +23,7 @@
     "gatsby-source-filesystem": "^1.5.11",
     "gatsby-transformer-remark": "^1.7.25",
     "gatsby-transformer-sharp": "^1.6.16",
+    "jsonresume-theme-kendall": "^0.1.18",
     "lodash": "^4.17.4",
     "react-helmet": "^5.2.0",
     "react-responsive-grid": "^0.3.4",
@@ -31,6 +32,7 @@
     "typography-theme-wordpress-2016": "^0.15.10"
   },
   "devDependencies": {
+    "resume-cli": "^0.4.19",
     "eslint": "^4.13.1",
     "eslint-plugin-react": "^7.5.1",
     "gh-pages": "^1.1.0",
@@ -46,6 +48,7 @@
     "url": "git+https://github.com/fxfactorial/fxfactorial.github.io.git"
   },
   "scripts": {
+    "resume":"cd resume && resume export resume.html --theme kendall && mv resume.html ../static",
     "dev": "gatsby develop",
     "lint": "./node_modules/.bin/eslint --ext .js,.jsx --ignore-pattern public .",
     "test": "echo \"Error: no test specified\" && exit 1",
