@@ -18,13 +18,22 @@ const wrapper_style = {
   marginBottom: rhythm(2.5),
 };
 
+const move_to_resume = () => {
+  if (typeof window !== 'undefined') {
+    window.location = '/resume.html';
+  }
+};
+
 export default () => (
   <div style={wrapper_style}>
     <img src={profilePic} alt={`Edgar Aroutiounian`} style={pic_style} />
     <p>
       My name is
       <strong>
-        <a href={'/resume.html'}> Edgar Aroutiounian</a>
+        <a onClick={move_to_resume} href={'#'}>
+          {' '}
+          Edgar Aroutiounian
+        </a>
       </strong>, I'm an Armenian-American programmer in Silicon Valley. I love functional
       programming, OCaml old timer. Currently I work at <a href={'https://expo.io'}>expo.io</a>{' '}
       working to make your mobile development experience with ReactNative that much better. Catch me
