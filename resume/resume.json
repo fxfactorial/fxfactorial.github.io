@@ -3,7 +3,8 @@
     "name": "Edgar Aroutiounian",
     "label": "Software engineer",
     "website": "https://hyegar.com",
-    "summary": "Polyglot, fast learner, generalist software developer with special strength in functional programming. Broad experience with mixing languages like JavaScript and OCaml, OCaml and Objective-C/C++. Driven by creative solutions, ideas. I love open-source and building things that ship. Lately been focused on ReactNative powered mobile development, I also emphasize teaching and made a hackerspace in Armenia",
+    "summary":
+      "Polyglot, fast learner, generalist software developer with special strength in functional programming. Broad experience with mixing languages like JavaScript and OCaml, OCaml and Objective-C/C++. Driven by creative solutions, ideas. I love open-source and building things that ship. Lately been focused on ReactNative powered mobile development, I also emphasize teaching and made a hackerspace in Armenia",
     "location": {
       "address": "",
       "postalCode": "",
@@ -29,17 +30,16 @@
       "company": "expo (expo.io)",
       "position": "Programmer",
       "startDate": "2017-09-01",
+      "endDate": "2018-03-01",
       "summary": "Doing any kind of coding for the needs of expo",
-      "highlights": [
-        "ReactNative infrastructure",
-        "Android JNI work"
-      ]
+      "highlights": ["ReactNative infrastructure", "Android JNI work"]
     },
     {
       "company": "Resquared LLC",
       "position": "Owner",
       "startDate": "2017-04-01",
-      "summary": "Mainly ReactNative development for paying clients, implemented Objective-C solutions when necessary as ReactNative occasionally did not expose proper APIs.",
+      "summary":
+        "Mainly ReactNative development for paying clients, implemented Objective-C solutions when necessary as ReactNative occasionally did not expose proper APIs.",
       "highlights": [
         "Product Development",
         "Client management",
@@ -53,7 +53,8 @@
       "website": "http://mixrank.com",
       "startDate": "2015-11-01",
       "endDate": "2016-06-22",
-      "summary": "In charge of entire iOS downloading pipeline including custom jailbreak software for iOS written in Objective-C++, cydia substrate. Created an open-source project, ocaml-usbmux, for allowing sshing of iPhones from either OS X or Linux.",
+      "summary":
+        "In charge of entire iOS downloading pipeline including custom jailbreak software for iOS written in Objective-C++, cydia substrate. Created an open-source project, ocaml-usbmux, for allowing sshing of iPhones from either OS X or Linux.",
       "highlights": [
         "Created an OCaml open source project, ocaml-usbmux",
         "Released a nixpkgs for an iOS cross compiler on Linux",
@@ -67,7 +68,8 @@
       "website": "http://ahrefs.com",
       "startDate": "2015-06-01",
       "endDate": "2015-11-01",
-      "summary": "Worked on frontend of a large scale webcrawler implemented in OCaml. Used bindings to Google's DFA based RE2 regex engine for performance in assigned task; cluster reindexed the entire reachable web in 28 days.",
+      "summary":
+        "Worked on frontend of a large scale webcrawler implemented in OCaml. Used bindings to Google's DFA based RE2 regex engine for performance in assigned task; cluster reindexed the entire reachable web in 28 days.",
       "highlights": [
         "Analyzed what web technologies powered a website in one pass and on average in 0.003 seconds",
         "Initial move to the Bay Area from New York City"
@@ -108,7 +110,8 @@
       "position": "Founder",
       "website": "http://iteratehackerspace.com",
       "startDate": "2016-09-01",
-      "summary": "I made the first hackerspace in Yerevan, Armenia. Taught programming for free to many students, mentored and helped start the careers of many talented young people.",
+      "summary":
+        "I made the first hackerspace in Yerevan, Armenia. Taught programming for free to many students, mentored and helped start the careers of many talented young people.",
       "highlights": ["Mentored many young people"]
     },
     {
@@ -116,7 +119,8 @@
       "position": "Organizer",
       "website": "http://www.meetup.com/sv-ocaml",
       "startDate": "2015-12-01",
-      "summary": "I run the meetup, organize events and speakers. I also hold regular office hours on Fridays providing any kind of OCaml needed help",
+      "summary":
+        "I run the meetup, organize events and speakers. I also hold regular office hours on Fridays providing any kind of OCaml needed help",
       "highlights": [
         "Hosted a talk by Matthew Saffer from Jane Street",
         "Hold weekly office hours on Fridays",
@@ -155,15 +159,7 @@
   "skills": [
     {
       "name": "Computer Programmer",
-      "keywords": [
-        "OCaml",
-        "Python",
-        "Objective-C",
-        "nixpkgs",
-        "C",
-        "C++",
-        "nodejs"
-      ]
+      "keywords": ["OCaml", "Python", "Objective-C", "nixpkgs", "C", "C++", "nodejs"]
     },
     {
       "name": "OCaml bindings to C, C++",
