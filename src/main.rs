@@ -8,6 +8,8 @@ use std::{fs, io};
 
 const SITE_GEN_DIR: &'static str = "site";
 
+const HOME_PAGE: &'static str = "./blog-posts/index.md";
+
 fn build_site() -> io::Result<()> {
     let mut entries = fs::read_dir("./blog-posts")?
         .map(|res| res.map(|e| e.path()))
@@ -26,15 +28,19 @@ fn build_site() -> io::Result<()> {
     };
 
     for each in entries {
+        let content = fs::read_to_string(&each)?;
+        let parser = Parser::new_ext(&content, options);
+        let mut html_output: String = String::with_capacity(content.len() * 3 / 2);
+        html::push_html(&mut html_output, parser);
+
         match each.to_str() {
-            Some("./blog-posts/index.md") => {
-                //
+            Some(HOME_PAGE) => {
+                let home_page = page_builders::build_homepage(html_output, cli_tools::git_hash());
+                let dest = format!("{}/index.html", SITE_GEN_DIR);
+                println!("dest:{}", dest);
+                fs::write(dest, home_page)?
             }
             Some(_) => {
-                let content = fs::read_to_string(each.join(&index_md))?;
-                let parser = Parser::new_ext(&content, options);
-                let mut html_output: String = String::with_capacity(content.len() * 3 / 2);
-                html::push_html(&mut html_output, parser);
                 let post = page_builders::build_post(html_output);
                 match each.file_name().and_then(OsStr::to_str) {
                     None => {

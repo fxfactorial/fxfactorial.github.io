@@ -35,7 +35,7 @@ pub mod page_builders {
         )
     }
 
-    pub fn build_homepage(html_from_markdown: String) -> String {
+    pub fn build_homepage(html_from_markdown: String, git_commit_hash: String) -> String {
         format!(
             r#"
         format!(
@@ -67,16 +67,28 @@ pub mod page_builders {
       }}
     </style>
 <body>
+<title>{}</title>
 {}
 </body>
 "#,
-            html_from_markdown
+            git_commit_hash, html_from_markdown
         )
     }
 }
 
 pub mod cli_tools {
+    pub fn git_hash() -> std::string::String {
+        // git describe --always --long --dirty
+        let output = std::process::Command::new("git")
+            .args(&["describe", "--always", "--long"])
+            .output()
+            .expect("git command failed - very odd");
+        match String::from_utf8(output.stdout) {
+            Ok(s) => s,
+            _ => "".to_string(),
+        }
+    }
     pub fn run_tidy(path: &std::path::Path) {
-        //
+        //let output = Command::new("tidy")
     }
 }
