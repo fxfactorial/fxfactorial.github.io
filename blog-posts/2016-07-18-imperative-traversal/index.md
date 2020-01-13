@@ -1,11 +1,4 @@
----
-title: Imperatively traverse binary trees in ReasonML, print zigzag
-tags: reason, trees, traversal, in_order, post_order, zigzag
-date: "2016-07-18T20:04:30+0000"
-description: tree traversals
----
-
-*This post was orginally written on `2016-07-18` and was in OCaml*
+_This post was orginally written on `2016-07-18` and was in OCaml_
 
 OCaml/ReasonML tree examples tend to be defined with algebraic data
 types and tend to be functional examples. Here are two imperative tree

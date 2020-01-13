@@ -13,3 +13,5 @@ public
 
 /target
 **/*.rs.bk
+# this is generated
+site
