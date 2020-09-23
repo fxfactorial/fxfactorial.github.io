@@ -3,31 +3,31 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>/</loc>
+    <loc>httsp://hyegar.com/</loc>
     <lastmod>2020-09-23T13:40:04-04:00</lastmod>
   </url>
   
   <url>
-    <loc>/posts/moving-on/</loc>
+    <loc>httsp://hyegar.com/posts/moving-on/</loc>
     <lastmod>2020-09-23T13:40:04-04:00</lastmod>
   </url>
   
   <url>
-    <loc>/posts/</loc>
+    <loc>httsp://hyegar.com/posts/</loc>
     <lastmod>2020-09-23T13:40:04-04:00</lastmod>
   </url>
   
   <url>
-    <loc>/about/</loc>
+    <loc>httsp://hyegar.com/about/</loc>
     <lastmod>2020-09-23T13:09:06-04:00</lastmod>
   </url>
   
   <url>
-    <loc>/categories/</loc>
+    <loc>httsp://hyegar.com/categories/</loc>
   </url>
   
   <url>
-    <loc>/tags/</loc>
+    <loc>httsp://hyegar.com/tags/</loc>
   </url>
   
 </urlset>

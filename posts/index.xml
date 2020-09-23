@@ -2,18 +2,18 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on Edgar&#39;s blog</title>
-    <link>/posts/</link>
+    <link>httsp://hyegar.com/posts/</link>
     <description>Recent content in Posts on Edgar&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright> © Edgar</copyright>
-    <lastBuildDate>Wed, 23 Sep 2020 13:40:04 -0400</lastBuildDate><atom:link href="/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 23 Sep 2020 13:40:04 -0400</lastBuildDate><atom:link href="httsp://hyegar.com/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Moving On</title>
-      <link>/posts/moving-on/</link>
+      <link>httsp://hyegar.com/posts/moving-on/</link>
       <pubDate>Wed, 23 Sep 2020 13:40:04 -0400</pubDate>
       
-      <guid>/posts/moving-on/</guid>
+      <guid>httsp://hyegar.com/posts/moving-on/</guid>
       <description>Time to focus and build</description>
     </item>
     
