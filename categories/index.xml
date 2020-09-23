@@ -2,10 +2,10 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Categories on Edgar&#39;s blog</title>
-    <link>https://fxfactorial.github.io/categories/</link>
+    <link>/categories/</link>
     <description>Recent content in Categories on Edgar&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <copyright> © Edgar</copyright><atom:link href="https://fxfactorial.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
+    <copyright> © Edgar</copyright><atom:link href="/categories/index.xml" rel="self" type="application/rss+xml" />
   </channel>
 </rss>

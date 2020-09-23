@@ -2,27 +2,27 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Edgar&#39;s blog</title>
-    <link>https://fxfactorial.github.io/</link>
+    <link>/</link>
     <description>Recent content on Edgar&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright> © Edgar</copyright>
-    <lastBuildDate>Wed, 23 Sep 2020 13:40:04 -0400</lastBuildDate><atom:link href="https://fxfactorial.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 23 Sep 2020 13:40:04 -0400</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Moving On</title>
-      <link>https://fxfactorial.github.io/posts/moving-on/</link>
+      <link>/posts/moving-on/</link>
       <pubDate>Wed, 23 Sep 2020 13:40:04 -0400</pubDate>
       
-      <guid>https://fxfactorial.github.io/posts/moving-on/</guid>
+      <guid>/posts/moving-on/</guid>
       <description>Time to focus</description>
     </item>
     
     <item>
       <title>About me</title>
-      <link>https://fxfactorial.github.io/about/</link>
+      <link>/about/</link>
       <pubDate>Wed, 23 Sep 2020 13:09:06 -0400</pubDate>
       
-      <guid>https://fxfactorial.github.io/about/</guid>
+      <guid>/about/</guid>
       <description>hello world this is a test</description>
     </item>
     
