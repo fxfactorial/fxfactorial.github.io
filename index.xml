@@ -7,7 +7,16 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright> © Edgar</copyright>
-    <lastBuildDate>Wed, 23 Sep 2020 13:40:04 -0400</lastBuildDate><atom:link href="https://hyegar.com/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 29 Mar 2021 17:44:09 -0400</lastBuildDate><atom:link href="https://hyegar.com/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Pending transactions, ABI decoding uniswap in golang</title>
+      <link>https://hyegar.com/posts/pending_tx_and_abi/</link>
+      <pubDate>Mon, 29 Mar 2021 17:44:09 -0400</pubDate>
+      
+      <guid>https://hyegar.com/posts/pending_tx_and_abi/</guid>
+      <description>This is really a blog post adding more description and explanation of my uniswap-tui repo and I go a bit fast.</description>
+    </item>
+    
     <item>
       <title>Moving On</title>
       <link>https://hyegar.com/posts/moving-on/</link>
