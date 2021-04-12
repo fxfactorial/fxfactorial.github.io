@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"><title>Flashbots RPC - Edgar&#39;s blog</title><meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta itemprop="name" content="Flashbots RPC">
+<meta itemprop="description" content="Signed FlashBots requests in golang"><meta itemprop="datePublished" content="2021-04-11T20:51:58-04:00" />
+<meta itemprop="dateModified" content="2021-04-11T20:51:58-04:00" />
+<meta itemprop="wordCount" content="144">
+<meta itemprop="keywords" content="" /><meta property="og:title" content="Flashbots RPC" />
+<meta property="og:description" content="Signed FlashBots requests in golang" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://hyegar.com/posts/flashbots-rpc/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-04-11T20:51:58-04:00" />
+<meta property="article:modified_time" content="2021-04-11T20:51:58-04:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Flashbots RPC"/>
+<meta name="twitter:description" content="Signed FlashBots requests in golang"/>
+<link href='https://fonts.googleapis.com/css?family=Playfair+Display:700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" type="text/css" media="screen" href="https://hyegar.com/css/normalize.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="https://hyegar.com/css/main.css" />
+
+        <link id="dark-scheme" rel="stylesheet" type="text/css" href="https://hyegar.com/css/dark.css" />
+
+	<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+		<script src="https://hyegar.com/js/main.js"></script>
+</head>
+
+<body>
+	<div class="container wrapper">
+		<div class="header">
+	
+		<div class="avatar">
+			<a href="https://hyegar.com/">
+				<img src="https://fxfactorial.github.io/resized-twitter.jpg" alt="Edgar&#39;s blog" />
+			</a>
+		</div>
+	
+	<h1 class="site-title"><a href="https://hyegar.com/">Edgar&#39;s blog</a></h1>
+	<div class="site-description"><p></p><nav class="nav social">
+			<ul class="flat"><li><a href="https://github.com/fxfactorial/" title="Github"><i data-feather="github"></i></a></li><li><a href="https://twitter.com/edgararout/" title="Twitter"><i data-feather="twitter"></i></a></li></ul>
+		</nav><span class="scheme-toggle"><a href="#" id="scheme-toggle"></a></div>
+
+	<nav class="nav">
+		<ul class="flat">
+			
+			<li>
+				<a href="../../">Home</a>
+			</li>
+			
+			<li>
+				<a href="../../posts">Posts</a>
+			</li>
+			
+			<li>
+				<a href="../../about">About</a>
+			</li>
+			
+		</ul>
+	</nav>
+</div>
+
+
+		<div class="post">
+			<div class="post-header">
+				
+					<div class="meta">
+						<div class="date">
+							<span class="day">11</span>
+							<span class="rest">Apr 2021</span>
+						</div>
+					</div>
+				
+				<div class="matter">
+					<h1 class="title">Flashbots RPC</h1>
+				</div>
+			</div>
+					
+			<div class="markdown">
+				<p>&hellip;a self contained example of sending an authed <code>POST</code> request to the flashbots mev-relay</p>
+<div class="highlight"><pre style="color:#586e75;background-color:#eee8d5;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#dc322f;font-weight:bold">package</span> <span style="color:#268bd2">main</span>
+
+<span style="color:#dc322f;font-weight:bold">import</span> (
+	<span style="color:#2aa198">&#34;bytes&#34;</span>
+	<span style="color:#2aa198">&#34;crypto/ecdsa&#34;</span>
+	<span style="color:#2aa198">&#34;encoding/json&#34;</span>
+	<span style="color:#2aa198">&#34;fmt&#34;</span>
+	<span style="color:#2aa198">&#34;io/ioutil&#34;</span>
+	<span style="color:#2aa198">&#34;math/big&#34;</span>
+	<span style="color:#2aa198">&#34;net/http&#34;</span>
+	<span style="color:#2aa198">&#34;time&#34;</span>
+
+	<span style="color:#2aa198">&#34;github.com/ethereum/go-ethereum/accounts&#34;</span>
+	<span style="color:#2aa198">&#34;github.com/ethereum/go-ethereum/common/hexutil&#34;</span>
+	<span style="color:#2aa198">&#34;github.com/ethereum/go-ethereum/crypto&#34;</span>
+)
+
+<span style="color:#859900">const</span> (
+	<span style="color:#268bd2">j</span>               = <span style="color:#2aa198">&#34;application/json&#34;</span>
+	<span style="color:#268bd2">flashbotURL</span>     = <span style="color:#2aa198">&#34;https://relay.flashbots.net&#34;</span>
+	<span style="color:#268bd2">stats</span>           = <span style="color:#2aa198">&#34;flashbots_getUserStats&#34;</span>
+	<span style="color:#268bd2">flashbotXHeader</span> = <span style="color:#2aa198">&#34;X-Flashbots-Signature&#34;</span>
+	<span style="color:#268bd2">p</span>               = <span style="color:#2aa198">&#34;POST&#34;</span>
+)
+
+<span style="color:#859900">var</span> (
+	<span style="color:#268bd2">privateKey</span>, <span style="color:#268bd2">_</span> = <span style="color:#268bd2">crypto</span>.<span style="color:#268bd2">HexToECDSA</span>(
+		<span style="color:#2aa198">&#34;2e19800fcbbf0abb7cf6d72ee7171f08943bc8e5c3568d1d7420e52136898154&#34;</span>,
+	)
+)
+
+<span style="color:#859900">func</span> <span style="color:#268bd2">flashbotHeader</span>(<span style="color:#268bd2">signature</span> []<span style="color:#859900;font-weight:bold">byte</span>, <span style="color:#268bd2">privateKey</span> *<span style="color:#268bd2">ecdsa</span>.<span style="color:#268bd2">PrivateKey</span>) <span style="color:#859900;font-weight:bold">string</span> {
+	<span style="color:#859900">return</span> <span style="color:#268bd2">crypto</span>.<span style="color:#268bd2">PubkeyToAddress</span>(<span style="color:#268bd2">privateKey</span>.<span style="color:#268bd2">PublicKey</span>).<span style="color:#268bd2">Hex</span>() +
+		<span style="color:#2aa198">&#34;:&#34;</span> + <span style="color:#268bd2">hexutil</span>.<span style="color:#268bd2">Encode</span>(<span style="color:#268bd2">signature</span>)
+}
+
+<span style="color:#859900">func</span> <span style="color:#268bd2">main</span>() {
+	<span style="color:#268bd2">mevHTTPClient</span> := &amp;<span style="color:#268bd2">http</span>.<span style="color:#268bd2">Client</span>{
+		<span style="color:#268bd2">Timeout</span>: <span style="color:#268bd2">time</span>.<span style="color:#268bd2">Second</span> * <span style="color:#2aa198;font-weight:bold">3</span>,
+	}
+	<span style="color:#268bd2">currentBlock</span> := <span style="color:#268bd2">big</span>.<span style="color:#268bd2">NewInt</span>(<span style="color:#2aa198;font-weight:bold">12</span><span style="color:#268bd2">_900_000</span>)
+	<span style="color:#268bd2">params</span> := <span style="color:#859900">map</span>[<span style="color:#859900;font-weight:bold">string</span>]<span style="color:#859900">interface</span>{}{
+		<span style="color:#2aa198">&#34;jsonrpc&#34;</span>: <span style="color:#2aa198">&#34;2.0&#34;</span>,
+		<span style="color:#2aa198">&#34;id&#34;</span>:      <span style="color:#2aa198;font-weight:bold">1</span>,
+		<span style="color:#2aa198">&#34;method&#34;</span>:  <span style="color:#268bd2">stats</span>,
+		<span style="color:#2aa198">&#34;params&#34;</span>: []<span style="color:#859900">interface</span>{}{
+			<span style="color:#268bd2">fmt</span>.<span style="color:#268bd2">Sprintf</span>(<span style="color:#2aa198">&#34;0x%x&#34;</span>, <span style="color:#268bd2">currentBlock</span>.<span style="color:#268bd2">Uint64</span>()),
+		},
+	}
+	<span style="color:#268bd2">payload</span>, <span style="color:#268bd2">_</span> := <span style="color:#268bd2">json</span>.<span style="color:#268bd2">Marshal</span>(<span style="color:#268bd2">params</span>)
+	<span style="color:#268bd2">req</span>, <span style="color:#268bd2">_</span> := <span style="color:#268bd2">http</span>.<span style="color:#268bd2">NewRequest</span>(<span style="color:#268bd2">p</span>, <span style="color:#268bd2">flashbotURL</span>, <span style="color:#268bd2">bytes</span>.<span style="color:#268bd2">NewBuffer</span>(<span style="color:#268bd2">payload</span>))
+	<span style="color:#268bd2">headerReady</span>, <span style="color:#268bd2">_</span> := <span style="color:#268bd2">crypto</span>.<span style="color:#268bd2">Sign</span>(
+		<span style="color:#268bd2">accounts</span>.<span style="color:#268bd2">TextHash</span>([]<span style="color:#cb4b16">byte</span>(<span style="color:#268bd2">hexutil</span>.<span style="color:#268bd2">Encode</span>(<span style="color:#268bd2">crypto</span>.<span style="color:#268bd2">Keccak256</span>(<span style="color:#268bd2">payload</span>)))),
+		<span style="color:#268bd2">privateKey</span>,
+	)
+	<span style="color:#268bd2">req</span>.<span style="color:#268bd2">Header</span>.<span style="color:#268bd2">Add</span>(<span style="color:#2aa198">&#34;content-type&#34;</span>, <span style="color:#268bd2">j</span>)
+	<span style="color:#268bd2">req</span>.<span style="color:#268bd2">Header</span>.<span style="color:#268bd2">Add</span>(<span style="color:#2aa198">&#34;Accept&#34;</span>, <span style="color:#268bd2">j</span>)
+	<span style="color:#268bd2">req</span>.<span style="color:#268bd2">Header</span>.<span style="color:#268bd2">Add</span>(<span style="color:#268bd2">flashbotXHeader</span>, <span style="color:#268bd2">flashbotHeader</span>(<span style="color:#268bd2">headerReady</span>, <span style="color:#268bd2">privateKey</span>))
+	<span style="color:#268bd2">resp</span>, <span style="color:#268bd2">_</span> := <span style="color:#268bd2">mevHTTPClient</span>.<span style="color:#268bd2">Do</span>(<span style="color:#268bd2">req</span>)
+	<span style="color:#268bd2">res</span>, <span style="color:#268bd2">_</span> := <span style="color:#268bd2">ioutil</span>.<span style="color:#268bd2">ReadAll</span>(<span style="color:#268bd2">resp</span>.<span style="color:#268bd2">Body</span>)
+	<span style="color:#268bd2">fmt</span>.<span style="color:#268bd2">Println</span>(<span style="color:#cb4b16">string</span>(<span style="color:#268bd2">res</span>))
+}
+</code></pre></div><p>replace the private key with your own, handle errors, etc</p>
+
+			</div>
+
+			<div class="tags">
+				
+					
+				
+			</div></div>
+	</div>
+	<div class="footer wrapper">
+	<nav class="nav">
+		<div>2021   © Edgar |  <a href="https://github.com/knadh/hugo-ink">Ink</a> theme on <a href="https://gohugo.io">Hugo</a></div>
+	</nav>
+</div>
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-57031124-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<script>feather.replace()</script>
+</body>
+</html>
