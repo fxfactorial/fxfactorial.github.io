@@ -26,14 +26,5 @@
       <description>This is really a blog post adding more description and explanation of my uniswap-tui repo and I go a bit fast.</description>
     </item>
     
-    <item>
-      <title>Moving On</title>
-      <link>https://hyegar.com/posts/moving-on/</link>
-      <pubDate>Wed, 23 Sep 2020 13:40:04 -0400</pubDate>
-      
-      <guid>https://hyegar.com/posts/moving-on/</guid>
-      <description>Longer story, context I joined the harmony blockchain project around August 2019 and within two months, I was coding core protocol work.</description>
-    </item>
-    
   </channel>
 </rss>
