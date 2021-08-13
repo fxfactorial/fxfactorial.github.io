@@ -7,7 +7,16 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright> © Edgar</copyright>
-    <lastBuildDate>Sun, 11 Apr 2021 20:51:58 -0400</lastBuildDate><atom:link href="https://hyegar.com/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 13 Aug 2021 16:17:19 -0400</lastBuildDate><atom:link href="https://hyegar.com/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>adding a new event to geth</title>
+      <link>https://hyegar.com/posts/new-event-to-geth/</link>
+      <pubDate>Fri, 13 Aug 2021 16:17:19 -0400</pubDate>
+      
+      <guid>https://hyegar.com/posts/new-event-to-geth/</guid>
+      <description>Adding new event Let&amp;rsquo;s add a new event to geth/bsc&amp;rsquo;s websocket based eth_subscription.</description>
+    </item>
+    
     <item>
       <title>Flashbots RPC</title>
       <link>https://hyegar.com/posts/flashbots-rpc/</link>
@@ -24,15 +33,6 @@
       
       <guid>https://hyegar.com/posts/pending-tx-and-abi/</guid>
       <description>This is really a blog post adding more description and explanation of my uniswap-tui repo and I go a bit fast.</description>
-    </item>
-    
-    <item>
-      <title>adding a new event to geth</title>
-      <link>https://hyegar.com/posts/new-event-to-geth/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://hyegar.com/posts/new-event-to-geth/</guid>
-      <description>Adding new event Let&amp;rsquo;s add a new event to geth/bsc&amp;rsquo;s websocket based eth_subscription.</description>
     </item>
     
   </channel>

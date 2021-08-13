@@ -2,13 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://hyegar.com/</loc>
-    <lastmod>2021-04-11T20:51:58-04:00</lastmod>
+    <loc>https://hyegar.com/posts/new-event-to-geth/</loc>
+    <lastmod>2021-08-13T16:17:19-04:00</lastmod>
   </url><url>
-    <loc>https://hyegar.com/posts/flashbots-rpc/</loc>
-    <lastmod>2021-04-11T20:51:58-04:00</lastmod>
+    <loc>https://hyegar.com/</loc>
+    <lastmod>2021-08-13T16:17:19-04:00</lastmod>
   </url><url>
     <loc>https://hyegar.com/posts/</loc>
+    <lastmod>2021-08-13T16:17:19-04:00</lastmod>
+  </url><url>
+    <loc>https://hyegar.com/posts/flashbots-rpc/</loc>
     <lastmod>2021-04-11T20:51:58-04:00</lastmod>
   </url><url>
     <loc>https://hyegar.com/posts/pending-tx-and-abi/</loc>
@@ -16,8 +19,6 @@
   </url><url>
     <loc>https://hyegar.com/about/</loc>
     <lastmod>2020-09-23T13:09:06-04:00</lastmod>
-  </url><url>
-    <loc>https://hyegar.com/posts/new-event-to-geth/</loc>
   </url><url>
     <loc>https://hyegar.com/categories/</loc>
   </url><url>
