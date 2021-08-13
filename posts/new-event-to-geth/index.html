@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"><title>adding a new event to geth - Edgar&#39;s blog</title><meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta itemprop="name" content="adding a new event to geth">
+<meta itemprop="description" content="new event to geth/bsc">
+
+<meta itemprop="wordCount" content="120">
+<meta itemprop="keywords" content="" /><meta property="og:title" content="adding a new event to geth" />
+<meta property="og:description" content="new event to geth/bsc" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://hyegar.com/posts/new-event-to-geth/" /><meta property="article:section" content="posts" />
+
+
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="adding a new event to geth"/>
+<meta name="twitter:description" content="new event to geth/bsc"/>
+<link href='https://fonts.googleapis.com/css?family=Playfair+Display:700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" type="text/css" media="screen" href="https://hyegar.com/css/normalize.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="https://hyegar.com/css/main.css" />
+
+        <link id="dark-scheme" rel="stylesheet" type="text/css" href="https://hyegar.com/css/dark.css" />
+
+	<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+		<script src="https://hyegar.com/js/main.js"></script>
+</head>
+
+<body>
+	<div class="container wrapper">
+		<div class="header">
+	
+		<div class="avatar">
+			<a href="https://hyegar.com/">
+				<img src="https://fxfactorial.github.io/resized-twitter.jpg" alt="Edgar&#39;s blog" />
+			</a>
+		</div>
+	
+	<h1 class="site-title"><a href="https://hyegar.com/">Edgar&#39;s blog</a></h1>
+	<div class="site-description"><p></p><nav class="nav social">
+			<ul class="flat"><li><a href="https://github.com/fxfactorial/" title="Github"><i data-feather="github"></i></a></li><li><a href="https://twitter.com/edgararout/" title="Twitter"><i data-feather="twitter"></i></a></li></ul>
+		</nav><span class="scheme-toggle"><a href="#" id="scheme-toggle"></a></div>
+
+	<nav class="nav">
+		<ul class="flat">
+			
+			<li>
+				<a href="../../">Home</a>
+			</li>
+			
+			<li>
+				<a href="../../posts">Posts</a>
+			</li>
+			
+			<li>
+				<a href="../../about">About</a>
+			</li>
+			
+		</ul>
+	</nav>
+</div>
+
+
+		<div class="post">
+			<div class="post-header">
+				
+				<div class="matter">
+					<h1 class="title">adding a new event to geth</h1>
+				</div>
+			</div>
+					
+			<div class="markdown">
+				<h1 id="adding-new-event">Adding new event</h1>
+<p>Let&rsquo;s add a new event to geth/bsc&rsquo;s websocket based <code>eth_subscription</code>.</p>
+<p>first check <code>bsc/eth/filters/api.go</code>, lets copy the method, <code>NewPendingTransactions</code>
+and call it something else, like NewIncomingTime</p>
+<p>but our body of the Submit callback will instead be:</p>
+<div class="highlight"><pre style="color:#586e75;background-color:#eee8d5;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang">	<span style="color:#268bd2">gopool</span>.<span style="color:#268bd2">Submit</span>(<span style="color:#859900">func</span>() {
+		<span style="color:#268bd2">t</span> := <span style="color:#268bd2">time</span>.<span style="color:#268bd2">NewTicker</span>(<span style="color:#268bd2">time</span>.<span style="color:#268bd2">Second</span> * <span style="color:#2aa198;font-weight:bold">2</span>)
+		<span style="color:#859900">defer</span> <span style="color:#268bd2">t</span>.<span style="color:#268bd2">Stop</span>()
+
+		<span style="color:#859900">for</span> {
+			<span style="color:#859900">select</span> {
+			<span style="color:#859900">case</span> <span style="color:#268bd2">tk</span> := &lt;-<span style="color:#268bd2">t</span>.<span style="color:#268bd2">C</span>:
+				<span style="color:#268bd2">notifier</span>.<span style="color:#268bd2">Notify</span>(<span style="color:#268bd2">rpcSub</span>.<span style="color:#268bd2">ID</span>, <span style="color:#268bd2">tk</span>)
+			<span style="color:#859900">case</span> &lt;-<span style="color:#268bd2">rpcSub</span>.<span style="color:#268bd2">Err</span>():
+				<span style="color:#859900">return</span>
+			<span style="color:#859900">case</span> &lt;-<span style="color:#268bd2">notifier</span>.<span style="color:#268bd2">Closed</span>():
+				<span style="color:#859900">return</span>
+			}
+		}
+	})
+</code></pre></div><p>compile with <code>make</code> in root of the geth code base, the binary is at <code>build/bin/geth</code></p>
+<h1 id="testing-it">testing it</h1>
+<p>use wscat (<code>npm i -g wscat</code>) and connect to your node, on the default its</p>
+<div class="highlight"><pre style="color:#586e75;background-color:#eee8d5;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fallback" data-lang="fallback">$ wscat -c ws://localhost:8546
+</code></pre></div><p>and enter:</p>
+<div class="highlight"><pre style="color:#586e75;background-color:#eee8d5;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fallback" data-lang="fallback">&gt; {&#34;id&#34;: 1, &#34;method&#34;: &#34;eth_subscribe&#34;, &#34;params&#34;: [&#34;newIncomingTime&#34;]}
+</code></pre></div><p>Now every two seconds you&rsquo;ll have an incoming subscription</p>
+
+			</div>
+
+			<div class="tags">
+				
+					
+				
+			</div></div>
+	</div>
+	<div class="footer wrapper">
+	<nav class="nav">
+		<div>1   © Edgar |  <a href="https://github.com/knadh/hugo-ink">Ink</a> theme on <a href="https://gohugo.io">Hugo</a></div>
+	</nav>
+</div>
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-57031124-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<script>feather.replace()</script>
+</body>
+</html>

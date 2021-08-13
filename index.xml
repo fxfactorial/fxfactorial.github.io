@@ -35,5 +35,14 @@
       <description>I&amp;rsquo;m a coder in DeFi &amp;amp; I work on mev-geth for flashbots</description>
     </item>
     
+    <item>
+      <title>adding a new event to geth</title>
+      <link>https://hyegar.com/posts/new-event-to-geth/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://hyegar.com/posts/new-event-to-geth/</guid>
+      <description>Adding new event Let&amp;rsquo;s add a new event to geth/bsc&amp;rsquo;s websocket based eth_subscription.</description>
+    </item>
+    
   </channel>
 </rss>
